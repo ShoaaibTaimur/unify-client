@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { toast } from "sonner";
 import { Building2, Layers, GraduationCap, Pencil, Trash2 } from "lucide-react";
-import type { Department, Batch, Section } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/organization")({
   head: () => ({
@@ -57,6 +57,7 @@ function OrganizationPage() {
 
   // Edit / Delete states
   const [editingItem, setEditingItem] = useState<{ type: "dep" | "batch" | "sec"; id: string; name: string } | null>(null);
+  const [deletingItem, setDeletingItem] = useState<{ type: "dep" | "batch" | "sec"; id: string; name: string } | null>(null);
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -83,6 +84,7 @@ function OrganizationPage() {
     },
     onSuccess: () => {
       toast.success("Deleted successfully");
+      setDeletingItem(null);
       qc.invalidateQueries({ queryKey: ["departments"] });
       qc.invalidateQueries({ queryKey: ["batches"] });
       qc.invalidateQueries({ queryKey: ["sections"] });
@@ -169,10 +171,8 @@ function OrganizationPage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive"
-                      onClick={() => {
-                        if (confirm(`Delete department "${d.name}"?`)) deleteMutation.mutate({ type: "dep", id: d.id });
-                      }}
+                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeletingItem({ type: "dep", id: d.id, name: d.name })}
                       title="Delete Department"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -209,10 +209,8 @@ function OrganizationPage() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive"
-                              onClick={() => {
-                                if (confirm(`Delete batch "${b.name}"?`)) deleteMutation.mutate({ type: "batch", id: b.id });
-                              }}
+                              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setDeletingItem({ type: "batch", id: b.id, name: b.name })}
                               title="Delete Batch"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -237,9 +235,7 @@ function OrganizationPage() {
                                 <Pencil className="h-3 w-3" />
                               </button>
                               <button
-                                onClick={() => {
-                                  if (confirm(`Delete section "${s.name}"?`)) deleteMutation.mutate({ type: "sec", id: s.id });
-                                }}
+                                onClick={() => setDeletingItem({ type: "sec", id: s.id, name: s.name })}
                                 className="text-muted-foreground hover:text-destructive"
                                 title="Delete Section"
                               >
@@ -282,6 +278,17 @@ function OrganizationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDeleteDialog
+        open={!!deletingItem}
+        onOpenChange={(open) => { if (!open) setDeletingItem(null); }}
+        itemName={deletingItem ? `${deletingItem.type === "dep" ? "department" : deletingItem.type === "batch" ? "batch" : "section"} "${deletingItem.name}"` : "this item"}
+        isPending={deleteMutation.isPending}
+        onConfirm={() => {
+          if (deletingItem) deleteMutation.mutate({ type: deletingItem.type, id: deletingItem.id });
+        }}
+      />
     </div>
   );
 }

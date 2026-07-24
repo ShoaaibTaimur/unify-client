@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import type { Role, User } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/users")({ component: UsersPage });
@@ -50,20 +52,27 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
   });
 
   return (
-    <div>
-      <div className="mb-3 flex justify-end">
-        <Button className="rounded-full" onClick={() => setCreating(true)}>
-          + Create {role.toUpperCase()}
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold capitalize">{role}s</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage {role} accounts and permissions across departments.
+          </p>
+        </div>
+        <Button className="rounded-xl" onClick={() => setCreating(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Create {role === "cr" ? "CR" : role}
         </Button>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+            <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left">Name</th>
                 <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Assignment</th>
+                <th className="px-4 py-3 text-left">Assigned Class / Dept</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -86,13 +95,9 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-destructive"
+                      className="text-destructive hover:bg-destructive/10"
                       disabled={deleteMutation.isPending}
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to delete user ${u.email}?`)) {
-                          deleteMutation.mutate(u.id);
-                        }
-                      }}
+                      onClick={() => setDeletingUser(u)}
                     >
                       Delete
                     </Button>
@@ -105,6 +110,19 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
       </div>
 
       <CreateUserDialog open={creating} onOpenChange={setCreating} defaultRole={role} />
+
+      <ConfirmDeleteDialog
+        open={!!deletingUser}
+        onOpenChange={(open) => { if (!open) setDeletingUser(null); }}
+        itemName={deletingUser ? `user account "${deletingUser.email}"` : "this user account"}
+        isPending={deleteMutation.isPending}
+        onConfirm={() => {
+          if (deletingUser) {
+            deleteMutation.mutate(deletingUser.id);
+            setDeletingUser(null);
+          }
+        }}
+      />
     </div>
   );
 }
