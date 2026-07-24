@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { addDays, format, differenceInDays } from "date-fns";
+import { addDays, format, differenceInDays, parseISO } from "date-fns";
 import { CalendarIcon, ClockIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -40,12 +43,13 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
   const [room, setRoom] = useState("");
   const [description, setDescription] = useState("");
   
-  // Date & time state split into clean separate date & time values
-  const [dateVal, setDateVal] = useState("");
+  // Date state using Date object
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [timeVal, setTimeVal] = useState("09:00");
   
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDateObj, setStartDateObj] = useState<Date | undefined>(new Date());
+  const [endDateObj, setEndDateObj] = useState<Date | undefined>(addDays(new Date(), 3));
+
   const [departmentId, setDepartmentId] = useState(fixed?.departmentId ?? "");
   const [batchId, setBatchId] = useState(fixed?.batchId ?? "");
   const [sectionId, setSectionId] = useState(fixed?.sectionId ?? "");
@@ -61,21 +65,21 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
       
       if (editing.date) {
         const d = new Date(editing.date);
-        setDateVal(format(d, "yyyy-MM-dd"));
+        setSelectedDate(d);
         setTimeVal(format(d, "HH:mm"));
       } else {
-        setDateVal(""); setTimeVal("09:00");
+        setSelectedDate(new Date()); setTimeVal("09:00");
       }
       
-      setStartDate(editing.startDate ? editing.startDate.slice(0, 10) : "");
-      setEndDate(editing.endDate ? editing.endDate.slice(0, 10) : "");
+      setStartDateObj(editing.startDate ? new Date(editing.startDate) : new Date());
+      setEndDateObj(editing.endDate ? new Date(editing.endDate) : addDays(new Date(), 3));
       setDepartmentId(editing.departmentId);
       setBatchId(editing.batchId); setSectionId(editing.sectionId);
     } else {
       setType("class-test"); setTitle(""); setSubject(""); setRoom(""); setDescription("");
-      setDateVal(format(new Date(), "yyyy-MM-dd")); setTimeVal("09:00");
-      setStartDate(format(new Date(), "yyyy-MM-dd"));
-      setEndDate(format(addDays(new Date(), 3), "yyyy-MM-dd"));
+      setSelectedDate(new Date()); setTimeVal("09:00");
+      setStartDateObj(new Date());
+      setEndDateObj(addDays(new Date(), 3));
       setDepartmentId(fixed?.departmentId ?? "");
       setBatchId(fixed?.batchId ?? ""); setSectionId(fixed?.sectionId ?? "");
     }
@@ -99,9 +103,9 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
   const mutation = useMutation({
     mutationFn: async () => {
       let combinedIso: string | undefined = undefined;
-      if (!isExam && dateVal) {
+      if (!isExam && selectedDate) {
         const [hours, minutes] = (timeVal || "09:00").split(":");
-        const d = new Date(dateVal);
+        const d = new Date(selectedDate);
         d.setHours(parseInt(hours || "9", 10), parseInt(minutes || "0", 10), 0, 0);
         combinedIso = d.toISOString();
       }
@@ -110,8 +114,8 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
         departmentId: effectiveDepartmentId, batchId, sectionId, activityType: type, title, subject,
         room: room || undefined, description: description || undefined, createdBy,
         date: isExam ? undefined : combinedIso,
-        startDate: isExam && startDate ? new Date(startDate).toISOString() : undefined,
-        endDate: isExam && endDate ? new Date(endDate).toISOString() : undefined,
+        startDate: isExam && startDateObj ? startDateObj.toISOString() : undefined,
+        endDate: isExam && endDateObj ? endDateObj.toISOString() : undefined,
       };
       if (editing) return api.updateActivity(editing.id, base);
       return api.createActivity(base);
@@ -124,13 +128,13 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
     onError: (e) => toast.error((e as Error).message),
   });
 
-  const canSubmit = title && subject && effectiveDepartmentId && batchId && sectionId && (isExam ? (startDate && endDate) : dateVal);
+  const canSubmit = title && subject && effectiveDepartmentId && batchId && sectionId && (isExam ? (startDateObj && endDateObj) : selectedDate);
 
   const examDurationDays = useMemo(() => {
-    if (!startDate || !endDate) return null;
-    const diff = differenceInDays(new Date(endDate), new Date(startDate)) + 1;
+    if (!startDateObj || !endDateObj) return null;
+    const diff = differenceInDays(endDateObj, startDateObj) + 1;
     return diff > 0 ? diff : null;
-  }, [startDate, endDate]);
+  }, [startDateObj, endDateObj]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -186,10 +190,52 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Start date">
-                  <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="rounded-xl bg-background" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal rounded-xl bg-background",
+                          !startDateObj && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                        {startDateObj ? format(startDateObj, "PPP") : <span>Pick date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDateObj}
+                        onSelect={setStartDateObj}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </Field>
                 <Field label="End date">
-                  <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="rounded-xl bg-background" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal rounded-xl bg-background",
+                          !endDateObj && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                        {endDateObj ? format(endDateObj, "PPP") : <span>Pick date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDateObj}
+                        onSelect={setEndDateObj}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </Field>
               </div>
             </div>
@@ -199,35 +245,57 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
                 <ClockIcon className="h-4 w-4 text-primary" /> Schedule Date & Time
               </div>
 
-              {/* Quick Date Presets */}
+              {/* Shadcn Calendar Date Picker & Presets */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-muted-foreground uppercase">Date</label>
                   <div className="flex gap-1">
                     <button
                       type="button"
-                      onClick={() => setDateVal(format(new Date(), "yyyy-MM-dd"))}
+                      onClick={() => setSelectedDate(new Date())}
                       className="rounded-lg bg-background px-2 py-0.5 text-[11px] font-medium border border-border hover:bg-accent"
                     >
                       Today
                     </button>
                     <button
                       type="button"
-                      onClick={() => setDateVal(format(addDays(new Date(), 1), "yyyy-MM-dd"))}
+                      onClick={() => setSelectedDate(addDays(new Date(), 1))}
                       className="rounded-lg bg-background px-2 py-0.5 text-[11px] font-medium border border-border hover:bg-accent"
                     >
                       Tomorrow
                     </button>
                     <button
                       type="button"
-                      onClick={() => setDateVal(format(addDays(new Date(), 7), "yyyy-MM-dd"))}
+                      onClick={() => setSelectedDate(addDays(new Date(), 7))}
                       className="rounded-lg bg-background px-2 py-0.5 text-[11px] font-medium border border-border hover:bg-accent"
                     >
                       +1 Week
                     </button>
                   </div>
                 </div>
-                <Input type="date" value={dateVal} onChange={e => setDateVal(e.target.value)} className="rounded-xl bg-background" />
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal rounded-xl bg-background",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                      {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Time Selection & Presets */}
@@ -326,8 +394,8 @@ export function ManageActivitiesTable({
               <td className="px-4 py-3">{a.subject}</td>
               <td className="px-4 py-3 whitespace-nowrap">
                 {a.startDate
-                  ? `${new Date(a.startDate).toLocaleDateString()} – ${new Date(a.endDate!).toLocaleDateString()}`
-                  : new Date(a.date!).toLocaleString()}
+                  ? `${format(new Date(a.startDate), "PPP")} – ${format(new Date(a.endDate!), "PPP")}`
+                  : format(new Date(a.date!), "PPpp")}
               </td>
               <td className="px-4 py-3 text-right whitespace-nowrap">
                 <Button size="sm" variant="ghost" onClick={() => onEdit(a)}>Edit</Button>
