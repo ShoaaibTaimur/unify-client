@@ -151,7 +151,7 @@ function StudentDashboard() {
         </div>
 
         {/* Countdown */}
-        <aside>
+        <aside className="order-first lg:order-last">
           <div className="sticky top-24 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[color:var(--primary)] to-[color:var(--primary-deep)] p-6 text-primary-foreground shadow-card">
             <p className="text-xs font-medium uppercase tracking-widest opacity-70">Next activity</p>
             {next ? (
