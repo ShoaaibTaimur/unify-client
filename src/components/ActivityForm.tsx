@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { addDays, format, differenceInDays, parseISO } from "date-fns";
 import { CalendarIcon, ClockIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 
 interface Props {
   open: boolean;
@@ -369,43 +370,66 @@ export function useActivityList(filter?: { departmentId?: string; batchId?: stri
 export function ManageActivitiesTable({
   activities, onEdit, onDelete,
 }: { activities: Activity[]; onEdit: (a: Activity) => void; onDelete: (a: Activity) => void }) {
+  const [deletingActivity, setDeletingActivity] = useState<Activity | null>(null);
+
   const sorted = useMemo(() =>
     [...activities].sort((a, b) => new Date(a.startDate ?? a.date!).getTime() - new Date(b.startDate ?? b.date!).getTime()),
     [activities]);
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="overflow-x-auto">
-      <table className="w-full min-w-[720px] text-sm">
-        <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
-          <tr>
-            <th className="px-4 py-3 text-left">Title</th>
-            <th className="px-4 py-3 text-left">Type</th>
-            <th className="px-4 py-3 text-left">Subject</th>
-            <th className="px-4 py-3 text-left">When</th>
-            <th className="px-4 py-3 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.length === 0 && (<tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">No activities.</td></tr>)}
-          {sorted.map(a => (
-            <tr key={a.id} className="border-b border-border/60 last:border-b-0">
-              <td className="px-4 py-3 font-medium">{a.title}</td>
-              <td className="px-4 py-3">{ACTIVITY_TYPES.find(t => t.value === a.activityType)?.label}</td>
-              <td className="px-4 py-3">{a.subject}</td>
-              <td className="px-4 py-3 whitespace-nowrap">
-                {a.startDate
-                  ? `${format(new Date(a.startDate), "PPP")} – ${format(new Date(a.endDate!), "PPP")}`
-                  : format(new Date(a.date!), "PPpp")}
-              </td>
-              <td className="px-4 py-3 text-right whitespace-nowrap">
-                <Button size="sm" variant="ghost" onClick={() => onEdit(a)}>Edit</Button>
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDelete(a)}>Delete</Button>
-              </td>
+    <>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 text-left">Title</th>
+              <th className="px-4 py-3 text-left">Type</th>
+              <th className="px-4 py-3 text-left">Subject</th>
+              <th className="px-4 py-3 text-left">When</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sorted.length === 0 && (<tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">No activities.</td></tr>)}
+            {sorted.map(a => (
+              <tr key={a.id} className="border-b border-border/60 last:border-b-0">
+                <td className="px-4 py-3 font-medium">{a.title}</td>
+                <td className="px-4 py-3">{ACTIVITY_TYPES.find(t => t.value === a.activityType)?.label}</td>
+                <td className="px-4 py-3">{a.subject}</td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {a.startDate
+                    ? `${format(new Date(a.startDate), "PPP")} – ${format(new Date(a.endDate!), "PPP")}`
+                    : format(new Date(a.date!), "PPpp")}
+                </td>
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  <Button size="sm" variant="ghost" onClick={() => onEdit(a)}>Edit</Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => setDeletingActivity(a)}
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
       </div>
-    </div>
+
+      <ConfirmDeleteDialog
+        open={!!deletingActivity}
+        onOpenChange={(open) => { if (!open) setDeletingActivity(null); }}
+        itemName={deletingActivity ? `activity "${deletingActivity.title}"` : "this activity"}
+        onConfirm={() => {
+          if (deletingActivity) {
+            onDelete(deletingActivity);
+            setDeletingActivity(null);
+          }
+        }}
+      />
+    </>
   );
 }
