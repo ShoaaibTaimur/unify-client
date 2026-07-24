@@ -90,7 +90,7 @@ function StudentDashboard() {
       <ClassSelectionDialog open={dialogOpen} onOpenChange={setDialogOpen} initial={cls} />
 
       {/* HERO */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_50%_0%,color-mix(in_oklab,var(--primary)_18%,transparent),transparent)]" />
         <div className="mx-auto max-w-7xl px-4 pb-8 pt-14 sm:px-6 sm:pt-20 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">

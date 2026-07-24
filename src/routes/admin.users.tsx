@@ -40,6 +40,7 @@ function UsersPage() {
 
 function UserTable({ users, role }: { users: User[]; role: Role }) {
   const [creating, setCreating] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const qc = useQueryClient();
 
   const deleteMutation = useMutation({

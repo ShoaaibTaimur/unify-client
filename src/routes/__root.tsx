@@ -122,7 +122,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-screen flex-col bg-background text-foreground">
         {!bare && <SiteHeader />}
-        <main className="flex-1">
+        <main key={routeState.pathname} className="flex-1 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <Outlet />
         </main>
         {!bare && <SiteFooter />}

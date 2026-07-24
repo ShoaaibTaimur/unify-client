@@ -33,7 +33,7 @@ export function ActivityCard({
     <>
       <div
         onClick={handleClick}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-primary/40"
+        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-primary/50 active:scale-[0.98]"
       >
         <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: color }} />
         <div className="flex items-start justify-between gap-3">
