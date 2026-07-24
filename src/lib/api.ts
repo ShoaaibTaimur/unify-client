@@ -24,9 +24,16 @@ function requireApiUrl(): string {
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const base = requireApiUrl();
+  if (!API_URL) {
+    const method = (init?.method || "GET").toUpperCase();
+    if (method === "GET") {
+      console.warn(`[UNIFY API] VITE_API_URL not set. Returning empty list for GET ${path}`);
+      return [] as unknown as T;
+    }
+    throw new Error("Backend not configured. Set VITE_API_URL in environment variables.");
+  }
   const token = typeof window !== "undefined" ? localStorage.getItem("unify_token") : null;
-  const res = await fetch(`${base}${path}`, {
+  const res = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
