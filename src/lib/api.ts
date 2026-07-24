@@ -10,7 +10,11 @@
  */
 import type { Activity, Batch, Department, Section, User } from "./types";
 
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "");
+const API_URL = (
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
+  (typeof process !== "undefined" && process.env?.VITE_API_URL) ||
+  ""
+)?.replace(/\/$/, "");
 
 export const isApiConfigured = Boolean(API_URL);
 
