@@ -18,7 +18,7 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader className="space-y-3">
           <div className="flex items-center gap-2">
             <span

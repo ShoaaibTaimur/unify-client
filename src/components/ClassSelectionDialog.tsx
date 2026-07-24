@@ -38,7 +38,7 @@ export function ClassSelectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <div className="mb-2 flex justify-center"><Logo showWordmark={false} size={44} /></div>
           <DialogTitle className="text-center font-display text-2xl">Select your class</DialogTitle>
