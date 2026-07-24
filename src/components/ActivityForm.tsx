@@ -261,7 +261,16 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
           )}
 
           <Field label="Description / Syllabus (Optional)">
-            <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} placeholder="Topics covered, guidelines..." className="rounded-xl" />
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              placeholder="Topics covered, syllabus details, exam guidelines, links (https://...)..."
+              className="rounded-xl font-mono text-xs leading-relaxed"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Preserves multiline formatting, lists, and links when viewed by students.
+            </p>
           </Field>
         </div>
 
