@@ -31,10 +31,9 @@ function useTicker(ms = 1000) {
 }
 
 function useClass() {
-  const [sel, setSel] = useState<ClassSelection | null>(null);
+  const [sel, setSel] = useState<ClassSelection | null>(() => getClassSelection());
   useEffect(() => {
     const sync = () => setSel(getClassSelection());
-    sync();
     window.addEventListener("unify:class-changed", sync);
     return () => window.removeEventListener("unify:class-changed", sync);
   }, []);
