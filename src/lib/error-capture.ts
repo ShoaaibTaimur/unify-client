@@ -63,10 +63,35 @@ console.error = (...args: unknown[]) => {
 };
 
 if (typeof globalThis.addEventListener === "function") {
-  globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
-  globalThis.addEventListener("unhandledrejection", (event) =>
-    record((event as PromiseRejectionEvent).reason),
-  );
+  globalThis.addEventListener("error", (event) => {
+    const err = (event as ErrorEvent).error ?? event;
+    record(err);
+    const msg = String((event as ErrorEvent).message || err?.message || "");
+    if (msg.includes("Failed to fetch dynamically imported module") || msg.includes("Importing a module script failed")) {
+      if (typeof window !== "undefined") {
+        console.warn("[UNIFY] Stale chunk detected, auto-reloading page...");
+        window.location.reload();
+      }
+    }
+  });
+  globalThis.addEventListener("unhandledrejection", (event) => {
+    const reason = (event as PromiseRejectionEvent).reason;
+    record(reason);
+    const msg = String(reason?.message || reason || "");
+    if (msg.includes("Failed to fetch dynamically imported module") || msg.includes("Importing a module script failed")) {
+      if (typeof window !== "undefined") {
+        console.warn("[UNIFY] Stale chunk detected, auto-reloading page...");
+        window.location.reload();
+      }
+    }
+  });
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("vite:preloadError", () => {
+    console.warn("[UNIFY] Vite preload error, auto-reloading page...");
+    window.location.reload();
+  });
 }
 
 export function consumeLastCapturedError(): unknown {
