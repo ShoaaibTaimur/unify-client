@@ -68,10 +68,24 @@ export const api = {
     http(`/api/sections${batchId ? `?batchId=${batchId}` : ""}`),
   createDepartment: (name: string): Promise<Department> =>
     http("/api/departments", { method: "POST", body: JSON.stringify({ name }) }),
+  updateDepartment: (id: string, name: string): Promise<Department> =>
+    http(`/api/departments/${id}`, { method: "PUT", body: JSON.stringify({ name }) }),
+  deleteDepartment: (id: string): Promise<void> =>
+    http(`/api/departments/${id}`, { method: "DELETE" }),
+
   createBatch: (departmentId: string, name: string): Promise<Batch> =>
     http("/api/batches", { method: "POST", body: JSON.stringify({ departmentId, name }) }),
+  updateBatch: (id: string, name: string): Promise<Batch> =>
+    http(`/api/batches/${id}`, { method: "PUT", body: JSON.stringify({ name }) }),
+  deleteBatch: (id: string): Promise<void> =>
+    http(`/api/batches/${id}`, { method: "DELETE" }),
+
   createSection: (batchId: string, name: string): Promise<Section> =>
     http("/api/sections", { method: "POST", body: JSON.stringify({ batchId, name }) }),
+  updateSection: (id: string, name: string): Promise<Section> =>
+    http(`/api/sections/${id}`, { method: "PUT", body: JSON.stringify({ name }) }),
+  deleteSection: (id: string): Promise<void> =>
+    http(`/api/sections/${id}`, { method: "DELETE" }),
 
   /* -------- Activities -------- */
   listActivities: (filter?: { departmentId?: string; batchId?: string; sectionId?: string }): Promise<Activity[]> => {
