@@ -91,6 +91,16 @@ export const api = {
 
   /* -------- Users / Auth -------- */
   listUsers: (): Promise<User[]> => http("/api/users"),
+  createUser: (input: {
+    name: string;
+    email: string;
+    password: string;
+    role: Role;
+    departmentId?: string;
+    batchId?: string;
+    sectionId?: string;
+  }): Promise<User> => http("/api/users", { method: "POST", body: JSON.stringify(input) }),
+  deleteUser: (id: string): Promise<void> => http(`/api/users/${id}`, { method: "DELETE" }),
   login: (email: string, password: string): Promise<{ token: string; user: User }> =>
     http("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   changePassword: (current: string, next: string): Promise<{ ok: true }> =>
