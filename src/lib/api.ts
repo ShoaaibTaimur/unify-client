@@ -75,7 +75,11 @@ export const api = {
 
   /* -------- Activities -------- */
   listActivities: (filter?: { departmentId?: string; batchId?: string; sectionId?: string }): Promise<Activity[]> => {
-    const qs = filter ? new URLSearchParams(filter as Record<string, string>).toString() : "";
+    const cleanFilter: Record<string, string> = {};
+    if (filter?.departmentId) cleanFilter.departmentId = filter.departmentId;
+    if (filter?.batchId) cleanFilter.batchId = filter.batchId;
+    if (filter?.sectionId) cleanFilter.sectionId = filter.sectionId;
+    const qs = new URLSearchParams(cleanFilter).toString();
     return http(`/api/activities${qs ? `?${qs}` : ""}`);
   },
   createActivity: (input: Omit<Activity, "id" | "createdAt" | "updatedAt">): Promise<Activity> =>
