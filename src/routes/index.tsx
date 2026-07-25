@@ -77,7 +77,12 @@ function StudentDashboard() {
     [activities.data, now]);
 
   const todays = useMemo(() =>
-    (activities.data ?? []).filter(a => a.date && isSameDay(new Date(a.date), now)),
+    (activities.data ?? []).filter(a => {
+      const targetDate = a.endDate ? new Date(a.endDate) : (a.date ? new Date(a.date) : null);
+      if (!targetDate) return false;
+      const isToday = isSameDay(targetDate, now) || (a.startDate && a.endDate && now >= new Date(a.startDate) && now <= new Date(a.endDate));
+      return isToday && targetDate.getTime() > now.getTime();
+    }),
     [activities.data, now]);
 
   const next = upcoming[0];
