@@ -37,38 +37,33 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
         </DialogHeader>
 
         <div className="space-y-5 py-2">
-          {/* Key Details Grid */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 rounded-2xl border border-border/80 bg-muted/30 p-4">
-            <div className="flex items-start gap-2.5 rounded-xl bg-primary/10 border border-primary/20 p-3.5">
-              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Schedule / Date</p>
-                <p className="mt-0.5 text-sm font-bold text-foreground">
-                  {isRange
-                    ? `${format(new Date(activity.startDate!), "MMM d, yyyy")} – ${format(new Date(activity.endDate!), "MMM d, yyyy")}`
-                    : format(new Date(activity.date!), "EEEE, MMM d, yyyy • h:mm a")}
-                </p>
-              </div>
+          {/* Prominent Hero Schedule & Date Banner */}
+          <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 shadow-xs">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+              <Clock className="h-4 w-4 text-primary" /> Schedule & Time
             </div>
-
-            {activity.room ? (
-              <div className="flex items-start gap-2.5">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Venue / Room</p>
-                  <p className="mt-0.5 text-sm font-medium text-foreground">{activity.room}</p>
-                </div>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-base sm:text-lg font-bold text-foreground">
+                {isRange
+                  ? `${format(new Date(activity.startDate!), "EEEE, MMM d, yyyy")} – ${format(new Date(activity.endDate!), "EEEE, MMM d, yyyy")}`
+                  : format(new Date(activity.date!), "EEEE, MMMM d, yyyy")}
               </div>
-            ) : (
-              <div className="flex items-start gap-2.5">
-                <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Course Subject</p>
-                  <p className="mt-0.5 text-sm font-medium text-foreground">{activity.subject}</p>
-                </div>
-              </div>
-            )}
+              {!isRange && activity.date && (
+                <span className="rounded-lg bg-primary px-3 py-1 text-xs sm:text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-xs">
+                  {format(new Date(activity.date), "h:mm a")}
+                </span>
+              )}
+            </div>
           </div>
+
+          {/* Venue Info */}
+          {activity.room && (
+            <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-3.5 text-sm font-medium">
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-muted-foreground">Venue:</span>
+              <span className="font-semibold text-foreground">{activity.room}</span>
+            </div>
+          )}
 
           {/* Description Section */}
           <div className="space-y-2">

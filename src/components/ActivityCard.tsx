@@ -53,20 +53,29 @@ export function ActivityCard({
             {!compact && activity.description && (
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground whitespace-pre-line">{activity.description}</p>
             )}
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">
-                <Clock className="h-3.5 w-3.5 shrink-0" />
-                {isRange
-                  ? `${format(new Date(activity.startDate!), "MMM d")} – ${format(new Date(activity.endDate!), "MMM d, yyyy")}`
-                  : format(new Date(activity.date!), "EEE, MMM d • h:mm a")}
-              </span>
-              {activity.room && (
-                <span className="inline-flex items-center gap-1 rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5 shrink-0" />
-                  {activity.room}
+            {/* Prominent Date & Time Banner */}
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-primary/25 bg-primary/10 px-3.5 py-2.5">
+              <div className="flex items-center gap-2 text-primary font-bold text-sm sm:text-base">
+                <Clock className="h-4.5 w-4.5 shrink-0 text-primary" />
+                <span>
+                  {isRange
+                    ? `${format(new Date(activity.startDate!), "MMM d, yyyy")} – ${format(new Date(activity.endDate!), "MMM d, yyyy")}`
+                    : format(new Date(activity.date!), "EEEE, MMM d")}
                 </span>
+              </div>
+              {!isRange && activity.date && (
+                <div className="rounded-md bg-primary px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-xs">
+                  {format(new Date(activity.date), "h:mm a")}
+                </div>
               )}
             </div>
+
+            {activity.room && (
+              <div className="mt-2.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5 text-primary" />
+                <span className="font-medium text-foreground">{activity.room}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
