@@ -26,7 +26,6 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { to: "/admin/organization", label: "Organization", icon: Network, description: "Departments, batches & sections" },
   { to: "/admin/activities", label: "Activities", icon: CalendarDays, description: "All activities across UNIFY" },
   { to: "/admin/users", label: "Users", icon: Users, description: "CRs, teachers & admins" },
-  { to: "/admin/settings", label: "Settings", icon: Settings, description: "Preferences & configuration" },
 ];
 
 function AdminLayout() {

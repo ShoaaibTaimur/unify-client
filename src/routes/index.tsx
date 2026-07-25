@@ -72,7 +72,7 @@ function StudentDashboard() {
 
   const now = new Date();
   const upcoming = useMemo(() => (activities.data ?? [])
-    .filter(a => nextActivityDate(a) >= new Date(now.getFullYear(), now.getMonth(), now.getDate()))
+    .filter(a => (a.endDate ? new Date(a.endDate) : nextActivityDate(a)) > now)
     .sort((a, b) => nextActivityDate(a).getTime() - nextActivityDate(b).getTime()),
     [activities.data, now]);
 
