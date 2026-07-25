@@ -53,16 +53,16 @@ export function ActivityCard({
             {!compact && activity.description && (
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground whitespace-pre-line">{activity.description}</p>
             )}
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-primary/70" />
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 px-2.5 py-1 text-xs font-semibold text-primary">
+                <Clock className="h-3.5 w-3.5 shrink-0" />
                 {isRange
                   ? `${format(new Date(activity.startDate!), "MMM d")} – ${format(new Date(activity.endDate!), "MMM d, yyyy")}`
                   : format(new Date(activity.date!), "EEE, MMM d • h:mm a")}
               </span>
               {activity.room && (
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-primary/70" />
+                <span className="inline-flex items-center gap-1 rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
                   {activity.room}
                 </span>
               )}

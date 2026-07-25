@@ -39,11 +39,11 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
         <div className="space-y-5 py-2">
           {/* Key Details Grid */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 rounded-2xl border border-border/80 bg-muted/30 p-4">
-            <div className="flex items-start gap-2.5">
+            <div className="flex items-start gap-2.5 rounded-xl bg-primary/10 border border-primary/20 p-3.5">
               <Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Schedule / Date</p>
-                <p className="mt-0.5 text-sm font-medium text-foreground">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">Schedule / Date</p>
+                <p className="mt-0.5 text-sm font-bold text-foreground">
                   {isRange
                     ? `${format(new Date(activity.startDate!), "MMM d, yyyy")} – ${format(new Date(activity.endDate!), "MMM d, yyyy")}`
                     : format(new Date(activity.date!), "EEEE, MMM d, yyyy • h:mm a")}
