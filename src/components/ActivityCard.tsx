@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { ACTIVITY_COLOR, ACTIVITY_TYPES, type Activity, type ActivityType } from "@/lib/types";
 import { format } from "date-fns";

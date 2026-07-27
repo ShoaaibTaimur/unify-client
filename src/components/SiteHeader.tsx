@@ -1,11 +1,27 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { getStoredUser } from "@/lib/session";
 import type { User } from "@/lib/types";
-import { Menu, LayoutDashboard, ListChecks, CalendarDays, LogIn, UserCircle2 } from "lucide-react";
+import {
+  Menu,
+  LayoutDashboard,
+  ListChecks,
+  CalendarDays,
+  LogIn,
+  UserCircle2,
+} from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV = [
@@ -15,7 +31,7 @@ const NAV = [
 ] as const;
 
 export function SiteHeader() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -26,12 +42,18 @@ export function SiteHeader() {
     return () => window.removeEventListener("unify:auth-changed", sync);
   }, []);
 
-  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const dashLink = user
-    ? user.role === "admin" ? "/admin"
-      : user.role === "teacher" ? "/teacher"
-      : user.role === "cr" ? "/cr" : "/"
+    ? user.role === "admin"
+      ? "/admin"
+      : user.role === "teacher"
+        ? "/teacher"
+        : user.role === "cr"
+          ? "/cr"
+          : "/"
     : "/login";
 
   return (
@@ -40,13 +62,20 @@ export function SiteHeader() {
         <div className="flex min-w-0 items-center gap-6">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full md:hidden hover:scale-105 active:scale-95 transition-transform" aria-label="Open menu">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full md:hidden hover:scale-105 active:scale-95 transition-transform"
+                aria-label="Open menu"
+              >
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] p-0">
               <SheetHeader className="border-b border-border p-4">
-                <SheetTitle className="text-left"><Logo /></SheetTitle>
+                <SheetTitle className="text-left">
+                  <Logo />
+                </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col p-3">
                 {NAV.map((n) => {
@@ -54,9 +83,12 @@ export function SiteHeader() {
                   const Icon = n.icon;
                   return (
                     <Link
-                      key={n.to} to={n.to}
+                      key={n.to}
+                      href={n.to}
                       className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                        active ? "bg-primary text-primary-foreground shadow-xs" : "text-foreground/80 hover:bg-muted hover:translate-x-1"
+                        active
+                          ? "bg-primary text-primary-foreground shadow-xs"
+                          : "text-foreground/80 hover:bg-muted hover:translate-x-1"
                       }`}
                     >
                       <Icon className="h-4 w-4" /> {n.label}
@@ -65,19 +97,28 @@ export function SiteHeader() {
                 })}
                 <div className="my-3 border-t border-border" />
                 {user ? (
-                  <Link to={dashLink} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:translate-x-1 transition-all duration-200">
+                  <Link
+                    href={dashLink}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:translate-x-1 transition-all duration-200"
+                  >
                     <UserCircle2 className="h-4 w-4 text-primary" />
                     {user.role[0].toUpperCase() + user.role.slice(1)} panel
                   </Link>
                 ) : (
-                  <Link to="/login" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:translate-x-1 transition-all duration-200">
+                  <Link
+                    href="/login"
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:translate-x-1 transition-all duration-200"
+                  >
                     <LogIn className="h-4 w-4 text-primary" /> Sign in
                   </Link>
                 )}
               </nav>
             </SheetContent>
           </Sheet>
-          <Link to="/" className="flex min-w-0 items-center gap-2 hover:scale-105 active:scale-95 transition-transform duration-200">
+          <Link
+            href="/"
+            className="flex min-w-0 items-center gap-2 hover:scale-105 active:scale-95 transition-transform duration-200"
+          >
             <Logo />
           </Link>
 
@@ -89,12 +130,16 @@ export function SiteHeader() {
               return (
                 <Link
                   key={n.to}
-                  to={n.to}
+                  href={n.to}
                   className={`group relative flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
-                    active ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    active
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`} />
+                  <Icon
+                    className={`h-4 w-4 transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}
+                  />
                   <span>{n.label}</span>
                 </Link>
               );
@@ -105,14 +150,23 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           {user ? (
-            <Link to={dashLink}>
-              <Button variant="outline" size="sm" className="rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs">
+            <Link href={dashLink} className="hidden md:inline-flex">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs"
+              >
                 {user.role[0].toUpperCase() + user.role.slice(1)} panel
               </Button>
             </Link>
           ) : (
-            <Link to="/login">
-              <Button size="sm" className="rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs">Sign in</Button>
+            <Link href="/login" className="hidden md:inline-flex">
+              <Button
+                size="sm"
+                className="rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs"
+              >
+                Sign in
+              </Button>
             </Link>
           )}
         </div>

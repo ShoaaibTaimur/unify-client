@@ -1,3 +1,5 @@
+"use client";
+
 interface LogoProps {
   size?: number;
   showWordmark?: boolean;

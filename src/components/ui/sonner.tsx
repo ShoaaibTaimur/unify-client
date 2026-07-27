@@ -1,3 +1,5 @@
+"use client";
+
 import { Toaster as Sonner } from "sonner";
 import { CheckCircle2, Info, Loader2, TriangleAlert, XCircle } from "lucide-react";
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { ACTIVITY_COLOR, type Activity, type ActivityType } from "@/lib/types";
 import { format } from "date-fns";
 import { MapPin, Clock, Calendar, BookOpen, FileText, User } from "lucide-react";
