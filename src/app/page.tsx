@@ -120,8 +120,15 @@ export default function StudentDashboard() {
   const nextDelta = next ? differenceInSeconds(nextActivityDate(next), now) : 0;
   const upNext2 = upcoming.filter((a) => a.id !== next?.id).slice(0, 2);
 
-  if (!loaded) {
-    return <PageLoader text="Loading your class..." />;
+  const isDataLoading =
+    !loaded ||
+    departments.isLoading ||
+    batches.isLoading ||
+    sections.isLoading ||
+    (!!cls && activities.isLoading);
+
+  if (isDataLoading) {
+    return <PageLoader text="Loading UNIFY..." />;
   }
 
   return (

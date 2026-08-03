@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Plus, ListChecks, CheckCircle2, CalendarDays } from "lucide-react";
 import { isSameDay } from "date-fns";
 import { TopBar, Stat, QuickActions } from "@/components/cr-shared";
+import { PageLoader } from "@/components/PageLoader";
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -44,6 +45,11 @@ export default function TeacherDashboard() {
   const activities = useActivityList(
     user ? { departmentId: user.departmentId } : undefined
   );
+
+  if (!user || activities.isLoading) {
+    return <PageLoader text="Loading teacher dashboard..." />;
+  }
+
   const list = activities.data ?? [];
   const now = new Date();
   const todays = list.filter((a) => a.date && isSameDay(new Date(a.date), now));

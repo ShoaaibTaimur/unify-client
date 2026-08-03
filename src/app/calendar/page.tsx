@@ -17,6 +17,7 @@ import {
   subMonths,
 } from "date-fns";
 import { ACTIVITY_COLOR, type Activity } from "@/lib/types";
+import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -49,7 +50,7 @@ function dayActivities(day: Date, list: Activity[]) {
 }
 
 export default function CalendarPage() {
-  const { cls } = useClassSelection();
+  const { cls, loaded } = useClassSelection();
   const [cursor, setCursor] = useState(new Date());
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
     null
@@ -73,6 +74,10 @@ export default function CalendarPage() {
     if (!selectedDay) return [];
     return dayActivities(selectedDay, activities.data ?? []);
   }, [selectedDay, activities.data]);
+
+  if (!loaded || activities.isLoading) {
+    return <PageLoader text="Loading calendar..." />;
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 animate-in fade-in duration-300">

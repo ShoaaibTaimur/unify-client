@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { ACTIVITY_TYPES, type Activity, type ActivityType } from "@/lib/types";
 import { useClassSelection } from "@/lib/session";
 import { ActivityCard } from "@/components/ActivityCard";
+import { PageLoader } from "@/components/PageLoader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -17,7 +18,7 @@ function endDateOf(a: Activity) {
 }
 
 export default function ActivitiesPage() {
-  const { cls } = useClassSelection();
+  const { cls, loaded } = useClassSelection();
   const [q, setQ] = useState("");
   const [type, setType] = useState<ActivityType | "all">("all");
   const [status, setStatus] = useState<StatusFilter>("upcoming");
@@ -49,6 +50,10 @@ export default function ActivitiesPage() {
           new Date(b.startDate ?? b.date!).getTime()
       );
   }, [activities.data, q, type, status]);
+
+  if (!loaded || activities.isLoading) {
+    return <PageLoader text="Loading activities..." />;
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

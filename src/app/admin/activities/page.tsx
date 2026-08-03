@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { Activity } from "@/lib/types";
 import { ManageActivitiesTable, ActivityFormDialog } from "@/components/ActivityForm";
+import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
@@ -24,6 +25,10 @@ export default function AdminActivitiesPage() {
       qc.invalidateQueries({ queryKey: ["activities"] });
     },
   });
+
+  if (activities.isLoading) {
+    return <PageLoader text="Loading activities..." />;
+  }
 
   return (
     <div>

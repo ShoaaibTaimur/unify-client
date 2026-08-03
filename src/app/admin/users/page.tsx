@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+import { PageLoader } from "@/components/PageLoader";
 import type { Role, User } from "@/lib/types";
 
 export default function UsersPage() {
@@ -30,6 +31,10 @@ export default function UsersPage() {
     queryKey: ["users"],
     queryFn: () => api.listUsers(),
   });
+
+  if (users.isLoading) {
+    return <PageLoader text="Loading users..." />;
+  }
 
   return (
     <div>

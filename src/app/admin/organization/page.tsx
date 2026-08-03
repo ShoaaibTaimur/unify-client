@@ -20,6 +20,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+import { PageLoader } from "@/components/PageLoader";
 import { toast } from "sonner";
 import { Building2, Layers, GraduationCap, Pencil, Trash2 } from "lucide-react";
 
@@ -37,6 +38,10 @@ export default function OrganizationPage() {
     queryKey: ["sections", "all"],
     queryFn: () => api.listSections(),
   });
+
+  if (deps.isLoading || batches.isLoading || sections.isLoading) {
+    return <PageLoader text="Loading organization data..." />;
+  }
 
   const [depName, setDepName] = useState("");
   const createDep = useMutation({

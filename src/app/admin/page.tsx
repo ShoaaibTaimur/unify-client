@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/ActivityCard";
+import { PageLoader } from "@/components/PageLoader";
 import { ACTIVITY_TYPES } from "@/lib/types";
 
 export default function AdminOverview() {
@@ -41,6 +42,17 @@ export default function AdminOverview() {
     queryKey: ["activities", "all"],
     queryFn: () => api.listActivities(),
   });
+
+  const isLoading =
+    departments.isLoading ||
+    batches.isLoading ||
+    sections.isLoading ||
+    users.isLoading ||
+    activities.isLoading;
+
+  if (isLoading) {
+    return <PageLoader text="Loading admin console..." />;
+  }
 
   const depList = departments.data ?? [];
   const batList = batches.data ?? [];

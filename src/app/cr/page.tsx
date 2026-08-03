@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Plus, ListChecks, CheckCircle2, CalendarDays } from "lucide-react";
 import { isSameDay } from "date-fns";
 import { TopBar, Stat, QuickActions } from "@/components/cr-shared";
+import { PageLoader } from "@/components/PageLoader";
 
 function useAuthGuard(role: "cr" | "teacher" | "admin"): User | null {
   const router = useRouter();
@@ -60,6 +61,10 @@ export default function CRDashboard() {
         }
       : undefined
   );
+
+  if (!user || activities.isLoading) {
+    return <PageLoader text="Loading CR dashboard..." />;
+  }
   const now = new Date();
   const list = activities.data ?? [];
   const todays = list.filter((a) => a.date && isSameDay(new Date(a.date), now));
