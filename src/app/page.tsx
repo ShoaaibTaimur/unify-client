@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { setClassSelection, useClassSelection } from "@/lib/session";
+import { hasSelectedClass, setClassSelection, useClassSelection } from "@/lib/session";
 import type { Activity } from "@/lib/types";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { ActivityCard } from "@/components/ActivityCard";
@@ -51,7 +51,7 @@ export default function StudentDashboard() {
   useTicker(1000);
 
   useEffect(() => {
-    if (loaded && !cls) setDialogOpen(true);
+    if (loaded && !hasSelectedClass(cls)) setDialogOpen(true);
   }, [cls, loaded]);
 
   const departments = useQuery({

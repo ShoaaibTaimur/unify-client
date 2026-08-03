@@ -7,6 +7,10 @@ const CLASS_KEY = "unify_class";
 const TOKEN_KEY = "unify_token";
 const USER_KEY = "unify_user";
 
+export function hasSelectedClass(sel: ClassSelection | null): boolean {
+  return Boolean(sel && sel.departmentId && sel.batchId && sel.sectionId);
+}
+
 export function getClassSelection(): ClassSelection | null {
   if (typeof window === "undefined") return null;
   try {

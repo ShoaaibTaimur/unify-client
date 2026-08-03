@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { ACTIVITY_TYPES, type Activity, type ActivityType } from "@/lib/types";
-import { useClassSelection } from "@/lib/session";
+import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { ActivityCard } from "@/components/ActivityCard";
+import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { PageLoader } from "@/components/PageLoader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,9 +20,14 @@ function endDateOf(a: Activity) {
 
 export default function ActivitiesPage() {
   const { cls, loaded } = useClassSelection();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [q, setQ] = useState("");
   const [type, setType] = useState<ActivityType | "all">("all");
   const [status, setStatus] = useState<StatusFilter>("upcoming");
+
+  useEffect(() => {
+    if (loaded && !hasSelectedClass(cls)) setDialogOpen(true);
+  }, [cls, loaded]);
 
   const activities = useQuery({
     queryKey: ["activities", cls],
@@ -56,73 +62,80 @@ export default function ActivitiesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="font-display text-4xl">All activities</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Everything scheduled for your class.
-          </p>
-        </div>
-      </div>
-
-      {/* Search + filters */}
-      <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-border bg-card p-3 shadow-card md:flex-row md:items-center">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search title, subject, room, description…"
-            className="h-11 rounded-2xl border-0 bg-muted/40 pl-11 text-base focus-visible:ring-primary"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <FilterPill
-            label="Upcoming"
-            active={status === "upcoming"}
-            onClick={() => setStatus("upcoming")}
-          />
-          <FilterPill
-            label="Completed"
-            active={status === "completed"}
-            onClick={() => setStatus("completed")}
-          />
-          <FilterPill
-            label="All"
-            active={status === "all"}
-            onClick={() => setStatus("all")}
-          />
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        <TypePill
-          label="All types"
-          active={type === "all"}
-          onClick={() => setType("all")}
-        />
-        {ACTIVITY_TYPES.map((t) => (
-          <TypePill
-            key={t.value}
-            label={t.label}
-            active={type === t.value}
-            onClick={() => setType(t.value)}
-          />
-        ))}
-      </div>
-
-      {/* Results */}
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {filtered.length === 0 ? (
-          <div className="col-span-full rounded-3xl border border-dashed border-border p-14 text-center text-muted-foreground">
-            No activities match your filters.
+    <>
+      <ClassSelectionDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        initial={cls}
+      />
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="font-display text-4xl">All activities</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Everything scheduled for your class.
+            </p>
           </div>
-        ) : (
-          filtered.map((a) => <ActivityCard key={a.id} activity={a} />)
-        )}
+        </div>
+
+        {/* Search + filters */}
+        <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-border bg-card p-3 shadow-card md:flex-row md:items-center">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search title, subject, room, description…"
+              className="h-11 rounded-2xl border-0 bg-muted/40 pl-11 text-base focus-visible:ring-primary"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <FilterPill
+              label="Upcoming"
+              active={status === "upcoming"}
+              onClick={() => setStatus("upcoming")}
+            />
+            <FilterPill
+              label="Completed"
+              active={status === "completed"}
+              onClick={() => setStatus("completed")}
+            />
+            <FilterPill
+              label="All"
+              active={status === "all"}
+              onClick={() => setStatus("all")}
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <TypePill
+            label="All types"
+            active={type === "all"}
+            onClick={() => setType("all")}
+          />
+          {ACTIVITY_TYPES.map((t) => (
+            <TypePill
+              key={t.value}
+              label={t.label}
+              active={type === t.value}
+              onClick={() => setType(t.value)}
+            />
+          ))}
+        </div>
+
+        {/* Results */}
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {filtered.length === 0 ? (
+            <div className="col-span-full rounded-3xl border border-dashed border-border p-14 text-center text-muted-foreground">
+              No activities match your filters.
+            </div>
+          ) : (
+            filtered.map((a) => <ActivityCard key={a.id} activity={a} />)
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
