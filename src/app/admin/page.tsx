@@ -76,7 +76,7 @@ export default function AdminOverview() {
         new Date(b.createdAt ?? b.date ?? 0).getTime() -
         new Date(a.createdAt ?? a.date ?? 0).getTime()
     )
-    .slice(0, 5);
+    .slice(0, 2);
 
   const kpis = [
     {

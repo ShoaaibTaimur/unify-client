@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { getStoredUser } from "@/lib/session";
 import {
@@ -13,7 +14,7 @@ import {
 import type { Activity, User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Plus, ListChecks, CheckCircle2, CalendarDays } from "lucide-react";
+import { Plus, ListChecks, CheckCircle2, CalendarDays, ArrowRight } from "lucide-react";
 import { isSameDay } from "date-fns";
 import { TopBar, Stat, QuickActions } from "@/components/cr-shared";
 import { PageLoader } from "@/components/PageLoader";
@@ -21,6 +22,7 @@ import { PageLoader } from "@/components/PageLoader";
 export default function TeacherDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+
   useEffect(() => {
     const u = getStoredUser();
     if (!u) {
@@ -46,6 +48,14 @@ export default function TeacherDashboard() {
     user ? { departmentId: user.departmentId } : undefined
   );
 
+  const del = useMutation({
+    mutationFn: (a: Activity) => api.deleteActivity(a.id),
+    onSuccess: () => {
+      toast.success("Activity deleted");
+      qc.invalidateQueries({ queryKey: ["activities"] });
+    },
+  });
+
   if (!user || activities.isLoading) {
     return <PageLoader text="Loading teacher dashboard..." />;
   }
@@ -60,15 +70,8 @@ export default function TeacherDashboard() {
     (a) => new Date(a.endDate ?? a.date!) < now
   );
 
-  const del = useMutation({
-    mutationFn: (a: Activity) => api.deleteActivity(a.id),
-    onSuccess: () => {
-      toast.success("Activity deleted");
-      qc.invalidateQueries({ queryKey: ["activities"] });
-    },
-  });
-
-  if (!user) return null;
+  // Show top 2 recent activities on dashboard
+  const recentTwo = list.slice(0, 2);
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,19 +90,31 @@ export default function TeacherDashboard() {
         <QuickActions onAdd={() => { setEditing(null); setOpen(true); }} />
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-2xl">
-            All activities in your department
-          </h2>
-          <Button
-            className="rounded-full"
-            onClick={() => { setEditing(null); setOpen(true); }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add activity
-          </Button>
+          <div>
+            <h2 className="font-display text-2xl">
+              Recent activities in your department
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Showing top {recentTwo.length} of {list.length} activities
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/activities">
+              <Button variant="outline" className="rounded-full">
+                View all activities <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              className="rounded-full"
+              onClick={() => { setEditing(null); setOpen(true); }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add activity
+            </Button>
+          </div>
         </div>
         <div className="mt-4">
           <ManageActivitiesTable
-            activities={list}
+            activities={recentTwo}
             onEdit={(a) => { setEditing(a); setOpen(true); }}
             onDelete={(a) => del.mutate(a)}
           />
