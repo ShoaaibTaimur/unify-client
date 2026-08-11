@@ -62,7 +62,7 @@ export interface Activity {
   id: string;
   departmentId: string;
   batchId: string;
-  sectionId: string;
+  sectionId?: string;
   activityType: ActivityType;
   title: string;
   subject: string;
@@ -73,7 +73,9 @@ export interface Activity {
   /** For exam periods. */
   startDate?: string;
   endDate?: string;
-  createdBy: string;
+  /** Optional time string e.g. "10:00 AM" or "09:00" */
+  time?: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }

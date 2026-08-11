@@ -40,17 +40,24 @@ export function ActivityCard({
         <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: color }} />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span
                 className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-white"
                 style={{ background: color }}
               >
                 {activityLabel(activity.activityType)}
               </span>
-              <span className="truncate text-xs text-muted-foreground">{activity.subject}</span>
+              <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+                {activity.title}
+              </span>
+              {(!activity.sectionId || activity.sectionId === "all") && (
+                <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  Batch-wide
+                </span>
+              )}
             </div>
-            <h3 className="mt-2 truncate font-display text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-              {activity.title}
+            <h3 className="mt-2 truncate font-display text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+              {activity.subject}
             </h3>
             {!compact && activity.description && (
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground whitespace-pre-line">{activity.description}</p>
@@ -65,9 +72,9 @@ export function ActivityCard({
                     : format(new Date(activity.date!), "EEEE, MMM d")}
                 </span>
               </div>
-              {!isRange && activity.date && (
+              {(activity.time || (!isRange && activity.date)) && (
                 <div className="rounded-md bg-primary px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-xs">
-                  {format(new Date(activity.date), "h:mm a")}
+                  {activity.time ?? format(new Date(activity.date!), "h:mm a")}
                 </div>
               )}
             </div>

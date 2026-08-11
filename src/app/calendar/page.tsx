@@ -175,9 +175,9 @@ export default function CalendarPage() {
                         }}
                         className="truncate rounded-md px-2 py-0.5 text-[11px] font-medium text-white transition-transform hover:scale-[1.03] shadow-xs cursor-pointer"
                         style={{ background: ACTIVITY_COLOR[a.activityType] }}
-                        title={`${activityLabel(a.activityType)} — ${a.title}`}
+                        title={`${activityLabel(a.activityType)} — ${a.subject} (${a.title})`}
                       >
-                        {a.title}
+                        {a.subject}
                       </div>
                     ))}
                     {items.length > 3 && (

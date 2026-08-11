@@ -24,6 +24,7 @@ import {
   Search,
   KeyRound,
   ArrowRight,
+  FileSpreadsheet,
 } from "lucide-react";
 
 const PANEL_NAV = [
@@ -53,15 +54,25 @@ const PANEL_NAV = [
   },
 ] as const;
 
-export function QuickActions({ onAdd }: { onAdd?: () => void }) {
+export function QuickActions({ onAdd, onImportCsv }: { onAdd?: () => void; onImportCsv?: () => void }) {
   const items = [
     ...(onAdd
       ? [
           {
             label: "Add activity",
-            description: "Create a new activity",
+            description: "Create a single activity",
             icon: Plus,
             onClick: onAdd,
+          },
+        ]
+      : []),
+    ...(onImportCsv
+      ? [
+          {
+            label: "Import CSV Routine",
+            description: "Bulk upload exam routines",
+            icon: FileSpreadsheet,
+            onClick: onImportCsv,
           },
         ]
       : []),

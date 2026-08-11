@@ -12,7 +12,8 @@ import { ActivityDetailsDialog } from "@/components/ActivityDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/PageLoader";
 import { differenceInSeconds, isSameDay } from "date-fns";
-import { ArrowRight, PartyPopper, Settings2 } from "lucide-react";
+import { hasActiveExams } from "@/lib/utils";
+import { ArrowRight, PartyPopper, Settings2, ExternalLink } from "lucide-react";
 
 function useTicker(ms = 1000) {
   const [, set] = useState(0);
@@ -72,11 +73,13 @@ export default function StudentDashboard() {
     queryFn: () => api.listActivities(cls!),
   });
 
+  const showSeatPlan = hasActiveExams(activities.data);
+
   const meta = useMemo(() => {
     if (!cls) return null;
     const dep = departments.data?.find((d) => d.id === cls.departmentId)?.name;
     const bat = batches.data?.find((b) => b.id === cls.batchId)?.name;
-    const sec = sections.data?.find((s) => s.id === cls.sectionId)?.name;
+    const sec = cls.sectionId === "all" || !cls.sectionId ? "All Sections" : sections.data?.find((s) => s.id === cls.sectionId)?.name;
     return { dep, bat, sec };
   }, [cls, departments.data, batches.data, sections.data]);
 
@@ -175,6 +178,20 @@ export default function StudentDashboard() {
               </p>
             </div>
             <div className="flex gap-2">
+              {showSeatPlan && (
+                <a
+                  href="https://examsync.kiron.dev/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-bold"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" /> Exam Seat Plan ↗
+                  </Button>
+                </a>
+              )}
               <Button
                 variant="outline"
                 className="rounded-full"
@@ -270,10 +287,10 @@ export default function StudentDashboard() {
             </div>
             {next ? (
               <>
-                <h3 className="mt-2 font-display text-2xl leading-tight">
+                <h3 className="mt-2 font-display text-2xl font-bold leading-tight">
                   {next.subject}
                 </h3>
-                <p className="mt-1 text-sm opacity-80">{next.title}</p>
+                <p className="mt-1 font-mono text-sm font-semibold opacity-90">{next.title}</p>
                 <div className="mt-6 grid grid-cols-3 gap-3">
                   {countdown(nextDelta).map(([n, l]) => (
                     <div

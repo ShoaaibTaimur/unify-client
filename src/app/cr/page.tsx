@@ -11,10 +11,11 @@ import {
   ManageActivitiesTable,
   useActivityList,
 } from "@/components/ActivityForm";
+import { CsvImportDialog } from "@/components/CsvImportDialog";
 import type { Activity, User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Plus, ListChecks, CheckCircle2, CalendarDays, ArrowRight } from "lucide-react";
+import { Plus, ListChecks, CheckCircle2, CalendarDays, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { isSameDay } from "date-fns";
 import { TopBar, Stat, QuickActions } from "@/components/cr-shared";
 import { PageLoader } from "@/components/PageLoader";
@@ -51,6 +52,7 @@ export default function CRDashboard() {
   const user = useAuthGuard("cr");
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [csvOpen, setCsvOpen] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);
 
   const activities = useActivityList(
@@ -102,19 +104,29 @@ export default function CRDashboard() {
           />
         </div>
 
-        <QuickActions onAdd={() => { setEditing(null); setOpen(true); }} />
+        <QuickActions
+          onAdd={() => { setEditing(null); setOpen(true); }}
+          onImportCsv={() => setCsvOpen(true)}
+        />
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-display text-2xl">Manage activities</h2>
             <p className="text-xs text-muted-foreground">
-              Showing top {recentTwo.length} of {list.length} activities
+              Total {list.length} activities in your batch & section
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => setCsvOpen(true)}
+            >
+              <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Import CSV Routine
+            </Button>
             <Link href="/activities">
               <Button variant="outline" className="rounded-full">
-                View all activities <ArrowRight className="ml-1.5 h-4 w-4" />
+                View all <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             </Link>
             <Button
@@ -127,7 +139,7 @@ export default function CRDashboard() {
         </div>
         <div className="mt-4">
           <ManageActivitiesTable
-            activities={recentTwo}
+            activities={list}
             onEdit={(a) => { setEditing(a); setOpen(true); }}
             onDelete={(a) => del.mutate(a)}
           />
@@ -144,6 +156,13 @@ export default function CRDashboard() {
           sectionId: user.sectionId,
         }}
         createdBy={user.id}
+      />
+
+      <CsvImportDialog
+        open={csvOpen}
+        onOpenChange={setCsvOpen}
+        defaultDepartmentId={user.departmentId}
+        defaultBatchId={user.batchId}
       />
     </div>
   );

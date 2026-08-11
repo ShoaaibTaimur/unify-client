@@ -94,6 +94,14 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <a
+            href="https://examsync.kiron.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary font-medium hover:underline transition-colors"
+          >
+            Exam Seat Plan (ExamSync) ↗
+          </a>
           <AboutDialog />
           <CreditsDialog />
         </div>

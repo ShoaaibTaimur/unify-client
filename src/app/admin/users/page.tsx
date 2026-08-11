@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { PageLoader } from "@/components/PageLoader";
 import type { Role, User } from "@/lib/types";
@@ -71,7 +71,15 @@ export default function UsersPage() {
 function UserTable({ users, role }: { users: User[]; role: Role }) {
   const [creating, setCreating] = useState(false);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const qc = useQueryClient();
+
+  const totalItems = users.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const validPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIdx = (validPage - 1) * pageSize;
+  const paginatedUsers = users.slice(startIdx, startIdx + pageSize);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.deleteUser(id),
@@ -124,10 +132,10 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                   </td>
                 </tr>
               )}
-              {users.map((u) => (
+              {paginatedUsers.map((u) => (
                 <tr
                   key={u.id}
-                  className="border-b border-border/60 last:border-b-0"
+                  className="border-b border-border/60 last:border-b-0 hover:bg-muted/20 transition-colors"
                 >
                   <td className="px-4 py-3 font-medium">{u.name}</td>
                   <td className="px-4 py-3">{u.email}</td>
@@ -152,6 +160,66 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
             </tbody>
           </table>
         </div>
+
+        {/* User Pagination Bar */}
+        {totalItems > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border bg-muted/30 px-4 py-3 text-xs">
+            <div className="text-muted-foreground">
+              Showing <strong className="text-foreground font-semibold">{startIdx + 1}</strong> to{" "}
+              <strong className="text-foreground font-semibold">{Math.min(startIdx + pageSize, totalItems)}</strong> of{" "}
+              <strong className="text-foreground font-semibold">{totalItems}</strong> entries
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Rows per page:</span>
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(val) => {
+                    setPageSize(Number(val));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-16 rounded-xl bg-background text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-foreground">
+                  Page {validPage} of {totalPages}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-xl"
+                    disabled={validPage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-xl"
+                    disabled={validPage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <CreateUserDialog

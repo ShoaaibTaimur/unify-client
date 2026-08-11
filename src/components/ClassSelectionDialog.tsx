@@ -15,14 +15,14 @@ export function ClassSelectionDialog({
 }: { open: boolean; onOpenChange: (v: boolean) => void; initial?: ClassSelection | null }) {
   const [departmentId, setDepartmentId] = useState(initial?.departmentId ?? "");
   const [batchId, setBatchId] = useState(initial?.batchId ?? "");
-  const [sectionId, setSectionId] = useState(initial?.sectionId ?? "");
+  const [sectionId, setSectionId] = useState(initial?.sectionId || "all");
 
   useEffect(() => {
     if (open) {
       const s = initial ?? getClassSelection();
       setDepartmentId(s?.departmentId ?? "");
       setBatchId(s?.batchId ?? "");
-      setSectionId(s?.sectionId ?? "");
+      setSectionId(s?.sectionId || "all");
     }
   }, [open, initial]);
 
@@ -36,7 +36,7 @@ export function ClassSelectionDialog({
     queryFn: () => api.listSections(batchId),
   });
 
-  const canContinue = departmentId && batchId && sectionId;
+  const canContinue = Boolean(departmentId && batchId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,7 +52,7 @@ export function ClassSelectionDialog({
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
             <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Department</label>
-            <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setBatchId(""); setSectionId(""); }}>
+            <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setBatchId(""); setSectionId("all"); }}>
               <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
               <SelectContent>
                 {departments.data?.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
@@ -61,7 +61,7 @@ export function ClassSelectionDialog({
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Batch</label>
-            <Select value={batchId} onValueChange={(v) => { setBatchId(v); setSectionId(""); }} disabled={!departmentId}>
+            <Select value={batchId} onValueChange={(v) => { setBatchId(v); setSectionId("all"); }} disabled={!departmentId}>
               <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
               <SelectContent>
                 {batches.data?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
@@ -70,9 +70,10 @@ export function ClassSelectionDialog({
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Section</label>
-            <Select value={sectionId} onValueChange={setSectionId} disabled={!batchId}>
+            <Select value={sectionId || "all"} onValueChange={setSectionId} disabled={!batchId}>
               <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Sections (Default)</SelectItem>
                 {sections.data?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -83,7 +84,7 @@ export function ClassSelectionDialog({
           className="mt-2 h-11 w-full rounded-xl text-base"
           disabled={!canContinue}
           onClick={() => {
-            setClassSelection({ departmentId, batchId, sectionId });
+            setClassSelection({ departmentId, batchId, sectionId: sectionId || "all" });
             onOpenChange(false);
           }}
         >

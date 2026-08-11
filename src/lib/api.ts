@@ -132,6 +132,13 @@ export const api = {
     input: Omit<Activity, "id" | "createdAt" | "updatedAt">
   ): Promise<Activity> =>
     http("/api/activities", { method: "POST", body: JSON.stringify(input) }),
+  createActivitiesBulk: (
+    items: Omit<Activity, "id" | "createdAt" | "updatedAt">[]
+  ): Promise<{ count: number; activities: Activity[] }> =>
+    http("/api/activities/bulk", {
+      method: "POST",
+      body: JSON.stringify({ activities: items }),
+    }),
   updateActivity: (id: string, patch: Partial<Activity>): Promise<Activity> =>
     http(`/api/activities/${id}`, {
       method: "PATCH",

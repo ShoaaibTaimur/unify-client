@@ -12,8 +12,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { getStoredUser } from "@/lib/session";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { getStoredUser, hasSelectedClass, useClassSelection } from "@/lib/session";
 import type { User } from "@/lib/types";
+import { hasActiveExams } from "@/lib/utils";
 import {
   Menu,
   LayoutDashboard,
@@ -21,6 +24,7 @@ import {
   CalendarDays,
   LogIn,
   UserCircle2,
+  ExternalLink,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -34,6 +38,20 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
+
+  const { cls } = useClassSelection();
+  const activities = useQuery({
+    queryKey: ["activities", cls?.departmentId, cls?.batchId, cls?.sectionId],
+    enabled: !!cls && hasSelectedClass(cls),
+    queryFn: () =>
+      api.listActivities({
+        departmentId: cls!.departmentId,
+        batchId: cls!.batchId,
+        sectionId: cls!.sectionId,
+      }),
+  });
+
+  const showSeatPlan = hasActiveExams(activities.data);
 
   useEffect(() => {
     const sync = () => setUser(getStoredUser());
@@ -95,6 +113,16 @@ export function SiteHeader() {
                     </Link>
                   );
                 })}
+                {showSeatPlan && (
+                  <a
+                    href="https://examsync.kiron.dev/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all duration-200 mt-1"
+                  >
+                    <ExternalLink className="h-4 w-4" /> Exam Seat Plan ↗
+                  </a>
+                )}
                 <div className="my-3 border-t border-border" />
                 {user ? (
                   <Link
@@ -144,6 +172,17 @@ export function SiteHeader() {
                 </Link>
               );
             })}
+            {showSeatPlan && (
+              <a
+                href="https://examsync.kiron.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-bold text-primary hover:bg-primary/10 hover:text-primary transition-all duration-200 border border-primary/30 ml-1"
+              >
+                <span>Seat Plan</span>
+                <ExternalLink className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </a>
+            )}
           </nav>
         </div>
 
