@@ -16,11 +16,11 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground overflow-x-hidden max-w-full">
       {!bare && <SiteHeader />}
       <main
         key={pathname}
-        className="flex-1 animate-in fade-in slide-in-from-bottom-2 duration-300"
+        className="flex-1 w-full max-w-full overflow-x-hidden animate-in fade-in slide-in-from-bottom-2 duration-300"
       >
         {children}
       </main>
