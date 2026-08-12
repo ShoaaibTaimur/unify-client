@@ -85,16 +85,8 @@ export function LoginView() {
             className="mt-2 w-full h-11 rounded-xl text-sm font-semibold shadow-xs"
           >
             {loading ? "Signing in..." : "Sign in to Portal"}
-            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </form>
-
-        <div className="mt-6 rounded-2xl border border-border/80 bg-muted/30 p-3.5 text-center text-[11px] text-muted-foreground">
-          <p className="font-semibold text-foreground">Demo Accounts</p>
-          <p className="mt-0.5">Admin: admin@unify.edu · admin123</p>
-          <p>Teacher: teacher.cse@unify.edu · teacher123</p>
-          <p>CR: cr.cse17a@unify.edu · cr123</p>
-        </div>
       </div>
     </div>
   );
