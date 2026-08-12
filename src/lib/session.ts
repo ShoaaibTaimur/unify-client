@@ -47,6 +47,14 @@ export function setStoredSession(token: string, user: User) {
   window.dispatchEvent(new Event("unify:auth-changed"));
 }
 
+export function updateStoredUser(patch: Partial<User>) {
+  const current = getStoredUser();
+  if (!current) return;
+  const updated = { ...current, ...patch };
+  localStorage.setItem(USER_KEY, JSON.stringify(updated));
+  window.dispatchEvent(new Event("unify:auth-changed"));
+}
+
 export function clearStoredSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { getStoredUser } from "@/lib/session";
+import { getStoredUser, updateStoredUser } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ export function ChangePasswordView() {
     setLoading(true);
     try {
       await api.changePassword(oldPassword, newPassword);
+      updateStoredUser({ mustChangePassword: false });
       toast.success("Password changed successfully");
       router.push(
         user.role === "admin"
