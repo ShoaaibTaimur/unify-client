@@ -1,9 +1,14 @@
-"use client";
+import type { Metadata } from "next";
 
-import { isApiConfigured } from "@/lib/api";
+export const metadata: Metadata = {
+  title: "Settings — Admin Console",
+  description: "Environment and integration settings for the UNIFY admin panel.",
+};
 
 export default function SettingsPage() {
   const url = process.env.NEXT_PUBLIC_API_URL;
+  const configured = Boolean(url && url.startsWith("http"));
+
   return (
     <div>
       <h1 className="font-display text-4xl">Settings</h1>
@@ -14,7 +19,7 @@ export default function SettingsPage() {
       <div className="mt-8 max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-card">
         <h2 className="font-display text-xl">Backend</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {isApiConfigured ? (
+          {configured ? (
             <>
               Connected to <code>{url}</code>.
             </>

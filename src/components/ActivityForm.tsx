@@ -590,3 +590,5 @@ export function ManageActivitiesTable({
     </>
   );
 }
+
+export { ActivityFormDialog as ActivityForm };
