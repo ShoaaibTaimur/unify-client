@@ -60,6 +60,7 @@ export function HomeView() {
   const activities = useQuery({
     queryKey: ["activities", cls],
     queryFn: () => api.listActivities(cls ?? undefined),
+    enabled: loaded,
   });
 
   const departments = useQuery({
@@ -120,6 +121,21 @@ export function HomeView() {
 
   if (!loaded || activities.isLoading) {
     return <PageLoader text="Loading your class..." />;
+  }
+
+  if (activities.isError) {
+    return (
+      <div className="mx-auto max-w-md py-24 text-center">
+        <p className="text-sm font-medium text-destructive">Failed to load activities.</p>
+        <p className="mt-1 text-xs text-muted-foreground">{(activities.error as Error)?.message}</p>
+        <button
+          onClick={() => activities.refetch()}
+          className="mt-4 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   return (

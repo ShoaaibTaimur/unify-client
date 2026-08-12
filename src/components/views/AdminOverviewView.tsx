@@ -9,17 +9,10 @@ import {
   CalendarDays,
   Layers,
   ArrowRight,
-  ShieldCheck,
-  UserCheck,
-  Briefcase,
-  Plus,
-  Server,
-  Activity as ActivityIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/ActivityCard";
-import { PageLoader } from "@/components/PageLoader";
-import { ACTIVITY_TYPES } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function AdminOverviewView() {
   const departments = useQuery({
@@ -43,17 +36,7 @@ export function AdminOverviewView() {
     queryFn: () => api.listActivities(),
   });
 
-  const isLoading =
-    departments.isLoading ||
-    batches.isLoading ||
-    sections.isLoading ||
-    users.isLoading ||
-    activities.isLoading;
-
-  if (isLoading) {
-    return <PageLoader text="Loading admin console..." />;
-  }
-
+  // Don't block the whole page — show what's ready, skeleton what isn't
   const depList = departments.data ?? [];
   const batList = batches.data ?? [];
   const secList = sections.data ?? [];
@@ -85,6 +68,7 @@ export function AdminOverviewView() {
       sub: "Academic divisions",
       icon: Building2,
       color: "text-blue-500 bg-blue-500/10",
+      loading: departments.isLoading,
     },
     {
       label: "Batches",
@@ -92,6 +76,7 @@ export function AdminOverviewView() {
       sub: `${secList.length} active sections`,
       icon: Layers,
       color: "text-amber-500 bg-amber-500/10",
+      loading: batches.isLoading || sections.isLoading,
     },
     {
       label: "Total Users",
@@ -99,6 +84,7 @@ export function AdminOverviewView() {
       sub: `${crCount} CRs · ${teacherCount} Teachers`,
       icon: Users,
       color: "text-emerald-500 bg-emerald-500/10",
+      loading: users.isLoading,
     },
     {
       label: "Total Activities",
@@ -106,6 +92,7 @@ export function AdminOverviewView() {
       sub: `${upcomingCount} upcoming entries`,
       icon: CalendarDays,
       color: "text-purple-500 bg-purple-500/10",
+      loading: activities.isLoading,
     },
   ];
 
@@ -132,13 +119,21 @@ export function AdminOverviewView() {
                 >
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className="font-display text-3xl font-bold text-foreground">
-                  {k.value}
-                </span>
+                {k.loading ? (
+                  <Skeleton className="h-9 w-12 rounded-lg" />
+                ) : (
+                  <span className="font-display text-3xl font-bold text-foreground">
+                    {k.value}
+                  </span>
+                )}
               </div>
               <div className="mt-3">
                 <div className="font-semibold text-sm">{k.label}</div>
-                <div className="text-xs text-muted-foreground">{k.sub}</div>
+                {k.loading ? (
+                  <Skeleton className="mt-1 h-3 w-24 rounded" />
+                ) : (
+                  <div className="text-xs text-muted-foreground">{k.sub}</div>
+                )}
               </div>
             </div>
           );

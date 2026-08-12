@@ -40,14 +40,31 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const token =
     typeof window !== "undefined" ? localStorage.getItem("unify_token") : null;
-  const res = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init?.headers,
-    },
-  });
+
+  // Abort after 15 seconds — prevents infinite loading on slow/dead server
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init?.headers,
+      },
+    });
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      throw new Error("Request timed out. Check your network or server.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+
   if (!res.ok) {
     let msg = `API ${res.status}`;
     try {

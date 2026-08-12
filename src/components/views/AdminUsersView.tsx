@@ -36,6 +36,21 @@ export function AdminUsersView() {
     return <PageLoader text="Loading users..." />;
   }
 
+  if (users.isError) {
+    return (
+      <div className="mx-auto max-w-md py-24 text-center">
+        <p className="text-sm font-medium text-destructive">Failed to load users.</p>
+        <p className="mt-1 text-xs text-muted-foreground">{(users.error as Error)?.message}</p>
+        <button
+          onClick={() => users.refetch()}
+          className="mt-4 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
