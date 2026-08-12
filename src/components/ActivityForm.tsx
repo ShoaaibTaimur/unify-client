@@ -115,9 +115,10 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
         combinedIso = d.toISOString();
       }
 
-      const targetSectionId = isExam && (!sectionId || sectionId === "") ? "all" : sectionId;
+      const targetBatchId = (!batchId || batchId === "") ? "all" : batchId;
+      const targetSectionId = (!sectionId || sectionId === "") ? "all" : sectionId;
       const base = {
-        departmentId: effectiveDepartmentId, batchId, sectionId: targetSectionId, activityType: type, title, subject,
+        departmentId: effectiveDepartmentId, batchId: targetBatchId, sectionId: targetSectionId, activityType: type, title, subject,
         room: room || undefined, description: description || undefined, createdBy,
         time: timeVal || undefined,
         date: isExam ? undefined : combinedIso,
@@ -135,8 +136,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
     onError: (e) => toast.error((e as Error).message),
   });
 
-  const isSectionValid = isExam ? true : (!!sectionId && sectionId !== "");
-  const canSubmit = title && subject && effectiveDepartmentId && batchId && isSectionValid && (isExam ? (startDateObj && endDateObj) : selectedDate);
+  const canSubmit = title && subject && effectiveDepartmentId && (batchId || allowChooseBatchSection) && (isExam ? (startDateObj && endDateObj) : selectedDate);
 
   const examDurationDays = useMemo(() => {
     if (!startDateObj || !endDateObj) return null;
@@ -161,7 +161,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
 
           {chooseDepartment && (
             <Field label="Department">
-              <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setBatchId(""); setSectionId(""); }}>
+              <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setBatchId("all"); setSectionId("all"); }}>
                 <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select department" /></SelectTrigger>
                 <SelectContent>{departments.data?.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
               </Select>
@@ -171,13 +171,16 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
           {allowChooseBatchSection && (
             <div className="grid grid-cols-2 gap-3">
               <Field label="Batch">
-                <Select value={batchId} onValueChange={(v) => { setBatchId(v); setSectionId(isExam ? "all" : ""); }} disabled={!effectiveDepartmentId}>
+                <Select value={batchId || "all"} onValueChange={(v) => { setBatchId(v); setSectionId("all"); }} disabled={!effectiveDepartmentId}>
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder={effectiveDepartmentId ? "Select Batch" : "Select department first"} /></SelectTrigger>
-                  <SelectContent>{batches.data?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    <SelectItem value="all">All Batches (Dept-wide)</SelectItem>
+                    {batches.data?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </Field>
-              <Field label={isExam ? "Section (Optional)" : "Section"}>
-                <Select value={sectionId || "all"} onValueChange={setSectionId} disabled={!batchId}>
+              <Field label="Section (Optional)">
+                <Select value={sectionId || "all"} onValueChange={setSectionId} disabled={!batchId || batchId === "all"}>
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select Section" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sections (Batch-wide)</SelectItem>
@@ -188,12 +191,12 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
             </div>
           )}
 
-          {!allowChooseBatchSection && isExam && (
+          {!allowChooseBatchSection && (
             <Field label="Target Section">
               <Select value={sectionId || "all"} onValueChange={setSectionId}>
                 <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select Target" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Sections (Batch-wide Exam)</SelectItem>
+                  <SelectItem value="all">All Sections (Batch-wide)</SelectItem>
                   {fixed?.sectionId && <SelectItem value={fixed.sectionId}>My Section Only</SelectItem>}
                 </SelectContent>
               </Select>
@@ -473,11 +476,15 @@ export function ManageActivitiesTable({
                   <td className="px-4 py-3 font-medium">
                     <div className="font-bold text-foreground flex items-center gap-2">
                       <span>{a.subject}</span>
-                      {(!a.sectionId || a.sectionId === "all") && (
+                      {(!a.batchId || a.batchId === "all") ? (
+                        <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                          Dept-wide (All Batches)
+                        </span>
+                      ) : (!a.sectionId || a.sectionId === "all") ? (
                         <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 border border-amber-500/20">
                           Batch-wide
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </td>
                   <td className="px-4 py-3">{ACTIVITY_TYPES.find((t) => t.value === a.activityType)?.label}</td>

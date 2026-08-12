@@ -177,16 +177,17 @@ export default function StudentDashboard() {
                   : "Pick your class to see your activities."}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
               {showSeatPlan && (
                 <a
                   href="https://examsync.kiron.dev/"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
                 >
                   <Button
                     variant="outline"
-                    className="rounded-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-bold"
+                    className="w-full sm:w-auto rounded-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-bold justify-center"
                   >
                     <ExternalLink className="mr-2 h-4 w-4" /> Exam Seat Plan ↗
                   </Button>
@@ -194,7 +195,7 @@ export default function StudentDashboard() {
               )}
               <Button
                 variant="outline"
-                className="rounded-full"
+                className="w-full sm:w-auto rounded-full justify-center"
                 onClick={() => {
                   setClassSelection({
                     departmentId: "",
@@ -206,8 +207,8 @@ export default function StudentDashboard() {
               >
                 <Settings2 className="mr-2 h-4 w-4" /> Change class
               </Button>
-              <Link href="/activities">
-                <Button className="rounded-full">
+              <Link href="/activities" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto rounded-full justify-center">
                   View all activities <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
