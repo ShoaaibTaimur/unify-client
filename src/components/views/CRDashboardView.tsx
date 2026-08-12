@@ -51,16 +51,8 @@ export function CRDashboardView() {
     },
   });
 
-  if (!user || user.role !== "cr") {
-    return (
-      <div className="mx-auto max-w-md py-16 text-center">
-        <p className="text-muted-foreground">Access denied. CR sign-in required.</p>
-        <Link href="/login">
-          <Button className="mt-4 rounded-full">Sign in</Button>
-        </Link>
-      </div>
-    );
-  }
+
+  if (!user) return null;
 
   if (activities.isLoading) {
     return <PageLoader text="Loading your dashboard..." />;
