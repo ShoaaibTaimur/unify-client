@@ -140,8 +140,9 @@ export const api = {
   }): Promise<Activity[]> => {
     const cleanFilter: Record<string, string> = {};
     if (filter?.departmentId) cleanFilter.departmentId = filter.departmentId;
-    if (filter?.batchId) cleanFilter.batchId = filter.batchId;
-    if (filter?.sectionId) cleanFilter.sectionId = filter.sectionId;
+    // "all" is a UI sentinel meaning "no filter" — never send it to the backend
+    if (filter?.batchId && filter.batchId !== "all") cleanFilter.batchId = filter.batchId;
+    if (filter?.sectionId && filter.sectionId !== "all") cleanFilter.sectionId = filter.sectionId;
     const qs = new URLSearchParams(cleanFilter).toString();
     return http(`/api/activities${qs ? `?${qs}` : ""}`);
   },
