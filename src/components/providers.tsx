@@ -7,14 +7,13 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // Show stale data immediately while revalidating in background
-        staleTime: 30_000, // 30s — no immediate refetch on every navigation
-        // On error, show stale data rather than full blank / loader
+        // Show stale data while revalidating in background
+        staleTime: 60_000, // 60s — no needless refetch on navigation
+        // Show stale data on error rather than blank screen
         placeholderData: (prev: unknown) => prev,
-        // Only retry once; if the server is down, fail fast
-        retry: 1,
-        retryDelay: 1500,
-        // Never hang forever — treat a request taking > 15s as failed
+        // Retry up to 3× with exponential backoff — handles Vercel cold starts
+        retry: 3,
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10_000),
         gcTime: 5 * 60_000,
       },
       mutations: {

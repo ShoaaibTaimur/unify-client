@@ -11,6 +11,7 @@ import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/PageLoader";
 import { Plus, FileSpreadsheet } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Activity } from "@/lib/types";
 import { toast } from "sonner";
 import { getStoredUser } from "@/lib/session";
@@ -34,10 +35,6 @@ export function AdminActivitiesView() {
       qc.invalidateQueries({ queryKey: ["activities"] });
     },
   });
-
-  if (activities.isLoading) {
-    return <PageLoader text="Loading activities..." />;
-  }
 
   const list = activities.data ?? [];
 
@@ -70,14 +67,20 @@ export function AdminActivitiesView() {
         </div>
       </div>
 
-      <ManageActivitiesTable
-        activities={list}
-        onEdit={(a) => {
-          setEditing(a);
-          setOpen(true);
-        }}
-        onDelete={(a) => del.mutate(a)}
-      />
+      {activities.isLoading ? (
+        <div className="space-y-3">
+          {[1,2,3,4,5].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+        </div>
+      ) : (
+        <ManageActivitiesTable
+          activities={list}
+          onEdit={(a) => {
+            setEditing(a);
+            setOpen(true);
+          }}
+          onDelete={(a) => del.mutate(a)}
+        />
+      )}
 
       <ActivityForm
         open={open}

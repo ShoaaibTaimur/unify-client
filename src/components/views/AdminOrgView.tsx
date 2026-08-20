@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { PageLoader } from "@/components/PageLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Building2, Layers, GraduationCap, Pencil, Trash2 } from "lucide-react";
 
@@ -39,9 +40,7 @@ export function AdminOrgView() {
     queryFn: () => api.listSections(),
   });
 
-  if (deps.isLoading || batches.isLoading || sections.isLoading) {
-    return <PageLoader text="Loading organization data..." />;
-  }
+  // Note: isLoading check moved below all hooks to avoid React rules-of-hooks violation
 
   const [depName, setDepName] = useState("");
   const createDep = useMutation({
@@ -258,12 +257,14 @@ export function AdminOrgView() {
         </p>
 
         <div className="mt-4 space-y-4">
-          {(deps.data ?? []).length === 0 && (
+          {(deps.isLoading || batches.isLoading || sections.isLoading) ? (
+            [1,2,3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)
+          ) : (deps.data ?? []).length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
               No departments yet. Add one above to get started.
             </div>
-          )}
-          {(deps.data ?? []).map((d) => {
+          ) : null}
+          {!(deps.isLoading || batches.isLoading || sections.isLoading) && (deps.data ?? []).map((d) => {
             const depBatches = (batches.data ?? []).filter(
               (b) => b.departmentId === d.id
             );

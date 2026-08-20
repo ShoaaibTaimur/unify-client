@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/PasswordInput";
 import {
   Select,
   SelectContent,
@@ -24,6 +25,7 @@ import { toast } from "sonner";
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { PageLoader } from "@/components/PageLoader";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Role, User } from "@/lib/types";
 
 export function AdminUsersView() {
@@ -31,10 +33,6 @@ export function AdminUsersView() {
     queryKey: ["users"],
     queryFn: () => api.listUsers(),
   });
-
-  if (users.isLoading) {
-    return <PageLoader text="Loading users..." />;
-  }
 
   if (users.isError) {
     return (
@@ -74,10 +72,16 @@ export function AdminUsersView() {
         </TabsList>
         {(["cr", "teacher", "admin"] as Role[]).map((r) => (
           <TabsContent key={r} value={r} className="mt-4">
-            <UserTable
-              users={(users.data ?? []).filter((u) => u.role === r)}
-              role={r}
-            />
+            {users.isLoading ? (
+              <div className="space-y-3">
+                {[1,2,3,4].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+              </div>
+            ) : (
+              <UserTable
+                users={(users.data ?? []).filter((u) => u.role === r)}
+                role={r}
+              />
+            )}
           </TabsContent>
         ))}
       </Tabs>
@@ -379,8 +383,7 @@ function CreateUserDialog({
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground">Temporary Password</label>
-            <Input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimum 6 characters"

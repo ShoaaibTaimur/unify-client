@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export function LoginView() {
   const router = useRouter();
@@ -68,8 +69,7 @@ export function LoginView() {
             <label className="text-xs font-semibold text-foreground">Password</label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="password"
+              <PasswordInput
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

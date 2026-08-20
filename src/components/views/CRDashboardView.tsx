@@ -15,6 +15,7 @@ import { CsvImportDialog } from "@/components/CsvImportDialog";
 import { Stat as StatCard } from "@/components/cr-shared";
 import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   CalendarDays,
   CheckCircle,
@@ -53,10 +54,6 @@ export function CRDashboardView() {
 
 
   if (!user) return null;
-
-  if (activities.isLoading) {
-    return <PageLoader text="Loading your dashboard..." />;
-  }
 
   const list = activities.data ?? [];
   const now = new Date();
@@ -151,14 +148,20 @@ export function CRDashboardView() {
           </div>
         </div>
         <div className="mt-4">
-          <ManageActivitiesTable
-            activities={list}
-            onEdit={(a) => {
-              setEditing(a);
-              setOpen(true);
-            }}
-            onDelete={(a) => del.mutate(a)}
-          />
+          {activities.isLoading ? (
+            <div className="space-y-3">
+              {[1,2,3].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+            </div>
+          ) : (
+            <ManageActivitiesTable
+              activities={list}
+              onEdit={(a) => {
+                setEditing(a);
+                setOpen(true);
+              }}
+              onDelete={(a) => del.mutate(a)}
+            />
+          )}
         </div>
       </div>
 

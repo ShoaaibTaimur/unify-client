@@ -41,14 +41,10 @@ export function SiteHeader() {
 
   const { cls } = useClassSelection();
   const activities = useQuery({
-    queryKey: ["activities", cls?.departmentId, cls?.batchId, cls?.sectionId],
+    // Key matches HomeView / ActivitiesView / CalendarView — shared cache, no extra fetch
+    queryKey: ["activities", cls],
     enabled: !!cls && hasSelectedClass(cls),
-    queryFn: () =>
-      api.listActivities({
-        departmentId: cls!.departmentId,
-        batchId: cls!.batchId,
-        sectionId: cls!.sectionId,
-      }),
+    queryFn: () => api.listActivities(cls ?? undefined),
   });
 
   const showSeatPlan = hasActiveExams(activities.data);

@@ -5,24 +5,7 @@ import { Logo } from "./Logo";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-const CREDITS = [
-  {
-    name: "Md Shoaaib Taimur",
-    role: "Creator & Lead Developer",
-    description:
-      "Designed, architected, and developed the complete UNIFY platform from concept to implementation, including the system architecture, user experience, backend design, frontend development, and overall product vision.",
-    portfolio: "https://taimur.dev",
-    linkedin: "https://www.linkedin.com/in/shoaaib-taimur/",
-  },
-  {
-    name: "Toufiq Hasan Kiron",
-    role: "UI Refinement & Project Contributor",
-    description:
-      "Contributed to refining the user interface, improving usability, and enhancing the overall user experience through design feedback and implementation improvements.",
-    portfolio: "https://kiron.dev",
-    linkedin: "https://www.linkedin.com/in/toufiq-hasan-kiron/",
-  },
-];
+
 
 function AboutDialog() {
   const [open, setOpen] = useState(false);
@@ -52,31 +35,38 @@ function AboutDialog() {
   );
 }
 
-function CreditsDialog() {
+function MadeByDialog() {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="text-muted-foreground transition-colors duration-200 hover:text-foreground hover:scale-105 active:scale-95">Credits</button>
+        <button className="text-muted-foreground transition-colors duration-200 hover:text-foreground hover:scale-105 active:scale-95">Made by</button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Built by</DialogTitle>
-          <DialogDescription>The people behind UNIFY.</DialogDescription>
+          <DialogTitle className="font-display text-2xl text-center">Made by</DialogTitle>
+          <DialogDescription className="text-center">
+            UNIFY is crafted and maintained by DevMotive.
+          </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-2 sm:grid-cols-2">
-          {CREDITS.map((c) => (
-            <div key={c.name} className="rounded-2xl border border-border bg-card p-5 transition-transform duration-200 hover:scale-[1.02] shadow-xs">
-              <div className="text-base font-semibold text-foreground">{c.name}</div>
-              <div className="mt-0.5 text-xs uppercase tracking-wide text-accent font-medium">{c.role}</div>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{c.description}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <a href={c.portfolio} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary hover:underline">Portfolio ↗</a>
-                <span className="text-border">•</span>
-                <a href={c.linkedin} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary hover:underline">LinkedIn ↗</a>
-              </div>
+        <div className="flex flex-col items-center gap-5 py-4">
+          <a
+            href="https://devmotive.site"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md w-full"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/devmotive_logo.png"
+              alt="DevMotive logo"
+              className="h-16 w-16 rounded-xl object-contain"
+            />
+            <div className="text-center">
+              <div className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">DevMotive</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">devmotive.site ↗</div>
             </div>
-          ))}
+          </a>
         </div>
       </DialogContent>
     </Dialog>
@@ -103,7 +93,7 @@ export function SiteFooter() {
             Exam Seat Plan (ExamSync) ↗
           </a>
           <AboutDialog />
-          <CreditsDialog />
+          <MadeByDialog />
         </div>
       </div>
       <div className="border-t border-border/60 py-4 text-center text-xs text-muted-foreground">

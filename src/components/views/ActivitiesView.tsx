@@ -11,6 +11,7 @@ import { PageLoader } from "@/components/PageLoader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type StatusFilter = "all" | "upcoming" | "completed";
 
@@ -58,10 +59,6 @@ export function ActivitiesView() {
           new Date(b.startDate ?? b.date!).getTime()
       );
   }, [activities.data, q, type, status]);
-
-  if (!loaded || activities.isLoading) {
-    return <PageLoader text="Loading activities..." />;
-  }
 
   if (activities.isError) {
     return (
@@ -150,7 +147,9 @@ export function ActivitiesView() {
 
         {/* List */}
         <div className="mt-6 space-y-3">
-          {filtered.length === 0 ? (
+          {(!loaded || activities.isLoading) ? (
+            [1,2,3,4,5].map((i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
+          ) : filtered.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-sm text-muted-foreground">
               No activities found for this filter.
             </div>

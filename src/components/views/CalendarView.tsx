@@ -66,6 +66,8 @@ export function CalendarView() {
   const activities = useQuery({
     queryKey: ["activities", cls],
     queryFn: () => api.listActivities(cls ?? undefined),
+    // Don't fire until class selection is resolved from storage (same as HomeView)
+    enabled: loaded,
   });
 
   const start = startOfWeek(startOfMonth(cursor));

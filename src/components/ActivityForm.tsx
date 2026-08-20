@@ -65,17 +65,22 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
     if (editing) {
       setType(editing.activityType); setTitle(editing.title); setSubject(editing.subject);
       setRoom(editing.room ?? ""); setDescription(editing.description ?? "");
-      
-      if (editing.time) {
-        setTimeVal(editing.time);
-      } else if (editing.date) {
+
+      // Always restore the activity's date — even when editing.time is present.
+      // Previously selectedDate was only set in the else-if branch, so editing
+      // with a saved `time` field left selectedDate at today's date.
+      if (editing.date) {
         const d = new Date(editing.date);
         setSelectedDate(d);
-        setTimeVal(format(d, "HH:mm"));
+        setTimeVal(editing.time ?? format(d, "HH:mm"));
+      } else if (editing.time) {
+        // time-only record (no date saved) — keep today as date anchor
+        setSelectedDate(new Date());
+        setTimeVal(editing.time);
       } else {
         setSelectedDate(new Date()); setTimeVal("09:00");
       }
-      
+
       setStartDateObj(editing.startDate ? new Date(editing.startDate) : new Date());
       setEndDateObj(editing.endDate ? new Date(editing.endDate) : addDays(new Date(), 3));
       setDepartmentId(editing.departmentId);
@@ -193,13 +198,19 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
 
           {!allowChooseBatchSection && (
             <Field label="Target Section">
-              <Select value={sectionId || "all"} onValueChange={setSectionId}>
-                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select Target" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sections (Batch-wide)</SelectItem>
-                  {fixed?.sectionId && <SelectItem value={fixed.sectionId}>My Section Only</SelectItem>}
-                </SelectContent>
-              </Select>
+              {/* CR role: fixed.sectionId is always set — lock to their section only, no batch-wide option */}
+              {fixed?.sectionId ? (
+                <div className="flex h-10 w-full items-center rounded-xl border border-border bg-muted/40 px-3 text-sm text-foreground/80">
+                  My Section Only
+                </div>
+              ) : (
+                <Select value={sectionId || "all"} onValueChange={setSectionId}>
+                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select Target" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sections (Batch-wide)</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </Field>
           )}
 
@@ -415,7 +426,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export function useActivityList(filter?: { departmentId?: string; batchId?: string; sectionId?: string }) {
-  return useQuery({ queryKey: ["activities", filter], queryFn: () => api.listActivities(filter) });
+  return useQuery({
+    queryKey: ["activities", filter],
+    queryFn: () => api.listActivities(filter),
+    staleTime: 60_000,
+  });
 }
 
 export function ManageActivitiesTable({

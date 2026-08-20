@@ -14,6 +14,7 @@ import { PageLoader } from "@/components/PageLoader";
 import { differenceInSeconds, isSameDay } from "date-fns";
 import { hasActiveExams } from "@/lib/utils";
 import { ArrowRight, PartyPopper, Settings2, ExternalLink } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function useTicker(ms = 1000) {
   const [, set] = useState(0);
@@ -119,9 +120,8 @@ export function HomeView() {
       ? `${depName} · ${batchName}${secName ? ` · ${secName}` : ""}`
       : null;
 
-  if (!loaded || activities.isLoading) {
-    return <PageLoader text="Loading your class..." />;
-  }
+  // Don't block the whole page — skeleton inline where data is still loading
+  const isDataLoading = !loaded || activities.isLoading;
 
   if (activities.isError) {
     return (
@@ -237,7 +237,11 @@ export function HomeView() {
             </span>
           </div>
 
-          {todayList.length === 0 ? (
+          {isDataLoading ? (
+            <div className="mt-3 space-y-3">
+              {[1, 2].map((i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+            </div>
+          ) : todayList.length === 0 ? (
             <div className="mt-3 flex items-center justify-between rounded-2xl border border-dashed border-border bg-card p-4 sm:p-6 text-sm text-muted-foreground shadow-xs max-w-full">
               <span className="flex items-center gap-2 font-medium">
                 <PartyPopper className="h-5 w-5 shrink-0 text-primary" />
@@ -256,7 +260,11 @@ export function HomeView() {
           <h2 className="mt-10 mb-3 font-display text-lg sm:text-xl font-semibold">
             Upcoming
           </h2>
-          {upNext2.length === 0 ? (
+          {isDataLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+            </div>
+          ) : upNext2.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Nothing else on the horizon.
             </p>
@@ -278,64 +286,70 @@ export function HomeView() {
 
         {/* Countdown Sidebar */}
         <aside className="order-first min-w-0 max-w-full lg:order-last">
-          <div
-            onClick={() => {
-              if (next) setSelectedNextActivity(next);
-            }}
-            className={`sticky top-24 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[color:var(--primary)] to-[color:var(--primary-deep)] p-5 sm:p-6 text-primary-foreground shadow-card transition-all duration-300 ${
-              next
-                ? "cursor-pointer hover:scale-[1.01] hover:shadow-xl active:scale-[0.99]"
-                : ""
-            }`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-medium uppercase tracking-widest opacity-70 truncate">
-                Next activity
-              </p>
-              {next && (
-                <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider backdrop-blur-xs">
-                  Details
-                </span>
+          {isDataLoading ? (
+            <div className="sticky top-24 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[color:var(--primary)] to-[color:var(--primary-deep)] p-5 sm:p-6 shadow-card">
+              <Skeleton className="h-3 w-20 rounded bg-white/20" />
+              <Skeleton className="mt-4 h-7 w-3/4 rounded bg-white/20" />
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                {[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl bg-white/20" />)}
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => { if (next) setSelectedNextActivity(next); }}
+              className={`sticky top-24 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[color:var(--primary)] to-[color:var(--primary-deep)] p-5 sm:p-6 text-primary-foreground shadow-card transition-all duration-300 ${
+                next ? "cursor-pointer hover:scale-[1.01] hover:shadow-xl active:scale-[0.99]" : ""
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-medium uppercase tracking-widest opacity-70 truncate">
+                  Next activity
+                </p>
+                {next && (
+                  <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider backdrop-blur-xs">
+                    Details
+                  </span>
+                )}
+              </div>
+              {next ? (
+                <>
+                  <h3 className="mt-2 font-display text-xl sm:text-2xl font-bold leading-tight break-words">
+                    {next.subject}
+                  </h3>
+                  <p className="mt-1 font-mono text-xs sm:text-sm font-semibold opacity-90 break-words">{next.title}</p>
+                  <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-3">
+                    {countdown(nextDelta).map(([n, l]) => (
+                      <div
+                        key={l}
+                        className="min-w-0 rounded-xl sm:rounded-2xl bg-white/10 px-1.5 sm:px-3 py-2.5 sm:py-4 text-center backdrop-blur-sm"
+                      >
+                        <div className="font-display text-xl sm:text-3xl font-semibold tabular-nums truncate">
+                          {n}
+                        </div>
+                        <div className="mt-0.5 text-[9px] sm:text-[10px] uppercase tracking-widest opacity-80 truncate">
+                          {l}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-5 text-xs sm:text-sm opacity-80">
+                    Starts{" "}
+                    {nextActivityDate(next).toLocaleString(undefined, {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </>
+              ) : (
+                <div className="py-6 text-center text-sm opacity-80">
+                  No upcoming activities scheduled.
+                </div>
               )}
             </div>
-            {next ? (
-              <>
-                <h3 className="mt-2 font-display text-xl sm:text-2xl font-bold leading-tight break-words">
-                  {next.subject}
-                </h3>
-                <p className="mt-1 font-mono text-xs sm:text-sm font-semibold opacity-90 break-words">{next.title}</p>
-                <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-3">
-                  {countdown(nextDelta).map(([n, l]) => (
-                    <div
-                      key={l}
-                      className="min-w-0 rounded-xl sm:rounded-2xl bg-white/10 px-1.5 sm:px-3 py-2.5 sm:py-4 text-center backdrop-blur-sm"
-                    >
-                      <div className="font-display text-xl sm:text-3xl font-semibold tabular-nums truncate">
-                        {n}
-                      </div>
-                      <div className="mt-0.5 text-[9px] sm:text-[10px] uppercase tracking-widest opacity-80 truncate">
-                        {l}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-5 text-xs sm:text-sm opacity-80">
-                  Starts{" "}
-                  {nextActivityDate(next).toLocaleString(undefined, {
-                    weekday: "long",
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </>
-            ) : (
-              <div className="py-6 text-center text-sm opacity-80">
-                No upcoming activities scheduled.
-              </div>
-            )}
-          </div>
+          )}
         </aside>
       </section>
     </>
