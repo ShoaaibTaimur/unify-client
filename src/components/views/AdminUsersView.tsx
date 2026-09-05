@@ -102,6 +102,22 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
   const startIdx = (validPage - 1) * pageSize;
   const paginatedUsers = users.slice(startIdx, startIdx + pageSize);
 
+  const departments = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => api.listDepartments(),
+    staleTime: 5 * 60_000,
+  });
+  const batches = useQuery({
+    queryKey: ["batches", "all"],
+    queryFn: () => api.listBatches(),
+    staleTime: 5 * 60_000,
+  });
+  const sections = useQuery({
+    queryKey: ["sections", "all"],
+    queryFn: () => api.listSections(),
+    staleTime: 5 * 60_000,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.deleteUser(id),
     onSuccess: () => {
@@ -153,31 +169,36 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                   </td>
                 </tr>
               )}
-              {paginatedUsers.map((u) => (
-                <tr
-                  key={u.id}
-                  className="border-b border-border/60 last:border-b-0 hover:bg-muted/20 transition-colors"
-                >
-                  <td className="px-4 py-3 font-medium">{u.name}</td>
-                  <td className="px-4 py-3">{u.email}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {[u.departmentId, u.batchId, u.sectionId]
-                      .filter(Boolean)
-                      .join(" · ") || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive hover:bg-destructive/10"
-                      disabled={deleteMutation.isPending}
-                      onClick={() => setDeletingUser(u)}
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {paginatedUsers.map((u) => {
+                const dep = departments.data?.find((d) => d.id === u.departmentId)?.name;
+                const bat = u.batchId === "all" ? "All Batches" : batches.data?.find((b) => b.id === u.batchId)?.name;
+                const sec = u.sectionId === "all" ? "All Sections" : sections.data?.find((s) => s.id === u.sectionId)?.name;
+                const orgText = [dep, bat, sec].filter(Boolean).join(" · ") || (u.departmentId ? (departments.isLoading ? "Loading..." : u.departmentId) : "—");
+
+                return (
+                  <tr
+                    key={u.id}
+                    className="border-b border-border/60 last:border-b-0 hover:bg-muted/20 transition-colors"
+                  >
+                    <td className="px-4 py-3 font-medium">{u.name}</td>
+                    <td className="px-4 py-3">{u.email}</td>
+                    <td className="px-4 py-3 text-xs font-medium text-foreground/80">
+                      {orgText}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:bg-destructive/10"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => setDeletingUser(u)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

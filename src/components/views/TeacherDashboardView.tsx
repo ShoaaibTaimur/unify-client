@@ -23,9 +23,14 @@ import {
   FileSpreadsheet,
   Plus,
   ArrowRight,
+  GraduationCap,
+  Building2,
+  User as UserIcon,
+  Mail,
 } from "lucide-react";
 import type { Activity } from "@/lib/types";
 import { toast } from "sonner";
+import { useOrgDetails } from "@/hooks/use-org-details";
 
 export function TeacherDashboardView() {
   const user = getStoredUser();
@@ -33,6 +38,10 @@ export function TeacherDashboardView() {
   const [csvOpen, setCsvOpen] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);
   const qc = useQueryClient();
+
+  const { depName, isLoading: orgLoading } = useOrgDetails({
+    departmentId: user?.departmentId,
+  });
 
   const filter = user?.departmentId
     ? { departmentId: user.departmentId }
@@ -46,7 +55,6 @@ export function TeacherDashboardView() {
       qc.invalidateQueries({ queryKey: ["activities"] });
     },
   });
-
 
   if (!user) return null;
 
@@ -62,14 +70,30 @@ export function TeacherDashboardView() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              Teacher Dashboard · {user.departmentId}
+              <GraduationCap className="h-3.5 w-3.5 text-primary" />
+              Teacher Dashboard · {depName || (orgLoading ? "Loading department..." : "Department")}
             </div>
             <h1 className="mt-3 font-display text-3xl sm:text-4xl font-bold">
               Welcome back, {user.name}!
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Faculty scheduling and activity management for your department.
+              Faculty scheduling and activity management for {depName || "your department"}.
             </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 border-t border-border/60 text-xs">
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <Building2 className="h-3.5 w-3.5 text-primary" />
+                <span>Department: <strong className="text-primary font-semibold">{depName || "Loading..."}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <UserIcon className="h-3.5 w-3.5 text-primary" />
+                <span>Faculty: <strong>{user.name}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-muted-foreground">
+                <Mail className="h-3.5 w-3.5 text-primary" />
+                <span>{user.email}</span>
+              </div>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
             <Button
@@ -106,7 +130,7 @@ export function TeacherDashboardView() {
         <StatCard
           icon={<Briefcase className="h-5 w-5 text-blue-500" />}
           value={list.length}
-          label="Department Total"
+          label={depName ? `${depName} Total` : "Department Total"}
         />
       </div>
 
@@ -114,10 +138,10 @@ export function TeacherDashboardView() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-display text-2xl">
-              Recent activities in your department
+              Recent activities in {depName || "your department"}
             </h2>
             <p className="text-xs text-muted-foreground">
-              Total {list.length} activities in your department
+              Total {list.length} activities in {depName || "your department"}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -128,11 +152,11 @@ export function TeacherDashboardView() {
             >
               <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Import CSV Routine
             </Button>
-            <Link href="/activities">
-              <Button variant="outline" className="rounded-full">
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href="/activities">
                 View all <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Button
               className="rounded-full"
               onClick={() => {

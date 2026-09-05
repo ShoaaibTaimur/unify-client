@@ -23,6 +23,7 @@ import {
   KeyRound,
   Search,
 } from "lucide-react";
+import { useOrgDetails } from "@/hooks/use-org-details";
 
 type AllowedRole = "cr" | "teacher";
 
@@ -64,6 +65,13 @@ export function PanelClientLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
+
+  const { formatted, depName } = useOrgDetails({
+    departmentId: user?.departmentId,
+    batchId: user?.batchId,
+    sectionId: user?.sectionId,
+  });
+  const orgLabel = role === "teacher" ? depName : formatted;
 
   useEffect(() => {
     const u = getStoredUser();
@@ -156,6 +164,11 @@ export function PanelClientLayout({
                   <div className="truncate text-xs text-muted-foreground">
                     {user.email}
                   </div>
+                  {orgLabel && (
+                    <div className="mt-1 text-[11px] font-semibold text-primary truncate">
+                      {orgLabel}
+                    </div>
+                  )}
                 </div>
               </div>
             </SheetContent>
@@ -173,6 +186,11 @@ export function PanelClientLayout({
           <div className="hidden text-right text-xs sm:block">
             <div className="font-medium">{user.name}</div>
             <div className="truncate text-muted-foreground">{user.email}</div>
+            {orgLabel && (
+              <div className="text-[11px] font-semibold text-primary truncate max-w-[200px]">
+                {orgLabel}
+              </div>
+            )}
           </div>
           <ThemeToggle />
           <Button

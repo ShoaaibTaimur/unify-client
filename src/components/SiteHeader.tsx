@@ -47,7 +47,12 @@ export function SiteHeader() {
     queryFn: () => api.listActivities(cls ?? undefined),
   });
 
-  const showSeatPlan = hasActiveExams(activities.data);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const showSeatPlan = mounted && hasActiveExams(activities.data);
 
   useEffect(() => {
     const sync = () => setUser(getStoredUser());
@@ -185,24 +190,26 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           {user ? (
-            <Link href={dashLink} className="hidden md:inline-flex">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs"
-              >
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="hidden md:inline-flex rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs"
+            >
+              <Link href={dashLink}>
                 {user.role[0].toUpperCase() + user.role.slice(1)} panel
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           ) : (
-            <Link href="/login" className="hidden md:inline-flex">
-              <Button
-                size="sm"
-                className="rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs"
-              >
+            <Button
+              asChild
+              size="sm"
+              className="hidden md:inline-flex rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs"
+            >
+              <Link href="/login">
                 Sign in
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </div>
       </div>

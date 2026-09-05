@@ -152,11 +152,11 @@ export function AdminOverviewView() {
                   Latest entries added across all departments
                 </p>
               </div>
-              <Link href="/admin/activities">
-                <Button variant="outline" size="sm" className="rounded-full">
+              <Button asChild variant="outline" size="sm" className="rounded-full">
+                <Link href="/admin/activities">
                   View all ({actList.length}) <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
 
             <div className="space-y-3">

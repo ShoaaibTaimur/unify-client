@@ -51,9 +51,9 @@
 
 /*
  * UNIFY design tokens.
- * Primary: Maroon #800000
- * Secondary: Deep Maroon #5C0011
- * Accent: Dusty Rose #B8748A (chosen instead of gold, warm complement to maroon)
+ * Primary: Maroon #800000 / #8B003D
+ * Secondary: Deep Maroon #5C0011 / #5E0028
+ * Accent: Dusty Rose #B8748A
  * Background: #F8F8F8 light / near-black dark
  */
 :root {

@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { ACTIVITY_TYPES, type Activity, type ActivityType } from "@/lib/types";
+import { ACTIVITY_TYPES, type Activity, type ActivityType, type ClassSelection } from "@/lib/types";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { ActivityCard } from "@/components/ActivityCard";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
@@ -19,8 +19,8 @@ function endDateOf(a: Activity) {
   return new Date(a.endDate ?? a.date!);
 }
 
-export function ActivitiesView() {
-  const { cls, loaded } = useClassSelection();
+export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
+  const { cls, loaded } = useClassSelection(initialClass);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [q, setQ] = useState("");
   const [type, setType] = useState<ActivityType | "all">("all");
@@ -33,8 +33,7 @@ export function ActivitiesView() {
   const activities = useQuery({
     queryKey: ["activities", cls],
     queryFn: () => api.listActivities(cls ?? undefined),
-    // Don't fire until we know the class selection (avoids double fetch)
-    enabled: loaded,
+    enabled: Boolean(loaded && hasSelectedClass(cls)),
   });
 
   const filtered = useMemo(() => {
@@ -147,7 +146,7 @@ export function ActivitiesView() {
 
         {/* List */}
         <div className="mt-6 space-y-3">
-          {(!loaded || activities.isLoading) ? (
+          {((!loaded && !initialClass) || (hasSelectedClass(cls) && activities.isLoading && !activities.data)) ? (
             [1,2,3,4,5].map((i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
           ) : filtered.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-sm text-muted-foreground">

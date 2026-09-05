@@ -3,6 +3,10 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { RootLayout } from "@/components/RootLayout";
 import { Analytics } from "@vercel/analytics/react";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "UNIFY — One place for every academic activity",
@@ -22,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <head>
         <script
           dangerouslySetInnerHTML={{

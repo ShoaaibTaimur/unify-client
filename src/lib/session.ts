@@ -7,9 +7,7 @@ const CLASS_KEY = "unify_class";
 const TOKEN_KEY = "unify_token";
 const USER_KEY = "unify_user";
 
-export function hasSelectedClass(sel: ClassSelection | null): boolean {
-  return Boolean(sel && sel.departmentId && sel.batchId && sel.sectionId);
-}
+export { hasSelectedClass } from "./utils";
 
 export function getClassSelection(): ClassSelection | null {
   if (typeof window === "undefined") return null;
@@ -23,11 +21,19 @@ export function getClassSelection(): ClassSelection | null {
 
 export function setClassSelection(sel: ClassSelection) {
   localStorage.setItem(CLASS_KEY, JSON.stringify(sel));
+  if (typeof document !== "undefined") {
+    document.cookie = `${CLASS_KEY}=${encodeURIComponent(
+      JSON.stringify(sel)
+    )}; path=/; max-age=31536000; SameSite=Lax`;
+  }
   window.dispatchEvent(new Event("unify:class-changed"));
 }
 
 export function clearClassSelection() {
   localStorage.removeItem(CLASS_KEY);
+  if (typeof document !== "undefined") {
+    document.cookie = `${CLASS_KEY}=; path=/; max-age=0; SameSite=Lax`;
+  }
   window.dispatchEvent(new Event("unify:class-changed"));
 }
 
@@ -62,17 +68,28 @@ export function clearStoredSession() {
 }
 
 /** Reactive hook to get class selection state with hydration guard */
-export function useClassSelection() {
-  const [cls, setCls] = useState<ClassSelection | null>(null);
-  const [loaded, setLoaded] = useState(false);
+export function useClassSelection(initial?: ClassSelection | null) {
+  const [cls, setCls] = useState<ClassSelection | null>(initial ?? null);
+  const [loaded, setLoaded] = useState(Boolean(initial));
 
   useEffect(() => {
-    setCls(getClassSelection());
+    const current = getClassSelection();
+    if (current) {
+      setCls(current);
+      if (typeof document !== "undefined" && !document.cookie.includes(CLASS_KEY)) {
+        document.cookie = `${CLASS_KEY}=${encodeURIComponent(
+          JSON.stringify(current)
+        )}; path=/; max-age=31536000; SameSite=Lax`;
+      }
+    } else if (initial) {
+      setCls(initial);
+      localStorage.setItem(CLASS_KEY, JSON.stringify(initial));
+    }
     setLoaded(true);
     const sync = () => setCls(getClassSelection());
     window.addEventListener("unify:class-changed", sync);
     return () => window.removeEventListener("unify:class-changed", sync);
-  }, []);
+  }, [initial]);
 
   return { cls, loaded };
 }

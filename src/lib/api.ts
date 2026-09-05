@@ -41,9 +41,9 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("unify_token") : null;
 
-  // Abort after 30 seconds — Vercel cold starts can take 10-20s
+  // Abort after 10 seconds to prevent lingering loading hangs
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000);
+  const timeout = setTimeout(() => controller.abort(), 10_000);
 
   let res: Response;
   try {

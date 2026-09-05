@@ -1,9 +1,8 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-import type { Activity } from "./types";
+export { cn } from "cn";
+import type { Activity, ClassSelection } from "./types";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+export function hasSelectedClass(sel: ClassSelection | null): boolean {
+  return Boolean(sel && sel.departmentId && sel.batchId && sel.sectionId);
 }
 
 /** Check if there are active or upcoming mid-term or final exams in the given activities list */

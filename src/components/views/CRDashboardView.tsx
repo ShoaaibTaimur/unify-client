@@ -22,9 +22,16 @@ import {
   FileSpreadsheet,
   Plus,
   ArrowRight,
+  Users,
+  Building2,
+  Layers,
+  GraduationCap,
+  User as UserIcon,
+  Mail,
 } from "lucide-react";
 import type { Activity } from "@/lib/types";
 import { toast } from "sonner";
+import { useOrgDetails } from "@/hooks/use-org-details";
 
 export function CRDashboardView() {
   const user = getStoredUser();
@@ -32,6 +39,13 @@ export function CRDashboardView() {
   const [csvOpen, setCsvOpen] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);
   const qc = useQueryClient();
+
+  const { depName, batchName, sectionName, formatted, isLoading: orgLoading } =
+    useOrgDetails({
+      departmentId: user?.departmentId,
+      batchId: user?.batchId,
+      sectionId: user?.sectionId,
+    });
 
   const filter =
     user?.departmentId && user?.batchId
@@ -52,7 +66,6 @@ export function CRDashboardView() {
     },
   });
 
-
   if (!user) return null;
 
   const list = activities.data ?? [];
@@ -67,14 +80,38 @@ export function CRDashboardView() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              CR Dashboard · {[user.departmentId, user.batchId, user.sectionId].filter(Boolean).join(" · ")}
+              <Users className="h-3.5 w-3.5 text-primary" />
+              CR Dashboard · {formatted || (orgLoading ? "Loading class details..." : "Class Section")}
             </div>
             <h1 className="mt-3 font-display text-3xl sm:text-4xl font-bold">
               Welcome back, {user.name}!
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Manage activities for your class section.
+              Manage activities for {formatted || "your class section"}.
             </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 border-t border-border/60 text-xs">
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <Building2 className="h-3.5 w-3.5 text-primary" />
+                <span>Department: <strong className="text-primary font-semibold">{depName || "Loading..."}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <Layers className="h-3.5 w-3.5 text-primary" />
+                <span>Batch: <strong className="text-primary font-semibold">{batchName || "Loading..."}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                <span>Section: <strong className="text-primary font-semibold">{sectionName || "All"}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <UserIcon className="h-3.5 w-3.5 text-primary" />
+                <span>CR: <strong>{user.name}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-muted-foreground">
+                <Mail className="h-3.5 w-3.5 text-primary" />
+                <span>{user.email}</span>
+              </div>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
             <Button
@@ -111,7 +148,7 @@ export function CRDashboardView() {
         <StatCard
           icon={<FileSpreadsheet className="h-5 w-5 text-blue-500" />}
           value={list.length}
-          label="Total Managed"
+          label={formatted ? `${formatted} Total` : "Total Managed"}
         />
       </div>
 
@@ -120,7 +157,7 @@ export function CRDashboardView() {
           <div>
             <h2 className="font-display text-2xl">Manage activities</h2>
             <p className="text-xs text-muted-foreground">
-              Total {list.length} activities in your batch & section
+              Total {list.length} activities in {formatted || "your batch & section"}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -131,11 +168,11 @@ export function CRDashboardView() {
             >
               <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Import CSV Routine
             </Button>
-            <Link href="/activities">
-              <Button variant="outline" className="rounded-full">
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href="/activities">
                 View all <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Button
               className="rounded-full"
               onClick={() => {

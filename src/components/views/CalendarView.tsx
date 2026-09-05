@@ -16,7 +16,7 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
-import { ACTIVITY_COLOR, type Activity } from "@/lib/types";
+import { ACTIVITY_COLOR, type Activity, type ClassSelection } from "@/lib/types";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,8 @@ function dayActivities(day: Date, list: Activity[]) {
   });
 }
 
-export function CalendarView() {
-  const { cls, loaded } = useClassSelection();
+export function CalendarView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
+  const { cls, loaded } = useClassSelection(initialClass);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cursor, setCursor] = useState(new Date());
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
@@ -66,8 +66,7 @@ export function CalendarView() {
   const activities = useQuery({
     queryKey: ["activities", cls],
     queryFn: () => api.listActivities(cls ?? undefined),
-    // Don't fire until class selection is resolved from storage (same as HomeView)
-    enabled: loaded,
+    enabled: Boolean(loaded && hasSelectedClass(cls)),
   });
 
   const start = startOfWeek(startOfMonth(cursor));

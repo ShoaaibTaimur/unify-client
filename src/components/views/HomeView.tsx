@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { hasSelectedClass, setClassSelection, useClassSelection } from "@/lib/session";
-import type { Activity } from "@/lib/types";
+import type { Activity, ClassSelection } from "@/lib/types";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { ActivityCard } from "@/components/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/ActivityDetailsDialog";
@@ -45,8 +45,8 @@ function countdown(totalSeconds: number): [number, string][] {
   ];
 }
 
-export function HomeView() {
-  const { cls, loaded } = useClassSelection();
+export function HomeView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
+  const { cls, loaded } = useClassSelection(initialClass);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedNextActivity, setSelectedNextActivity] = useState<Activity | null>(null);
 
@@ -61,26 +61,34 @@ export function HomeView() {
   const activities = useQuery({
     queryKey: ["activities", cls],
     queryFn: () => api.listActivities(cls ?? undefined),
-    enabled: loaded,
+    enabled: Boolean(loaded && hasSelectedClass(cls)),
   });
 
   const departments = useQuery({
     queryKey: ["departments"],
     queryFn: () => api.listDepartments(),
+    staleTime: 5 * 60_000,
   });
   const batches = useQuery({
     queryKey: ["batches", cls?.departmentId],
     queryFn: () => (cls?.departmentId ? api.listBatches(cls.departmentId) : []),
     enabled: !!cls?.departmentId,
+    staleTime: 5 * 60_000,
   });
   const sections = useQuery({
     queryKey: ["sections", cls?.batchId],
-    queryFn: () => (cls?.batchId ? api.listSections(cls.batchId) : []),
-    enabled: !!cls?.batchId,
+    queryFn: () => (cls?.batchId && cls.batchId !== "all" ? api.listSections(cls.batchId) : []),
+    enabled: !!cls?.batchId && cls.batchId !== "all",
+    staleTime: 5 * 60_000,
   });
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const list = activities.data ?? [];
-  const showSeatPlan = hasActiveExams(list);
+  const showSeatPlan = mounted && hasActiveExams(list);
   const now = new Date();
 
   const todayList = useMemo(() => {
@@ -120,8 +128,10 @@ export function HomeView() {
       ? `${depName} · ${batchName}${secName ? ` · ${secName}` : ""}`
       : null;
 
-  // Don't block the whole page — skeleton inline where data is still loading
-  const isDataLoading = !loaded || activities.isLoading;
+  // Instant render if data is already hydrated from SSR
+  const isDataLoading =
+    (!loaded && !initialClass) ||
+    (hasSelectedClass(cls) && activities.isLoading && !activities.data);
 
   if (activities.isError) {
     return (
@@ -187,19 +197,19 @@ export function HomeView() {
             </div>
             <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto max-w-full">
               {showSeatPlan && (
-                <a
-                  href="https://examsync.kiron.dev/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full sm:w-auto rounded-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-bold justify-center text-xs sm:text-sm"
                 >
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto rounded-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-bold justify-center text-xs sm:text-sm"
+                  <a
+                    href="https://examsync.kiron.dev/"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     <ExternalLink className="mr-1.5 h-3.5 w-3.5 shrink-0" /> Exam Seat Plan ↗
-                  </Button>
-                </a>
+                  </a>
+                </Button>
               )}
               <Button
                 variant="outline"
@@ -215,11 +225,14 @@ export function HomeView() {
               >
                 <Settings2 className="mr-1.5 h-3.5 w-3.5 shrink-0" /> Change class
               </Button>
-              <Link href="/activities" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto rounded-full justify-center text-xs sm:text-sm">
+              <Button
+                asChild
+                className="w-full sm:w-auto rounded-full justify-center text-xs sm:text-sm"
+              >
+                <Link href="/activities" className="w-full sm:w-auto">
                   View all activities <ArrowRight className="ml-1.5 h-3.5 w-3.5 shrink-0" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -232,7 +245,7 @@ export function HomeView() {
           {/* Today */}
           <div className="flex items-center justify-between">
             <h2 className="font-display text-xl sm:text-2xl font-semibold">Today</h2>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground" suppressHydrationWarning>
               {todayList.length} activity
             </span>
           </div>
@@ -276,11 +289,11 @@ export function HomeView() {
             </div>
           )}
           <div className="mt-4">
-            <Link href="/activities">
-              <Button variant="outline" className="rounded-full text-xs sm:text-sm">
+            <Button asChild variant="outline" className="rounded-full text-xs sm:text-sm">
+              <Link href="/activities">
                 View all
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
 
@@ -288,10 +301,12 @@ export function HomeView() {
         <aside className="order-first min-w-0 max-w-full lg:order-last">
           {isDataLoading ? (
             <div className="sticky top-24 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[color:var(--primary)] to-[color:var(--primary-deep)] p-5 sm:p-6 shadow-card">
-              <Skeleton className="h-3 w-20 rounded bg-white/20" />
-              <Skeleton className="mt-4 h-7 w-3/4 rounded bg-white/20" />
+              <div className="h-3 w-20 rounded bg-white/20 animate-pulse" />
+              <div className="mt-4 h-7 w-3/4 rounded bg-white/20 animate-pulse" />
               <div className="mt-5 grid grid-cols-3 gap-2">
-                {[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl bg-white/20" />)}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 rounded-xl bg-white/20 animate-pulse" />
+                ))}
               </div>
             </div>
           ) : (
@@ -317,7 +332,7 @@ export function HomeView() {
                     {next.subject}
                   </h3>
                   <p className="mt-1 font-mono text-xs sm:text-sm font-semibold opacity-90 break-words">{next.title}</p>
-                  <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-3">
+                  <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-3" suppressHydrationWarning>
                     {countdown(nextDelta).map(([n, l]) => (
                       <div
                         key={l}
@@ -332,7 +347,7 @@ export function HomeView() {
                       </div>
                     ))}
                   </div>
-                  <p className="mt-5 text-xs sm:text-sm opacity-80">
+                  <p className="mt-5 text-xs sm:text-sm opacity-80" suppressHydrationWarning>
                     Starts{" "}
                     {nextActivityDate(next).toLocaleString(undefined, {
                       weekday: "long",
