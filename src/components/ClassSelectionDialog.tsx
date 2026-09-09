@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getClassSelection, setClassSelection } from "@/lib/session";
 import type { ClassSelection } from "@/lib/types";
@@ -13,6 +14,8 @@ import { Logo } from "./Logo";
 export function ClassSelectionDialog({
   open, onOpenChange, initial,
 }: { open: boolean; onOpenChange: (v: boolean) => void; initial?: ClassSelection | null }) {
+  const router = useRouter();
+  const qc = useQueryClient();
   const [departmentId, setDepartmentId] = useState(initial?.departmentId ?? "");
   const [batchId, setBatchId] = useState(initial?.batchId ?? "");
   const [sectionId, setSectionId] = useState(initial?.sectionId || "all");
@@ -85,6 +88,8 @@ export function ClassSelectionDialog({
           disabled={!canContinue}
           onClick={() => {
             setClassSelection({ departmentId, batchId, sectionId: sectionId || "all" });
+            qc.invalidateQueries({ queryKey: ["activities"] });
+            router.refresh();
             onOpenChange(false);
           }}
         >

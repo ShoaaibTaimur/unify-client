@@ -10,12 +10,15 @@ export const metadata: Metadata = {
   description: "Month view of every class test, lab test, viva, assignment, and exam scheduled for your class.",
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function CalendarPage() {
   const cls = await getServerClassSelection();
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60_000,
+        staleTime: 0,
       },
     },
   });

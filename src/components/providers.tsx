@@ -6,11 +6,13 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60_000,
-        refetchOnWindowFocus: false,
+        staleTime: 0,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+        refetchOnMount: true,
         retry: 1,
         retryDelay: 1000,
-        gcTime: 10 * 60_000,
+        gcTime: 5 * 60_000,
       },
       mutations: {
         retry: 0,

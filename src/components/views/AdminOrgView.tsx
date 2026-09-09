@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { toast } from "sonner";
 import { Building2, Layers, GraduationCap, Pencil, Trash2 } from "lucide-react";
 
 export function AdminOrgView() {
+  const router = useRouter();
   const qc = useQueryClient();
   const deps = useQuery({
     queryKey: ["departments"],
@@ -49,6 +51,7 @@ export function AdminOrgView() {
       toast.success("Department created");
       setDepName("");
       qc.invalidateQueries({ queryKey: ["departments"] });
+      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -61,6 +64,7 @@ export function AdminOrgView() {
       toast.success("Batch created");
       setBatchName("");
       qc.invalidateQueries({ queryKey: ["batches"] });
+      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -74,6 +78,7 @@ export function AdminOrgView() {
       toast.success("Section created");
       setSecName("");
       qc.invalidateQueries({ queryKey: ["sections"] });
+      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -104,6 +109,7 @@ export function AdminOrgView() {
       qc.invalidateQueries({ queryKey: ["departments"] });
       qc.invalidateQueries({ queryKey: ["batches"] });
       qc.invalidateQueries({ queryKey: ["sections"] });
+      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -120,6 +126,7 @@ export function AdminOrgView() {
       qc.invalidateQueries({ queryKey: ["departments"] });
       qc.invalidateQueries({ queryKey: ["batches"] });
       qc.invalidateQueries({ queryKey: ["sections"] });
+      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });

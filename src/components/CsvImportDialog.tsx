@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatAppTime } from "@/lib/date-utils";
 import { api } from "@/lib/api";
 import type { ActivityType, Batch, Department, Section } from "@/lib/types";
 import {
@@ -158,6 +160,7 @@ export function downloadDemoCSV(departmentName = "CSE") {
 }
 
 export function CsvImportDialog({ open, onOpenChange, defaultDepartmentId, defaultBatchId }: Props) {
+  const router = useRouter();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -420,7 +423,7 @@ export function CsvImportDialog({ open, onOpenChange, defaultDepartmentId, defau
         subject: r.subject,
         startDate: r.startDate,
         endDate: r.endDate,
-        time: r.time || undefined,
+        time: formatAppTime(r.time) || undefined,
         room: r.room || undefined,
         description: r.description || undefined,
       }));
@@ -428,6 +431,7 @@ export function CsvImportDialog({ open, onOpenChange, defaultDepartmentId, defau
       const res = await api.createActivitiesBulk(itemsToCreate);
       toast.success(`Successfully imported ${res.count} exam routines across batches!`);
       qc.invalidateQueries({ queryKey: ["activities"] });
+      router.refresh();
       onOpenChange(false);
       setParsedRows([]);
       setHealthReport(null);
@@ -675,7 +679,7 @@ export function CsvImportDialog({ open, onOpenChange, defaultDepartmentId, defau
                                 </div>
                                 {row.time && (
                                   <div className="text-[11px] font-bold text-primary flex items-center gap-1 mt-0.5">
-                                    <Clock className="h-3 w-3" /> {row.time}
+                                    <Clock className="h-3 w-3" /> {formatAppTime(row.time)}
                                   </div>
                                 )}
                               </td>
@@ -727,7 +731,7 @@ export function CsvImportDialog({ open, onOpenChange, defaultDepartmentId, defau
                             <span className="font-medium">
                               {row.startDate ? new Date(row.startDate).toLocaleDateString() : "Invalid"} –{" "}
                               {row.endDate ? new Date(row.endDate).toLocaleDateString() : "Invalid"}
-                              {row.time ? ` @ ${row.time}` : ""}
+                              {row.time ? ` @ ${formatAppTime(row.time)}` : ""}
                             </span>
                           </div>
                         </div>

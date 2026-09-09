@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { getStoredUser } from "@/lib/session";
@@ -33,6 +34,7 @@ import { toast } from "sonner";
 import { useOrgDetails } from "@/hooks/use-org-details";
 
 export function TeacherDashboardView() {
+  const router = useRouter();
   const user = getStoredUser();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
@@ -53,6 +55,7 @@ export function TeacherDashboardView() {
     onSuccess: () => {
       toast.success("Activity deleted");
       qc.invalidateQueries({ queryKey: ["activities"] });
+      router.refresh();
     },
   });
 

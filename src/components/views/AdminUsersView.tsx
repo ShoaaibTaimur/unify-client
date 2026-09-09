@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -94,6 +95,7 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const router = useRouter();
   const qc = useQueryClient();
 
   const totalItems = users.length;
@@ -105,17 +107,14 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
   const departments = useQuery({
     queryKey: ["departments"],
     queryFn: () => api.listDepartments(),
-    staleTime: 5 * 60_000,
   });
   const batches = useQuery({
     queryKey: ["batches", "all"],
     queryFn: () => api.listBatches(),
-    staleTime: 5 * 60_000,
   });
   const sections = useQuery({
     queryKey: ["sections", "all"],
     queryFn: () => api.listSections(),
-    staleTime: 5 * 60_000,
   });
 
   const deleteMutation = useMutation({
@@ -123,6 +122,7 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
     onSuccess: () => {
       toast.success("User deleted");
       qc.invalidateQueries({ queryKey: ["users"] });
+      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -324,6 +324,7 @@ function CreateUserDialog({
     enabled: !!batchId,
   });
 
+  const router = useRouter();
   const qc = useQueryClient();
   const createMutation = useMutation({
     mutationFn: () =>
@@ -339,6 +340,7 @@ function CreateUserDialog({
     onSuccess: () => {
       toast.success("User account created successfully");
       qc.invalidateQueries({ queryKey: ["users"] });
+      router.refresh();
       onOpenChange(false);
       setEmail("");
       setName("");

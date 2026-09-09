@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { ACTIVITY_TYPES, type Activity, type ActivityType, type ClassSelection } from "@/lib/types";
-import { hasSelectedClass, useClassSelection } from "@/lib/session";
+import { hasSelectedClass, useClassSelection, useStoredUser } from "@/lib/session";
 import { ActivityCard } from "@/components/ActivityCard";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { PageLoader } from "@/components/PageLoader";
@@ -12,15 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { parseAppDate, combineDateAndTime, isActivityExpired, isStaffUser } from "@/lib/date-utils";
 
 type StatusFilter = "all" | "upcoming" | "completed";
 
-function endDateOf(a: Activity) {
-  return new Date(a.endDate ?? a.date!);
+function startDateOf(a: Activity): Date {
+  return combineDateAndTime(a.startDate ?? a.date, a.time);
 }
 
 export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
+  const { user } = useStoredUser();
+  const isStaff = isStaffUser(user);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [q, setQ] = useState("");
   const [type, setType] = useState<ActivityType | "all">("all");
@@ -40,10 +43,15 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
     const now = new Date();
     const needle = q.trim().toLowerCase();
     return (activities.data ?? [])
+      .filter((a) => {
+        // Common users cannot view activities expired more than 1 hour ago
+        if (!isStaff && isActivityExpired(a, now)) return false;
+        return true;
+      })
       .filter((a) => type === "all" || a.activityType === type)
       .filter((a) => {
         if (status === "all") return true;
-        const done = endDateOf(a) < now;
+        const done = isActivityExpired(a, now);
         return status === "completed" ? done : !done;
       })
       .filter((a) => {
@@ -52,12 +60,8 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
           .filter(Boolean)
           .some((f) => f!.toLowerCase().includes(needle));
       })
-      .sort(
-        (a, b) =>
-          new Date(a.startDate ?? a.date!).getTime() -
-          new Date(b.startDate ?? b.date!).getTime()
-      );
-  }, [activities.data, q, type, status]);
+      .sort((a, b) => startDateOf(a).getTime() - startDateOf(b).getTime());
+  }, [activities.data, q, type, status, isStaff]);
 
   if (activities.isError) {
     return (

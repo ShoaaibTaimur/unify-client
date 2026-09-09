@@ -1,7 +1,7 @@
 "use client";
 
 import { ACTIVITY_COLOR, type Activity } from "@/lib/types";
-import { format } from "date-fns";
+import { formatAppDate, formatAppTime } from "@/lib/date-utils";
 import { MapPin, Clock, Calendar, BookOpen, FileText, Layers, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { activityLabel } from "./ActivityCard";
@@ -18,6 +18,7 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
   const isRange = !!activity.startDate;
   const color = ACTIVITY_COLOR[activity.activityType];
   const isExam = activity.activityType === "mid-exam" || activity.activityType === "final-exam";
+  const displayTime = formatAppTime(activity.time, isRange ? null : activity.date);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,13 +62,13 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
                 <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Date & Schedule</div>
                 <div className="font-semibold text-sm text-foreground">
                   {isRange
-                    ? `${format(new Date(activity.startDate!), "EEEE, MMM d, yyyy")} – ${format(new Date(activity.endDate!), "EEEE, MMM d, yyyy")}`
-                    : format(new Date(activity.date!), "EEEE, MMMM d, yyyy")}
+                    ? `${formatAppDate(activity.startDate, "EEEE, MMM d, yyyy")} – ${formatAppDate(activity.endDate, "EEEE, MMM d, yyyy")}`
+                    : formatAppDate(activity.date, "EEEE, MMMM d, yyyy")}
                 </div>
-                {(activity.time || (!isRange && activity.date)) && (
+                {displayTime && (
                   <div className="mt-1 inline-flex items-center gap-1 font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                     <Clock className="h-3 w-3" />
-                    {activity.time ?? format(new Date(activity.date!), "h:mm a")}
+                    {displayTime}
                   </div>
                 )}
               </div>

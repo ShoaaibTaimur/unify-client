@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/ActivityCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { combineDateAndTime } from "@/lib/date-utils";
 
 export function AdminOverviewView() {
   const departments = useQuery({
@@ -49,7 +50,7 @@ export function AdminOverviewView() {
 
   const now = new Date();
   const upcomingCount = actList.filter(
-    (a) => new Date(a.endDate ?? a.startDate ?? a.date!) >= now
+    (a) => combineDateAndTime(a.endDate ?? a.startDate ?? a.date, a.time) >= now
   ).length;
   const completedCount = actList.length - upcomingCount;
 

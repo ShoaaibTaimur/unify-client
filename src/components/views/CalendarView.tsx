@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { hasSelectedClass, useClassSelection } from "@/lib/session";
+import { hasSelectedClass, useClassSelection, useStoredUser } from "@/lib/session";
 import {
   addMonths,
   eachDayOfInterval,
@@ -25,7 +25,9 @@ import {
   ChevronRight,
   Calendar as CalendarIcon,
   MapPin,
+  Clock,
 } from "lucide-react";
+import { parseAppDate, formatAppTime, parseTimeComponents, isActivityExpired, isStaffUser, combineDateAndTime } from "@/lib/date-utils";
 import { activityLabel } from "@/components/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/ActivityDetailsDialog";
 import {
@@ -37,21 +39,27 @@ import {
 } from "@/components/ui/dialog";
 
 function dayActivities(day: Date, list: Activity[]) {
+  const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+  const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23, 59, 59, 999);
+
   return list.filter((a) => {
     if (a.startDate && a.endDate) {
-      const s = new Date(a.startDate);
-      const e = new Date(a.endDate);
-      return (
-        day >= new Date(s.getFullYear(), s.getMonth(), s.getDate()) &&
-        day <= new Date(e.getFullYear(), e.getMonth(), e.getDate())
-      );
+      const s = parseAppDate(a.startDate);
+      const e = parseAppDate(a.endDate);
+      if (!s || !e) return false;
+      const sStart = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+      const eEnd = new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59, 999);
+      return dayStart <= eEnd && dayEnd >= sStart;
     }
-    return a.date ? isSameDay(new Date(a.date), day) : false;
+    const d = parseAppDate(a.date);
+    return d ? isSameDay(d, day) : false;
   });
 }
 
 export function CalendarView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
+  const { user } = useStoredUser();
+  const isStaff = isStaffUser(user);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cursor, setCursor] = useState(new Date());
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
@@ -69,6 +77,13 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
     enabled: Boolean(loaded && hasSelectedClass(cls)),
   });
 
+  const visibleActivities = useMemo(() => {
+    const list = activities.data ?? [];
+    if (isStaff) return list;
+    const now = new Date();
+    return list.filter((a) => !isActivityExpired(a, now));
+  }, [activities.data, isStaff]);
+
   const start = startOfWeek(startOfMonth(cursor));
   const end = endOfWeek(endOfMonth(cursor));
   const days = useMemo(
@@ -79,8 +94,19 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
 
   const activeDayActivities = useMemo(() => {
     if (!selectedDay) return [];
-    return dayActivities(selectedDay, activities.data ?? []);
-  }, [selectedDay, activities.data]);
+    return dayActivities(selectedDay, visibleActivities).sort((a, b) => {
+      const hasTimeA = Boolean(a.time && parseTimeComponents(a.time));
+      const hasTimeB = Boolean(b.time && parseTimeComponents(b.time));
+      if (hasTimeA && hasTimeB) {
+        const timeA = combineDateAndTime(a.startDate ?? a.date, a.time).getTime();
+        const timeB = combineDateAndTime(b.startDate ?? b.date, b.time).getTime();
+        return timeA - timeB;
+      }
+      if (hasTimeA && !hasTimeB) return -1;
+      if (!hasTimeA && hasTimeB) return 1;
+      return 0;
+    });
+  }, [selectedDay, visibleActivities]);
 
   if (!loaded || activities.isLoading) {
     return <PageLoader text="Loading calendar..." />;
@@ -145,7 +171,18 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
           <div className="grid grid-cols-7 divide-x divide-y divide-border/60">
             {days.map((day) => {
               const inMonth = isSameMonth(day, cursor);
-              const items = dayActivities(day, activities.data ?? []);
+              const items = dayActivities(day, visibleActivities).sort((a, b) => {
+                const hasTimeA = Boolean(a.time && parseTimeComponents(a.time));
+                const hasTimeB = Boolean(b.time && parseTimeComponents(b.time));
+                if (hasTimeA && hasTimeB) {
+                  const timeA = combineDateAndTime(a.startDate ?? a.date, a.time).getTime();
+                  const timeB = combineDateAndTime(b.startDate ?? b.date, b.time).getTime();
+                  return timeA - timeB;
+                }
+                if (hasTimeA && !hasTimeB) return -1;
+                if (!hasTimeA && hasTimeB) return 1;
+                return 0;
+              });
               const isToday = isSameDay(day, new Date());
               return (
                 <div
@@ -262,11 +299,18 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                     >
                       {activityLabel(act.activityType)}
                     </span>
-                    {act.room && (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3" /> {act.room}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {formatAppTime(act.time, act.startDate ? null : act.date) && (
+                        <span className="flex items-center gap-1 text-xs font-semibold text-primary">
+                          <Clock className="h-3 w-3" /> {formatAppTime(act.time, act.startDate ? null : act.date)}
+                        </span>
+                      )}
+                      {act.room && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3" /> {act.room}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <h4 className="mt-2 font-display text-base font-bold text-foreground group-hover:text-primary transition-colors">
                     {act.subject}

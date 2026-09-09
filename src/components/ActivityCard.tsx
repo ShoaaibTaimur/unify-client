@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ACTIVITY_COLOR, ACTIVITY_TYPES, type Activity, type ActivityType } from "@/lib/types";
-import { format } from "date-fns";
+import { formatAppDate, formatAppTime } from "@/lib/date-utils";
 import { MapPin, Clock } from "lucide-react";
 import { ActivityDetailsDialog } from "./ActivityDetailsDialog";
 
@@ -22,6 +22,7 @@ export function ActivityCard({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const isRange = !!activity.startDate;
   const color = ACTIVITY_COLOR[activity.activityType];
+  const displayTime = formatAppTime(activity.time, isRange ? null : activity.date);
 
   const handleClick = () => {
     if (onClick) {
@@ -72,13 +73,13 @@ export function ActivityCard({
                 <Clock className="h-4 w-4 shrink-0 text-primary" />
                 <span className="truncate">
                   {isRange
-                    ? `${format(new Date(activity.startDate!), "MMM d, yyyy")} – ${format(new Date(activity.endDate!), "MMM d, yyyy")}`
-                    : format(new Date(activity.date!), "EEEE, MMM d")}
+                    ? `${formatAppDate(activity.startDate, "MMM d, yyyy")} – ${formatAppDate(activity.endDate, "MMM d, yyyy")}`
+                    : formatAppDate(activity.date, "EEEE, MMM d")}
                 </span>
               </div>
-              {(activity.time || (!isRange && activity.date)) && (
+              {displayTime && (
                 <div className="rounded-md bg-primary px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-xs shrink-0">
-                  {activity.time ?? format(new Date(activity.date!), "h:mm a")}
+                  {displayTime}
                 </div>
               )}
             </div>

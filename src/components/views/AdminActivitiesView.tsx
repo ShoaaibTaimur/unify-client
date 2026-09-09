@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import { getStoredUser } from "@/lib/session";
 
 export function AdminActivitiesView() {
+  const router = useRouter();
   const user = getStoredUser();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
@@ -33,6 +35,7 @@ export function AdminActivitiesView() {
     onSuccess: () => {
       toast.success("Activity deleted");
       qc.invalidateQueries({ queryKey: ["activities"] });
+      router.refresh();
     },
   });
 

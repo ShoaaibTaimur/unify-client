@@ -48,6 +48,7 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
+      cache: "no-store",
       ...init,
       signal: controller.signal,
       headers: {

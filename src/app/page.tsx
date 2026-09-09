@@ -10,12 +10,15 @@ export const metadata: Metadata = {
   description: "Track today's, upcoming, and past academic activities for your university class.",
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function HomePage() {
   const cls = await getServerClassSelection();
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60_000,
+        staleTime: 0,
       },
     },
   });

@@ -10,12 +10,15 @@ export const metadata: Metadata = {
   description: "Browse all scheduled class tests, lab tests, assignments, viva, and exams for your class.",
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ActivitiesPage() {
   const cls = await getServerClassSelection();
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60_000,
+        staleTime: 0,
       },
     },
   });

@@ -4,7 +4,7 @@ const API_URL = (
   process.env.NEXT_PUBLIC_API_URL || "https://unify-backend.vercel.app"
 ).replace(/\/$/, "");
 
-async function serverFetch<T>(path: string, revalidateSeconds = 30): Promise<T> {
+async function serverFetch<T>(path: string): Promise<T> {
   if (!API_URL) return [] as unknown as T;
 
   const controller = new AbortController();
@@ -13,11 +13,9 @@ async function serverFetch<T>(path: string, revalidateSeconds = 30): Promise<T> 
   try {
     const res = await fetch(`${API_URL}${path}`, {
       signal: controller.signal,
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
-      },
-      next: {
-        revalidate: revalidateSeconds,
       },
     });
 
@@ -35,18 +33,16 @@ async function serverFetch<T>(path: string, revalidateSeconds = 30): Promise<T> 
 
 export const serverApi = {
   listDepartments: (): Promise<Department[]> =>
-    serverFetch<Department[]>("/api/departments", 300),
+    serverFetch<Department[]>("/api/departments"),
 
   listBatches: (departmentId?: string): Promise<Batch[]> =>
     serverFetch<Batch[]>(
-      `/api/batches${departmentId ? `?departmentId=${encodeURIComponent(departmentId)}` : ""}`,
-      300
+      `/api/batches${departmentId ? `?departmentId=${encodeURIComponent(departmentId)}` : ""}`
     ),
 
   listSections: (batchId?: string): Promise<Section[]> =>
     serverFetch<Section[]>(
-      `/api/sections${batchId ? `?batchId=${encodeURIComponent(batchId)}` : ""}`,
-      300
+      `/api/sections${batchId ? `?batchId=${encodeURIComponent(batchId)}` : ""}`
     ),
 
   listActivities: (filter?: {
@@ -59,6 +55,6 @@ export const serverApi = {
     if (filter?.batchId && filter.batchId !== "all") cleanFilter.batchId = filter.batchId;
     if (filter?.sectionId && filter.sectionId !== "all") cleanFilter.sectionId = filter.sectionId;
     const qs = new URLSearchParams(cleanFilter).toString();
-    return serverFetch<Activity[]>(`/api/activities${qs ? `?${qs}` : ""}`, 30);
+    return serverFetch<Activity[]>(`/api/activities${qs ? `?${qs}` : ""}`);
   },
 };

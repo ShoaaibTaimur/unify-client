@@ -13,6 +13,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { addDays, format, differenceInDays, parseISO } from "date-fns";
+import { useRouter } from "next/navigation";
+import { parseAppDate, formatAppDate, formatAppTime, to24HourTime } from "@/lib/date-utils";
 import { CalendarIcon, ClockIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
@@ -39,6 +41,7 @@ const TIME_PRESETS = [
 ];
 
 export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseBatchSection, chooseDepartment, createdBy }: Props) {
+  const router = useRouter();
   const qc = useQueryClient();
   const [type, setType] = useState<ActivityType>("class-test");
   const [title, setTitle] = useState("");
@@ -66,23 +69,19 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
       setType(editing.activityType); setTitle(editing.title); setSubject(editing.subject);
       setRoom(editing.room ?? ""); setDescription(editing.description ?? "");
 
-      // Always restore the activity's date — even when editing.time is present.
-      // Previously selectedDate was only set in the else-if branch, so editing
-      // with a saved `time` field left selectedDate at today's date.
       if (editing.date) {
-        const d = new Date(editing.date);
+        const d = parseAppDate(editing.date) || new Date();
         setSelectedDate(d);
-        setTimeVal(editing.time ?? format(d, "HH:mm"));
+        setTimeVal(to24HourTime(editing.time) || format(d, "HH:mm"));
       } else if (editing.time) {
-        // time-only record (no date saved) — keep today as date anchor
         setSelectedDate(new Date());
-        setTimeVal(editing.time);
+        setTimeVal(to24HourTime(editing.time));
       } else {
         setSelectedDate(new Date()); setTimeVal("09:00");
       }
 
-      setStartDateObj(editing.startDate ? new Date(editing.startDate) : new Date());
-      setEndDateObj(editing.endDate ? new Date(editing.endDate) : addDays(new Date(), 3));
+      setStartDateObj(editing.startDate ? parseAppDate(editing.startDate) || new Date() : new Date());
+      setEndDateObj(editing.endDate ? parseAppDate(editing.endDate) || addDays(new Date(), 3) : addDays(new Date(), 3));
       setDepartmentId(editing.departmentId);
       setBatchId(editing.batchId); setSectionId(editing.sectionId || "all");
     } else {
@@ -125,7 +124,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
       const base = {
         departmentId: effectiveDepartmentId, batchId: targetBatchId, sectionId: targetSectionId, activityType: type, title, subject,
         room: room || undefined, description: description || undefined, createdBy,
-        time: timeVal || undefined,
+        time: formatAppTime(timeVal) || undefined,
         date: isExam ? undefined : combinedIso,
         startDate: isExam && startDateObj ? startDateObj.toISOString() : undefined,
         endDate: isExam && endDateObj ? endDateObj.toISOString() : undefined,
@@ -136,6 +135,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
     onSuccess: () => {
       toast.success(editing ? "Activity updated" : "Activity created");
       qc.invalidateQueries({ queryKey: ["activities"] });
+      router.refresh();
       onOpenChange(false);
     },
     onError: (e) => toast.error((e as Error).message),
@@ -506,8 +506,8 @@ export function ManageActivitiesTable({
                   <td className="px-4 py-3 font-mono text-xs font-bold text-primary">{a.title}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {a.startDate
-                      ? `${format(new Date(a.startDate), "PPP")} – ${format(new Date(a.endDate!), "PPP")}`
-                      : format(new Date(a.date!), "PPpp")}
+                      ? `${formatAppDate(a.startDate, "PPP")} – ${formatAppDate(a.endDate, "PPP")}`
+                      : `${formatAppDate(a.date, "PPP")}${formatAppTime(a.time, a.date) ? `, ${formatAppTime(a.time, a.date)}` : ""}`}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <Button size="sm" variant="ghost" onClick={() => onEdit(a)}>

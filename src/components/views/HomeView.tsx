@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { hasSelectedClass, setClassSelection, useClassSelection } from "@/lib/session";
+import { hasSelectedClass, setClassSelection, useClassSelection, useStoredUser } from "@/lib/session";
 import type { Activity, ClassSelection } from "@/lib/types";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { ActivityCard } from "@/components/ActivityCard";
@@ -12,6 +12,7 @@ import { ActivityDetailsDialog } from "@/components/ActivityDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/PageLoader";
 import { differenceInSeconds, isSameDay } from "date-fns";
+import { parseAppDate, formatAppDate, formatAppTime, combineDateAndTime, parseTimeComponents, isActivityExpired, isStaffUser } from "@/lib/date-utils";
 import { hasActiveExams } from "@/lib/utils";
 import { ArrowRight, PartyPopper, Settings2, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,8 +25,8 @@ function useTicker(ms = 1000) {
   }, [ms]);
 }
 
-function nextActivityDate(a: Activity) {
-  return new Date(a.startDate ?? a.date!);
+function nextActivityDate(a: Activity): Date {
+  return combineDateAndTime(a.startDate ?? a.date, a.time);
 }
 
 function countdown(totalSeconds: number): [number, string][] {
@@ -47,6 +48,8 @@ function countdown(totalSeconds: number): [number, string][] {
 
 export function HomeView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
+  const { user } = useStoredUser();
+  const isStaff = isStaffUser(user);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedNextActivity, setSelectedNextActivity] = useState<Activity | null>(null);
 
@@ -67,19 +70,16 @@ export function HomeView({ initialClass }: { initialClass?: ClassSelection | nul
   const departments = useQuery({
     queryKey: ["departments"],
     queryFn: () => api.listDepartments(),
-    staleTime: 5 * 60_000,
   });
   const batches = useQuery({
     queryKey: ["batches", cls?.departmentId],
     queryFn: () => (cls?.departmentId ? api.listBatches(cls.departmentId) : []),
     enabled: !!cls?.departmentId,
-    staleTime: 5 * 60_000,
   });
   const sections = useQuery({
     queryKey: ["sections", cls?.batchId],
     queryFn: () => (cls?.batchId && cls.batchId !== "all" ? api.listSections(cls.batchId) : []),
     enabled: !!cls?.batchId && cls.batchId !== "all",
-    staleTime: 5 * 60_000,
   });
 
   const [mounted, setMounted] = useState(false);
@@ -92,24 +92,43 @@ export function HomeView({ initialClass }: { initialClass?: ClassSelection | nul
   const now = new Date();
 
   const todayList = useMemo(() => {
-    return list.filter((a) => {
-      if (a.startDate && a.endDate) {
-        const s = new Date(a.startDate);
-        const e = new Date(a.endDate);
-        return (
-          now >= new Date(s.getFullYear(), s.getMonth(), s.getDate()) &&
-          now <= new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59)
-        );
-      }
-      return a.date ? isSameDay(new Date(a.date), now) : false;
-    });
-  }, [list, now]);
+    return list
+      .filter((a) => {
+        // Exclude activities whose scheduled time was > 1 hour ago for common users
+        if (!isStaff && isActivityExpired(a, now)) return false;
+
+        if (a.startDate && a.endDate) {
+          const s = parseAppDate(a.startDate);
+          const e = parseAppDate(a.endDate);
+          if (!s || !e) return false;
+          const sStart = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+          const eEnd = new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59, 999);
+          const nowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          return nowStart >= sStart && nowStart <= eEnd;
+        }
+        const d = parseAppDate(a.date);
+        return d ? isSameDay(d, now) : false;
+      })
+      .sort((a, b) => {
+        // Sort by earliest scheduled time first
+        const hasTimeA = Boolean(a.time && parseTimeComponents(a.time));
+        const hasTimeB = Boolean(b.time && parseTimeComponents(b.time));
+        if (hasTimeA && hasTimeB) {
+          const timeA = combineDateAndTime(a.startDate ?? a.date, a.time).getTime();
+          const timeB = combineDateAndTime(b.startDate ?? b.date, b.time).getTime();
+          return timeA - timeB;
+        }
+        if (hasTimeA && !hasTimeB) return -1;
+        if (!hasTimeA && hasTimeB) return 1;
+        return 0;
+      });
+  }, [list, now, isStaff]);
 
   const upcomingList = useMemo(() => {
     return list
-      .filter((a) => nextActivityDate(a) >= now)
+      .filter((a) => (!isStaff ? !isActivityExpired(a, now) : true) && nextActivityDate(a) >= now)
       .sort((a, b) => nextActivityDate(a).getTime() - nextActivityDate(b).getTime());
-  }, [list, now]);
+  }, [list, now, isStaff]);
 
   const next = upcomingList[0] ?? null;
   const upNext2 = upcomingList.slice(1, 3);
@@ -349,13 +368,10 @@ export function HomeView({ initialClass }: { initialClass?: ClassSelection | nul
                   </div>
                   <p className="mt-5 text-xs sm:text-sm opacity-80" suppressHydrationWarning>
                     Starts{" "}
-                    {nextActivityDate(next).toLocaleString(undefined, {
-                      weekday: "long",
-                      month: "short",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
+                    {formatAppDate(nextActivityDate(next), "EEEE, MMMM d")}
+                    {formatAppTime(next.time, next.startDate ? null : next.date)
+                      ? ` at ${formatAppTime(next.time, next.startDate ? null : next.date)}`
+                      : ""}
                   </p>
                 </>
               ) : (
