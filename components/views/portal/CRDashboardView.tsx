@@ -1,0 +1,228 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { customAuth } from "@/lib/auth";
+import {
+  ActivityForm,
+  ManageActivitiesTable,
+  useActivityList,
+} from "@/components/activities/ActivityForm";
+import { ActivityCard } from "@/components/activities/ActivityCard";
+import { CsvImportDialog } from "@/components/activities/CsvImportDialog";
+import { Stat as StatCard } from "@/components/layout/cr-shared";
+import { PageLoader } from "@/components/common/PageLoader";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  CalendarDays,
+  CheckCircle,
+  FileSpreadsheet,
+  Plus,
+  ArrowRight,
+  Users,
+  Building2,
+  Layers,
+  GraduationCap,
+  User as UserIcon,
+  Mail,
+} from "lucide-react";
+import type { Activity } from "@/types";
+import { toast } from "sonner";
+import { useOrgDetails } from "@/hooks/use-org-details";
+
+export function CRDashboardView() {
+  const router = useRouter();
+  const user = customAuth.getUser();
+  const [open, setOpen] = useState(false);
+  const [csvOpen, setCsvOpen] = useState(false);
+  const [editing, setEditing] = useState<Activity | null>(null);
+  const qc = useQueryClient();
+
+  const { depName, batchName, sectionName, formatted, isLoading: orgLoading } =
+    useOrgDetails({
+      departmentId: user?.departmentId,
+      batchId: user?.batchId,
+      sectionId: user?.sectionId,
+    });
+
+  const filter =
+    user?.departmentId && user?.batchId
+      ? {
+          departmentId: user.departmentId,
+          batchId: user.batchId,
+          sectionId: user.sectionId,
+        }
+      : undefined;
+
+  const activities = useActivityList(filter);
+
+  const del = useMutation({
+    mutationFn: (a: Activity) => api.deleteActivity(a.id),
+    onSuccess: () => {
+      toast.success("Activity deleted");
+      qc.invalidateQueries({ queryKey: ["activities"] });
+      router.refresh();
+    },
+  });
+
+  if (!user) return null;
+
+  const list = activities.data ?? [];
+  const now = new Date();
+  const upcomingCount = list.filter(
+    (a) => new Date(a.endDate ?? a.startDate ?? a.date!) >= now
+  ).length;
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <Users className="h-3.5 w-3.5 text-primary" />
+              CR Dashboard · {formatted || (orgLoading ? "Loading class details..." : "Class Section")}
+            </div>
+            <h1 className="mt-3 font-display text-3xl sm:text-4xl font-bold">
+              Welcome back, {user.name}!
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Manage activities for {formatted || "your class section"}.
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 border-t border-border/60 text-xs">
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <Building2 className="h-3.5 w-3.5 text-primary" />
+                <span>Department: <strong className="text-primary font-semibold">{depName || "Loading..."}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <Layers className="h-3.5 w-3.5 text-primary" />
+                <span>Batch: <strong className="text-primary font-semibold">{batchName || "Loading..."}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                <span>Section: <strong className="text-primary font-semibold">{sectionName || "All"}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+                <UserIcon className="h-3.5 w-3.5 text-primary" />
+                <span>CR: <strong>{user.name}</strong></span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-muted-foreground">
+                <Mail className="h-3.5 w-3.5 text-primary" />
+                <span>{user.email}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Button
+              className="rounded-full"
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add activity
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => setCsvOpen(true)}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" /> Import CSV Routine
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StatCard
+          icon={<CalendarDays className="h-5 w-5 text-primary" />}
+          value={upcomingCount}
+          label="Upcoming"
+        />
+        <StatCard
+          icon={<CheckCircle className="h-5 w-5 text-emerald-500" />}
+          value={list.length - upcomingCount}
+          label="Completed"
+        />
+        <StatCard
+          icon={<FileSpreadsheet className="h-5 w-5 text-blue-500" />}
+          value={list.length}
+          label={formatted ? `${formatted} Total` : "Total Managed"}
+        />
+      </div>
+
+      <div className="mt-10">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-display text-2xl">Manage activities</h2>
+            <p className="text-xs text-muted-foreground">
+              Total {list.length} activities in {formatted || "your batch & section"}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => setCsvOpen(true)}
+            >
+              <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Import CSV Routine
+            </Button>
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href="/activities">
+                View all <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button
+              className="rounded-full"
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add activity
+            </Button>
+          </div>
+        </div>
+        <div className="mt-4">
+          {activities.isLoading ? (
+            <div className="space-y-3">
+              {[1,2,3].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+            </div>
+          ) : (
+            <ManageActivitiesTable
+              activities={list}
+              onEdit={(a) => {
+                setEditing(a);
+                setOpen(true);
+              }}
+              onDelete={(a) => del.mutate(a)}
+            />
+          )}
+        </div>
+      </div>
+
+      <ActivityForm
+        open={open}
+        onOpenChange={setOpen}
+        editing={editing}
+        fixed={{
+          departmentId: user.departmentId,
+          batchId: user.batchId,
+          sectionId: user.sectionId,
+        }}
+        createdBy={user.name}
+      />
+
+      <CsvImportDialog
+        open={csvOpen}
+        onOpenChange={setCsvOpen}
+        defaultDepartmentId={user.departmentId}
+        defaultBatchId={user.batchId}
+      />
+    </div>
+  );
+}
