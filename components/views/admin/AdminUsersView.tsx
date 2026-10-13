@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -24,7 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, KeyRound, Copy, Check, Pencil } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { PageLoader } from "@/components/common/PageLoader";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -94,6 +94,8 @@ export function AdminUsersView() {
 function UserTable({ users, role }: { users: User[]; role: Role }) {
   const [creating, setCreating] = useState(false);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [resettingUser, setResettingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const router = useRouter();
@@ -187,15 +189,35 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                       {orgText}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:bg-destructive/10"
-                        disabled={deleteMutation.isPending}
-                        onClick={() => setDeletingUser(u)}
-                      >
-                        Delete
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 rounded-xl text-xs hover:bg-muted"
+                          onClick={() => setEditingUser(u)}
+                        >
+                          <Pencil className="h-3.5 w-3.5 text-primary" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 rounded-xl text-xs hover:bg-muted"
+                          onClick={() => setResettingUser(u)}
+                        >
+                          <KeyRound className="h-3.5 w-3.5 text-amber-500" />
+                          Reset Password
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 rounded-xl text-xs text-destructive hover:bg-destructive/10"
+                          disabled={deleteMutation.isPending}
+                          onClick={() => setDeletingUser(u)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -287,6 +309,20 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
             deleteMutation.mutate(deletingUser.id);
             setDeletingUser(null);
           }
+        }}
+      />
+      <ResetPasswordDialog
+        user={resettingUser}
+        open={!!resettingUser}
+        onOpenChange={(open) => {
+          if (!open) setResettingUser(null);
+        }}
+      />
+      <EditUserDialog
+        user={editingUser}
+        open={!!editingUser}
+        onOpenChange={(open) => {
+          if (!open) setEditingUser(null);
         }}
       />
     </div>
@@ -508,3 +544,389 @@ function CreateUserDialog({
     </Dialog>
   );
 }
+
+function ResetPasswordDialog({
+  user,
+  open,
+  onOpenChange,
+}: {
+  user: User | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [customPassword, setCustomPassword] = useState("");
+  const [useCustom, setUseCustom] = useState(false);
+  const [result, setResult] = useState<{ temporaryPassword: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const qc = useQueryClient();
+
+  const handleClose = () => {
+    onOpenChange(false);
+    setTimeout(() => {
+      setResult(null);
+      setCustomPassword("");
+      setUseCustom(false);
+      setCopied(false);
+    }, 200);
+  };
+
+  const resetMutation = useMutation({
+    mutationFn: () => {
+      if (!user) throw new Error("No user selected");
+      return api.resetUserPassword(
+        user.id,
+        useCustom && customPassword ? customPassword : undefined
+      );
+    },
+    onSuccess: (data) => {
+      setResult({ temporaryPassword: data.temporaryPassword });
+      qc.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Temporary password enforced successfully");
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const handleCopy = () => {
+    if (!result?.temporaryPassword) return;
+    navigator.clipboard.writeText(result.temporaryPassword);
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!user) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+              <KeyRound className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle className="font-display text-xl font-semibold">
+                Reset User Password
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground">
+                Enforce a new temporary login password
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        {result ? (
+          <div className="space-y-4 py-2">
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-xs text-emerald-700 dark:text-emerald-400">
+              <p className="font-semibold text-emerald-800 dark:text-emerald-300">
+                Temporary password generated!
+              </p>
+              <p className="mt-1 leading-relaxed">
+                The account has been updated and flagged. On next login, the user will be
+                automatically forced to choose a new secure password.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-foreground">
+                Temporary Password for {user.name} ({user.email})
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex h-11 flex-1 items-center justify-between rounded-xl border border-border bg-muted/50 px-3.5 font-mono text-base font-semibold tracking-wider text-foreground select-all">
+                  <span>{result.temporaryPassword}</span>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleCopy}
+                  className="h-11 rounded-xl px-4 gap-2 text-xs font-semibold"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 text-emerald-400" /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" /> Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button onClick={handleClose} className="w-full rounded-xl">
+                Done
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <div className="space-y-4 py-2 text-sm">
+            <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-xs">
+              <div className="font-medium text-foreground">{user.name}</div>
+              <div className="text-muted-foreground">
+                {user.email} · {user.role.toUpperCase()}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+              Generating a temporary password will immediately overwrite existing credentials.
+              The user will be required to change it immediately after signing in.
+            </div>
+
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useCustom}
+                  onChange={(e) => setUseCustom(e.target.checked)}
+                  className="rounded border-border accent-primary h-4 w-4"
+                />
+                Specify custom temporary password (otherwise auto-generated)
+              </label>
+
+              {useCustom && (
+                <div className="space-y-1.5 animate-in fade-in duration-150">
+                  <PasswordInput
+                    value={customPassword}
+                    onChange={(e) => setCustomPassword(e.target.value)}
+                    placeholder="Enter temp password (min 6 chars)"
+                    className="rounded-xl"
+                  />
+                  {customPassword && customPassword.length < 6 && (
+                    <p className="text-[11px] text-destructive">
+                      Minimum 6 characters required
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0 pt-2">
+              <Button
+                variant="outline"
+                className="rounded-xl"
+                onClick={handleClose}
+                disabled={resetMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={
+                  resetMutation.isPending ||
+                  (useCustom && (!customPassword || customPassword.length < 6))
+                }
+                className="rounded-xl"
+                onClick={() => resetMutation.mutate()}
+              >
+                {resetMutation.isPending ? "Generating..." : "Enforce Temp Password"}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditUserDialog({
+  user,
+  open,
+  onOpenChange,
+}: {
+  user: User | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [name, setName] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [batchId, setBatchId] = useState("");
+  const [sectionId, setSectionId] = useState("");
+  const qc = useQueryClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setDepartmentId(user.departmentId || "");
+      setBatchId(user.batchId || "");
+      setSectionId(user.sectionId || "");
+    }
+  }, [user]);
+
+  const departments = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => api.listDepartments(),
+  });
+  const batches = useQuery({
+    queryKey: ["batches", departmentId],
+    queryFn: () => (departmentId ? api.listBatches(departmentId) : []),
+    enabled: !!departmentId,
+  });
+  const sections = useQuery({
+    queryKey: ["sections", batchId],
+    queryFn: () => (batchId ? api.listSections(batchId) : []),
+    enabled: !!batchId,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: () => {
+      if (!user) throw new Error("No user selected");
+      return api.updateUser(user.id, {
+        name: name.trim(),
+        departmentId: user.role === "admin" ? null : departmentId || null,
+        batchId: user.role === "cr" ? batchId || null : null,
+        sectionId: user.role === "cr" ? sectionId || null : null,
+      });
+    },
+    onSuccess: () => {
+      toast.success("User assignment updated successfully");
+      qc.invalidateQueries({ queryKey: ["users"] });
+      router.refresh();
+      onOpenChange(false);
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  if (!user) return null;
+
+  const isFormValid =
+    name.trim() &&
+    (user.role === "admin" || departmentId) &&
+    (user.role !== "cr" || (batchId && sectionId));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Pencil className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle className="font-display text-xl font-semibold">
+                Edit User Assignment
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground">
+                Update {user.role.toUpperCase()} profile & academic assignments
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2 text-sm">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Email</label>
+            <Input
+              value={user.email}
+              disabled
+              className="rounded-xl bg-muted/50 text-muted-foreground cursor-not-allowed"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Full Name</label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Dr. Alex Vance"
+              className="rounded-xl"
+            />
+          </div>
+
+          {user.role !== "admin" && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">
+                {user.role === "teacher" ? "Faculty Department" : "Department"}
+              </label>
+              <Select
+                value={departmentId}
+                onValueChange={(v) => {
+                  setDepartmentId(v);
+                  setBatchId("");
+                  setSectionId("");
+                }}
+              >
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.data?.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {user.role === "cr" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Batch</label>
+                <Select
+                  value={batchId}
+                  onValueChange={(v) => {
+                    setBatchId(v);
+                    setSectionId("");
+                  }}
+                  disabled={!departmentId}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Select Batch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {batches.data?.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Section</label>
+                <Select
+                  value={sectionId}
+                  onValueChange={setSectionId}
+                  disabled={!batchId}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Select Section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sections.data?.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0 pt-2">
+          <Button
+            variant="outline"
+            className="rounded-xl"
+            onClick={() => onOpenChange(false)}
+            disabled={updateMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={!isFormValid || updateMutation.isPending}
+            className="rounded-xl"
+            onClick={() => updateMutation.mutate()}
+          >
+            {updateMutation.isPending ? "Saving..." : "Save Changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

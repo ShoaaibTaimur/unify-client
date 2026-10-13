@@ -11,8 +11,9 @@ import {
 import { CsvImportDialog } from "@/components/activities/CsvImportDialog";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/common/PageLoader";
-import { Plus, FileSpreadsheet } from "lucide-react";
+import { Plus, FileSpreadsheet, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import type { Activity } from "@/types";
 import { toast } from "sonner";
 import { customAuth } from "@/lib/auth";
@@ -22,6 +23,7 @@ export function AdminActivitiesView() {
   const user = customAuth.getUser();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);
   const qc = useQueryClient();
 
@@ -39,6 +41,17 @@ export function AdminActivitiesView() {
     },
   });
 
+  const clearAllMutation = useMutation({
+    mutationFn: () => api.clearAllActivities(),
+    onSuccess: (res) => {
+      toast.success(`Cleared all ${res.deletedCount} activities`);
+      qc.invalidateQueries({ queryKey: ["activities"] });
+      setConfirmClearAll(false);
+      router.refresh();
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const list = activities.data ?? [];
 
   return (
@@ -50,7 +63,17 @@ export function AdminActivitiesView() {
             Manage all class tests, lab tests, viva, assignments, and exams across the university.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {list.length > 0 && (
+            <Button
+              variant="destructive"
+              className="rounded-full gap-2 text-xs"
+              disabled={clearAllMutation.isPending}
+              onClick={() => setConfirmClearAll(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Clear All Activities ({list.length})
+            </Button>
+          )}
           <Button
             variant="outline"
             className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
@@ -94,6 +117,14 @@ export function AdminActivitiesView() {
       />
 
       <CsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} />
+
+      <ConfirmDeleteDialog
+        open={confirmClearAll}
+        onOpenChange={setConfirmClearAll}
+        itemName={`ALL ${list.length} activities university-wide`}
+        isPending={clearAllMutation.isPending}
+        onConfirm={() => clearAllMutation.mutate()}
+      />
     </div>
   );
 }

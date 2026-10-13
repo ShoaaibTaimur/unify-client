@@ -179,6 +179,8 @@ export const api = {
     }),
   deleteActivity: (id: string): Promise<void> =>
     http(`/api/activities/${id}`, { method: "DELETE" }),
+  clearAllActivities: (): Promise<{ ok: boolean; deletedCount: number }> =>
+    http("/api/activities", { method: "DELETE" }),
 
   /* -------- Users / Auth -------- */
   listUsers: (): Promise<User[]> => http("/api/users"),
@@ -192,8 +194,29 @@ export const api = {
     sectionId?: string;
   }): Promise<User> =>
     http("/api/users", { method: "POST", body: JSON.stringify(input) }),
+  updateUser: (
+    id: string,
+    data: {
+      name?: string;
+      departmentId?: string | null;
+      batchId?: string | null;
+      sectionId?: string | null;
+    }
+  ): Promise<User> =>
+    http(`/api/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
   deleteUser: (id: string): Promise<void> =>
     http(`/api/users/${id}`, { method: "DELETE" }),
+  resetUserPassword: (
+    id: string,
+    temporaryPassword?: string
+  ): Promise<{ ok: boolean; temporaryPassword: string; user: User }> =>
+    http(`/api/users/${id}/reset-password`, {
+      method: "POST",
+      body: JSON.stringify({ temporaryPassword }),
+    }),
   login: (
     email: string,
     password: string
