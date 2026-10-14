@@ -18,6 +18,13 @@ function getSafeRedirectUrl(target: string | null): string | null {
   return null;
 }
 
+function isRoleAuthorized(role: string, target: string): boolean {
+  if (target.startsWith("/admin")) return role === "admin";
+  if (target.startsWith("/teacher")) return role === "teacher" || role === "admin";
+  if (target.startsWith("/cr")) return role === "cr" || role === "admin";
+  return true;
+}
+
 export function LoginView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -29,7 +36,7 @@ export function LoginView() {
   useEffect(() => {
     if (!sessionPending && currentSessionUser) {
       const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
-      if (fromParam) {
+      if (fromParam && isRoleAuthorized(currentSessionUser.role, fromParam)) {
         router.replace(fromParam);
       } else if (currentSessionUser.role === "admin") {
         router.replace("/admin");
@@ -51,7 +58,7 @@ export function LoginView() {
       toast.success(`Welcome back, ${user.name}!`);
 
       const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
-      if (fromParam) {
+      if (fromParam && isRoleAuthorized(user.role, fromParam)) {
         router.push(fromParam);
       } else if (user.role === "admin") {
         router.push("/admin");

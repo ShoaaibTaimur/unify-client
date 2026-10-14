@@ -14,8 +14,11 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = await getServerUser();
-  if (!user || user.role !== "admin") {
+  if (!user) {
     redirect("/login?from=/admin");
+  }
+  if (user.role !== "admin") {
+    redirect(user.role === "teacher" ? "/teacher" : user.role === "cr" ? "/cr" : "/");
   }
 
   return <AdminClientLayout initialUser={user}>{children}</AdminClientLayout>;

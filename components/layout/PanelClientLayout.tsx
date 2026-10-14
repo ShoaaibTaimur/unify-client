@@ -89,9 +89,9 @@ export function PanelClientLayout({
       return;
     }
     if (user.role !== role && user.role !== "admin") {
-      if (user.role === "cr") router.push("/cr");
-      else if (user.role === "teacher") router.push("/teacher");
-      else router.push("/");
+      if (user.role === "cr") router.replace("/cr");
+      else if (user.role === "teacher") router.replace("/teacher");
+      else router.replace("/");
       return;
     }
   }, [user, isPending, role, router, pathname]);
@@ -100,7 +100,9 @@ export function PanelClientLayout({
     setOpen(false);
   }, [pathname]);
 
-  if (isPending || !user) {
+  const isAllowed = user && (user.role === role || user.role === "admin");
+
+  if (isPending || !user || !isAllowed) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />

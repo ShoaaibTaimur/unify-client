@@ -4,8 +4,11 @@ import { redirect } from "next/navigation";
 
 export default async function CRLayout({ children }: { children: React.ReactNode }) {
   const user = await getServerUser();
-  if (!user || (user.role !== "cr" && user.role !== "admin")) {
+  if (!user) {
     redirect("/login?from=/cr");
+  }
+  if (user.role !== "cr" && user.role !== "admin") {
+    redirect(user.role === "teacher" ? "/teacher" : "/");
   }
 
   return (

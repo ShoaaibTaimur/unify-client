@@ -14,8 +14,11 @@ export const dynamic = "force-dynamic";
 
 export default async function TeacherDashboardPage() {
   const user = await getServerUser();
-  if (!user || (user.role !== "teacher" && user.role !== "admin")) {
+  if (!user) {
     redirect("/login?from=/teacher");
+  }
+  if (user.role !== "teacher" && user.role !== "admin") {
+    redirect(user.role === "cr" ? "/cr" : "/");
   }
 
   const queryClient = new QueryClient();

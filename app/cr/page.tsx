@@ -14,8 +14,11 @@ export const dynamic = "force-dynamic";
 
 export default async function CRDashboardPage() {
   const user = await getServerUser();
-  if (!user || (user.role !== "cr" && user.role !== "admin")) {
+  if (!user) {
     redirect("/login?from=/cr");
+  }
+  if (user.role !== "cr" && user.role !== "admin") {
+    redirect(user.role === "teacher" ? "/teacher" : "/");
   }
 
   const queryClient = new QueryClient();

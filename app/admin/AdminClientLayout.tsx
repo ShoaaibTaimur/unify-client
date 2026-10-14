@@ -86,7 +86,7 @@ export function AdminClientLayout({
       return;
     }
     if (user.role !== "admin") {
-      router.push(user.role === "teacher" ? "/teacher" : user.role === "cr" ? "/cr" : "/");
+      router.replace(user.role === "teacher" ? "/teacher" : user.role === "cr" ? "/cr" : "/");
       return;
     }
   }, [user, isPending, router, pathname]);
@@ -95,7 +95,7 @@ export function AdminClientLayout({
     setOpen(false);
   }, [pathname]);
 
-  if (isPending || !user) {
+  if (isPending || !user || user.role !== "admin") {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
