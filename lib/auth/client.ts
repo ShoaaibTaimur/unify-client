@@ -61,9 +61,6 @@ export const authClient = {
     return { user: data.user };
   },
 
-  /**
-   * Log out current user, revoking server session and clearing cookies.
-   */
   async signOut(): Promise<void> {
     try {
       await fetch("/api/auth/logout", {
@@ -77,9 +74,6 @@ export const authClient = {
     }
   },
 
-  /**
-   * Query the authoritative current session from Next.js server.
-   */
   async getSession(): Promise<AuthSession> {
     try {
       const res = await fetch("/api/auth/session", {
@@ -98,14 +92,10 @@ export const authClient = {
         isAuthenticated: Boolean(data.isAuthenticated && data.user),
       };
     } catch {
-      // Network failure: do not force unauthenticated state
       return { user: null, isAuthenticated: false };
     }
   },
 
-  /**
-   * Rotate and refresh access token with single-flight concurrency.
-   */
   async refreshSession(): Promise<boolean> {
     if (ongoingRefreshPromise) {
       return ongoingRefreshPromise;

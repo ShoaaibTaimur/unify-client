@@ -27,10 +27,6 @@ if (typeof window !== "undefined") {
 }
 
 export const customAuth = {
-  getToken(): string | null {
-    return null;
-  },
-
   getUser(): User | null {
     return inMemoryUser;
   },
@@ -48,18 +44,6 @@ export const customAuth = {
 
   async createUser(input: CreateUserInput): Promise<User> {
     return api.createUser(input);
-  },
-
-  updateUser(patch: Partial<User>) {
-    if (!inMemoryUser) return;
-    inMemoryUser = { ...inMemoryUser, ...patch };
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event(AUTH_EVENT));
-    }
-  },
-
-  isAuthenticated(): boolean {
-    return Boolean(inMemoryUser);
   },
 };
 

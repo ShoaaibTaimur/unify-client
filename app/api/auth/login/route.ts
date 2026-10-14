@@ -42,7 +42,6 @@ export async function POST(req: Request) {
     });
 
     if (!res.ok) {
-      // Generic error response to prevent user enumeration
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -58,14 +57,11 @@ export async function POST(req: Request) {
         { status: 502 }
       );
     }
-
-    // Set HTTP-only secure cookies on server with lifetimes determined by the backend
     await setAuthCookies(accessToken, refreshToken, {
       maxAge: data.expiresIn,
       refreshMaxAge: data.refreshExpiresIn,
     });
 
-    // Return safe user data ONLY. Never leak tokens in JSON response!
     return NextResponse.json({
       ok: true,
       user,

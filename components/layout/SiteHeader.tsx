@@ -16,7 +16,6 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { useAuth } from "@/lib/auth";
-import type { User } from "@/types";
 import { hasActiveExams, getActivityQueryKey } from "@/lib/utils";
 import {
   Menu,
