@@ -39,7 +39,7 @@ export default async function TeacherDashboardPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <TeacherDashboardView />
+      <TeacherDashboardView initialUser={user} />
     </HydrationBoundary>
   );
 }

@@ -42,7 +42,6 @@ export function SiteHeader() {
 
   const { cls } = useClassSelection();
   const activities = useQuery({
-    // Key matches HomeView / ActivitiesView / CalendarView — shared cache, no extra fetch
     queryKey: getActivityQueryKey(cls),
     enabled: true,
     queryFn: () => api.listActivities(hasSelectedClass(cls) ? cls! : undefined),

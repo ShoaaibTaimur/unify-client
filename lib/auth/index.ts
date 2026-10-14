@@ -18,19 +18,19 @@ if (typeof window !== "undefined") {
   authClient.getSession().then((session) => {
     inMemoryUser = session.user;
   });
+
+  window.addEventListener(AUTH_EVENT, () => {
+    authClient.getSession().then((session) => {
+      inMemoryUser = session.user;
+    });
+  });
 }
 
 export const customAuth = {
-  /**
-   * Browser JavaScript NEVER accesses tokens. Returns null by security design.
-   */
   getToken(): string | null {
     return null;
   },
 
-  /**
-   * Returns in-memory cached user info without reading sensitive storage.
-   */
   getUser(): User | null {
     return inMemoryUser;
   },
@@ -63,10 +63,6 @@ export const customAuth = {
   },
 };
 
-/**
- * Reactive React hook for custom frontend authentication.
- * Wraps useSession for backwards compatibility.
- */
 export function useAuth(initialUser?: User | null) {
   const { user, isPending, isAuthenticated, refetch } = useSession(initialUser);
 

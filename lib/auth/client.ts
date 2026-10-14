@@ -40,9 +40,6 @@ export const authClient = {
     return { user: data.user };
   },
 
-  /**
-   * Register a new account via Next.js Route Handler.
-   */
   async signUp(input: SignUpInput): Promise<{ user: User }> {
     const res = await fetch("/api/auth/signup", {
       method: "POST",

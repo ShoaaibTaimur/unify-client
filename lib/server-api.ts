@@ -2,10 +2,7 @@ import type { Activity, Batch, Department, Section, User } from "@/types";
 import { getAccessToken } from "./auth/cookies";
 
 const API_URL = (
-  process.env.BACKEND_API_URL ||
-  process.env.API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:3001"
+  process.env.NEXT_PUBLIC_API_URL || ""
 ).replace(/\/$/, "");
 
 async function serverFetch<T>(

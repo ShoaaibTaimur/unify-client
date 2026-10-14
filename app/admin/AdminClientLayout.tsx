@@ -60,28 +60,48 @@ const ADMIN_NAV: AdminNavItem[] = [
   },
 ];
 
-export function AdminClientLayout({ children }: { children: React.ReactNode }) {
+import { useSession } from "@/hooks/use-session";
+
+export function AdminClientLayout({
+  children,
+  initialUser,
+}: {
+  children: React.ReactNode;
+  initialUser?: User | null;
+}) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isPending } = useSession(initialUser);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const u = customAuth.getUser();
-    if (!u) { router.push("/login"); return; }
-    if (u.mustChangePassword) { router.push("/change-password"); return; }
-    if (u.role !== "admin") {
-      router.push(u.role === "teacher" ? "/teacher" : "/cr");
+    if (isPending) return;
+
+    if (!user) {
+      router.push(`/login?from=${encodeURIComponent(pathname)}`);
       return;
     }
-    setUser(u);
-  }, [router]);
+    if (user.mustChangePassword) {
+      router.push("/change-password");
+      return;
+    }
+    if (user.role !== "admin") {
+      router.push(user.role === "teacher" ? "/teacher" : user.role === "cr" ? "/cr" : "/");
+      return;
+    }
+  }, [user, isPending, router, pathname]);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  if (!user) return null;
+  if (isPending || !user) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   const NavList = (
     <nav className="flex-1 space-y-1">

@@ -35,7 +35,7 @@ export default async function CRDashboardPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <CRDashboardView />
+      <CRDashboardView initialUser={user} />
     </HydrationBoundary>
   );
 }

@@ -53,10 +53,6 @@ export async function getRefreshToken(): Promise<string | null> {
   }
 }
 
-/**
- * Set HTTP-only auth cookies using token lifetimes provided by backend.
- * Zero hardcoded lifetimes on frontend.
- */
 export async function setAuthCookies(
   accessToken: string,
   refreshToken: string,

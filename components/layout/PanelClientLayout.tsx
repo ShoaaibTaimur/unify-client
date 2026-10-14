@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { useOrgDetails } from "@/hooks/use-org-details";
 
+import { useSession } from "@/hooks/use-session";
+
 type AllowedRole = "cr" | "teacher";
 
 const NAV_ITEMS = [
@@ -55,15 +57,17 @@ export function PanelClientLayout({
   role,
   roleLabel,
   panelHref,
+  initialUser,
 }: {
   children: React.ReactNode;
   role: AllowedRole;
   roleLabel: string;
   panelHref: string;
+  initialUser?: User | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isPending } = useSession(initialUser);
   const [open, setOpen] = useState(false);
 
   const { formatted, depName } = useOrgDetails({
@@ -74,23 +78,35 @@ export function PanelClientLayout({
   const orgLabel = role === "teacher" ? depName : formatted;
 
   useEffect(() => {
-    const u = customAuth.getUser();
-    if (!u) { router.push("/login"); return; }
-    if (u.mustChangePassword) { router.push("/change-password"); return; }
-    if (u.role !== role) {
-      if (u.role === "admin") router.push("/admin");
-      else if (u.role === "cr") router.push("/cr");
-      else router.push("/teacher");
+    if (isPending) return;
+
+    if (!user) {
+      router.push(`/login?from=${encodeURIComponent(pathname)}`);
       return;
     }
-    setUser(u);
-  }, [role, router]);
+    if (user.mustChangePassword) {
+      router.push("/change-password");
+      return;
+    }
+    if (user.role !== role && user.role !== "admin") {
+      if (user.role === "cr") router.push("/cr");
+      else if (user.role === "teacher") router.push("/teacher");
+      else router.push("/");
+      return;
+    }
+  }, [user, isPending, role, router, pathname]);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  if (!user) return null;
+  if (isPending || !user) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   const handleSignOut = async () => {
     await customAuth.logout();

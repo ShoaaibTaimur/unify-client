@@ -29,13 +29,14 @@ import {
   User as UserIcon,
   Mail,
 } from "lucide-react";
-import type { Activity } from "@/types";
+import type { Activity, User } from "@/types";
 import { toast } from "sonner";
 import { useOrgDetails } from "@/hooks/use-org-details";
+import { useSession } from "@/hooks/use-session";
 
-export function TeacherDashboardView() {
+export function TeacherDashboardView({ initialUser }: { initialUser?: User | null } = {}) {
   const router = useRouter();
-  const user = customAuth.getUser();
+  const { user } = useSession(initialUser);
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);

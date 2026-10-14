@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { customAuth } from "@/lib/auth";
+import { useSession } from "@/hooks/use-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -11,7 +12,6 @@ import { PasswordInput } from "@/components/common/PasswordInput";
 
 function getSafeRedirectUrl(target: string | null): string | null {
   if (!target) return null;
-  // Prevent open redirect attacks: must start with / and not // or \\
   if (target.startsWith("/") && !target.startsWith("//") && !target.includes("\\")) {
     return target;
   }
@@ -21,9 +21,27 @@ function getSafeRedirectUrl(target: string | null): string | null {
 export function LoginView() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user: currentSessionUser, isPending: sessionPending } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!sessionPending && currentSessionUser) {
+      const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
+      if (fromParam) {
+        router.replace(fromParam);
+      } else if (currentSessionUser.role === "admin") {
+        router.replace("/admin");
+      } else if (currentSessionUser.role === "cr") {
+        router.replace("/cr");
+      } else if (currentSessionUser.role === "teacher") {
+        router.replace("/teacher");
+      } else {
+        router.replace("/");
+      }
+    }
+  }, [currentSessionUser, sessionPending, searchParams, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +49,6 @@ export function LoginView() {
     try {
       const user = await customAuth.login(email, password);
       toast.success(`Welcome back, ${user.name}!`);
-      router.refresh();
 
       const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
       if (fromParam) {
@@ -40,8 +57,10 @@ export function LoginView() {
         router.push("/admin");
       } else if (user.role === "cr") {
         router.push("/cr");
-      } else {
+      } else if (user.role === "teacher") {
         router.push("/teacher");
+      } else {
+        router.push("/");
       }
     } catch (err) {
       toast.error((err as Error).message);

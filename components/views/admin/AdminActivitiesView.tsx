@@ -16,11 +16,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import type { Activity } from "@/types";
 import { toast } from "sonner";
-import { customAuth } from "@/lib/auth";
+import { useSession } from "@/hooks/use-session";
 
 export function AdminActivitiesView() {
   const router = useRouter();
-  const user = customAuth.getUser();
+  const { user } = useSession();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
