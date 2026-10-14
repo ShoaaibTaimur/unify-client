@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { CRDashboardView } from "@/components/views/portal/CRDashboardView";
-import { getServerUser } from "@/lib/server-auth";
+import { getServerUser } from "@/lib/auth/server";
 import { serverApi } from "@/lib/server-api";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function CRDashboardPage() {
   const user = await getServerUser();
   if (!user || (user.role !== "cr" && user.role !== "admin")) {
-    redirect("/login");
+    redirect("/login?from=/cr");
   }
 
   const queryClient = new QueryClient();

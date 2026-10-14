@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { customAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,18 @@ import { toast } from "sonner";
 import { Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
 import { PasswordInput } from "@/components/common/PasswordInput";
 
+function getSafeRedirectUrl(target: string | null): string | null {
+  if (!target) return null;
+  // Prevent open redirect attacks: must start with / and not // or \\
+  if (target.startsWith("/") && !target.startsWith("//") && !target.includes("\\")) {
+    return target;
+  }
+  return null;
+}
+
 export function LoginView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,9 +32,17 @@ export function LoginView() {
       const user = await customAuth.login(email, password);
       toast.success(`Welcome back, ${user.name}!`);
       router.refresh();
-      if (user.role === "admin") router.push("/admin");
-      else if (user.role === "cr") router.push("/cr");
-      else router.push("/teacher");
+
+      const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
+      if (fromParam) {
+        router.push(fromParam);
+      } else if (user.role === "admin") {
+        router.push("/admin");
+      } else if (user.role === "cr") {
+        router.push("/cr");
+      } else {
+        router.push("/teacher");
+      }
     } catch (err) {
       toast.error((err as Error).message);
     } finally {

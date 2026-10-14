@@ -3,7 +3,7 @@ import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query
 import { HomeView } from "@/components/views/academic/HomeView";
 import { serverApi } from "@/lib/server-api";
 import { getServerClassSelection } from "@/lib/server-session";
-import { getServerUser } from "@/lib/server-auth";
+import { getServerUser } from "@/lib/auth/server";
 import { hasSelectedClass, getActivityQueryKey } from "@/lib/utils";
 
 export const metadata: Metadata = {

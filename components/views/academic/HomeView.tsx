@@ -11,7 +11,6 @@ import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/activities/ActivityDetailsDialog";
 import { Button } from "@/components/ui/button";
-import { PageLoader } from "@/components/common/PageLoader";
 import { differenceInSeconds, isSameDay } from "date-fns";
 import { parseAppDate, formatAppDate, formatAppTime, combineDateAndTime, parseTimeComponents, isActivityExpired, isStaffUser } from "@/lib/date-utils";
 import { hasActiveExams, getActivityQueryKey } from "@/lib/utils";

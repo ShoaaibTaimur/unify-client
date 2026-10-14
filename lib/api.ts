@@ -1,14 +1,5 @@
-/**
- * UNIFY API client.
- *
- * All data is loaded from the real backend. Set the backend URL via env:
- *
- *     NEXT_PUBLIC_API_URL=https://your-backend.vercel.app
- *
- * Without this variable, every request throws a clear error so nothing
- * silently falls back to fake data.
- */
 import type { Activity, Batch, Department, Section, User } from "@/types";
+import { authClient } from "./auth";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
@@ -25,30 +16,27 @@ function requireApiUrl(): string {
 
 function getTargetUrl(path: string): string {
   if (typeof window !== "undefined") {
-    // In browser: relative URL leverages same-origin Next.js rewrite (zero CORS, auto cookies)
+    // In browser: relative URL leverages same-origin Next.js rewrite / Route Handlers
     return path;
   }
   return `${API_URL}${path}`;
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("unify_token") : null;
-
   // Abort after 10 seconds to prevent lingering loading hangs
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
 
   let res: Response;
   try {
-    res = await fetch(getTargetUrl(path), {
+    // authClient.fetch automatically includes HTTP-only cookies and handles 401 refresh retries
+    res = await authClient.fetch(getTargetUrl(path), {
       cache: "no-store",
-      credentials: "include",
+      credentials: "same-origin",
       ...init,
       signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...init?.headers,
       },
     });
@@ -217,18 +205,17 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ temporaryPassword }),
     }),
-  login: (
+  login: async (
     email: string,
     password: string
-  ): Promise<{ token: string; user: User }> =>
-    http("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    }),
-  logout: (): Promise<{ ok: true }> =>
-    http("/api/auth/logout", {
-      method: "POST",
-    }),
+  ): Promise<{ token: string; user: User }> => {
+    const res = await authClient.signIn({ email, password });
+    return { token: "", user: res.user };
+  },
+  logout: async (): Promise<{ ok: true }> => {
+    await authClient.signOut();
+    return { ok: true };
+  },
   changePassword: (
     current: string,
     next: string
@@ -238,3 +225,13 @@ export const api = {
       body: JSON.stringify({ current, next }),
     }),
 };
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+  role: Role;
+  departmentId?: string;
+  batchId?: string;
+  sectionId?: string;
+}

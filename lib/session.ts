@@ -4,8 +4,6 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ClassSelection } from "@/types";
 
 const CLASS_KEY = "unify_class";
-const TOKEN_KEY = "unify_token";
-const USER_KEY = "unify_user";
 
 export { hasSelectedClass } from "./utils";
 

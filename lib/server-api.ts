@@ -1,10 +1,11 @@
 import type { Activity, Batch, Department, Section, User } from "@/types";
-import { getServerToken } from "./server-auth";
+import { getAccessToken } from "./auth/cookies";
 
 const API_URL = (
+  process.env.BACKEND_API_URL ||
   process.env.API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  ""
+  "http://localhost:3001"
 ).replace(/\/$/, "");
 
 async function serverFetch<T>(
@@ -16,7 +17,7 @@ async function serverFetch<T>(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
 
-  const token = options?.token ?? (await getServerToken());
+  const token = options?.token ?? (await getAccessToken());
   const reval = options?.revalidate ?? 30;
 
   try {
@@ -26,7 +27,12 @@ async function serverFetch<T>(
       cache: token ? "no-store" : undefined,
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}`, Cookie: `unify_token=${encodeURIComponent(token)}` } : {}),
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+              Cookie: `access_token=${encodeURIComponent(token)}; unify_token=${encodeURIComponent(token)}`,
+            }
+          : {}),
       },
     });
 
@@ -88,7 +94,7 @@ export const serverApi = {
   },
 
   getCurrentUser: async (): Promise<User | null> => {
-    const token = await getServerToken();
+    const token = await getAccessToken();
     if (!token) return null;
     const res = await serverFetch<{ user: User }>("/api/auth/me", { token });
     return res && "user" in res ? res.user : null;

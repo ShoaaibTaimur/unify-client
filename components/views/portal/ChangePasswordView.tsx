@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { customAuth } from "@/lib/auth";
+import { useSession } from "@/hooks/use-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -12,11 +12,19 @@ import { PasswordInput } from "@/components/common/PasswordInput";
 
 export function ChangePasswordView() {
   const router = useRouter();
-  const user = customAuth.getUser();
+  const { user, isPending } = useSession();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (isPending) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center text-sm text-muted-foreground">
+        Loading security session...
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -35,15 +43,8 @@ export function ChangePasswordView() {
     setLoading(true);
     try {
       await api.changePassword(oldPassword, newPassword);
-      customAuth.updateUser({ mustChangePassword: false });
-      toast.success("Password changed successfully");
-      router.push(
-        user.role === "admin"
-          ? "/admin"
-          : user.role === "cr"
-          ? "/cr"
-          : "/teacher"
-      );
+      toast.success("Password changed successfully. Please sign in with your new credentials.");
+      router.push("/login");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
