@@ -17,8 +17,8 @@ export default async function TeacherDashboardPage() {
   if (!user) {
     redirect("/login?from=/teacher");
   }
-  if (user.role !== "teacher" && user.role !== "admin") {
-    redirect(user.role === "cr" ? "/cr" : "/");
+  if (user.role !== "teacher") {
+    redirect(user.role === "admin" ? "/admin" : user.role === "cr" ? "/cr" : "/");
   }
 
   const queryClient = new QueryClient();

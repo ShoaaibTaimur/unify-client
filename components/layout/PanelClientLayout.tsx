@@ -88,8 +88,9 @@ export function PanelClientLayout({
       router.push("/change-password");
       return;
     }
-    if (user.role !== role && user.role !== "admin") {
-      if (user.role === "cr") router.replace("/cr");
+    if (user.role !== role) {
+      if (user.role === "admin") router.replace("/admin");
+      else if (user.role === "cr") router.replace("/cr");
       else if (user.role === "teacher") router.replace("/teacher");
       else router.replace("/");
       return;
@@ -100,7 +101,7 @@ export function PanelClientLayout({
     setOpen(false);
   }, [pathname]);
 
-  const isAllowed = user && (user.role === role || user.role === "admin");
+  const isAllowed = user && user.role === role;
 
   if (isPending || !user || !isAllowed) {
     return (

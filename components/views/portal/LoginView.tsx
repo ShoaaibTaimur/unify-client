@@ -20,8 +20,8 @@ function getSafeRedirectUrl(target: string | null): string | null {
 
 function isRoleAuthorized(role: string, target: string): boolean {
   if (target.startsWith("/admin")) return role === "admin";
-  if (target.startsWith("/teacher")) return role === "teacher" || role === "admin";
-  if (target.startsWith("/cr")) return role === "cr" || role === "admin";
+  if (target.startsWith("/teacher")) return role === "teacher";
+  if (target.startsWith("/cr")) return role === "cr";
   return true;
 }
 

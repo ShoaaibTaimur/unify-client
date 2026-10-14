@@ -17,8 +17,8 @@ export default async function CRDashboardPage() {
   if (!user) {
     redirect("/login?from=/cr");
   }
-  if (user.role !== "cr" && user.role !== "admin") {
-    redirect(user.role === "teacher" ? "/teacher" : "/");
+  if (user.role !== "cr") {
+    redirect(user.role === "admin" ? "/admin" : user.role === "teacher" ? "/teacher" : "/");
   }
 
   const queryClient = new QueryClient();
