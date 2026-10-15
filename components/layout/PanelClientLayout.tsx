@@ -119,13 +119,14 @@ export function PanelClientLayout({
   };
 
   const NavList = (
-    <nav className="flex-1 space-y-1">
+    <nav className="flex flex-col p-2 font-mono text-xs uppercase tracking-wider">
       <Link
         href={panelHref}
-        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+        prefetch={false}
+        className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold transition-colors border-b border-border/40 ${
           pathname === panelHref
-            ? "bg-primary text-primary-foreground"
-            : "text-foreground/70 hover:bg-muted hover:text-foreground"
+            ? "bg-primary text-primary-foreground font-bold shadow-2xs"
+            : "text-foreground/80 hover:bg-primary/10 hover:text-primary"
         }`}
       >
         <LayoutDashboard className="h-4 w-4" /> {roleLabel} Panel
@@ -137,91 +138,123 @@ export function PanelClientLayout({
           <Link
             key={n.to}
             href={n.to}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+            prefetch={false}
+            className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold transition-colors border-b border-border/40 ${
               active
-                ? "bg-primary text-primary-foreground"
-                : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                ? "bg-primary text-primary-foreground font-bold shadow-2xs"
+                : "text-foreground/80 hover:bg-primary/10 hover:text-primary"
             }`}
           >
             <Icon className="h-4 w-4" /> {n.label}
           </Link>
         );
       })}
-      <div className="my-2 border-t border-border" />
-      <button
-        onClick={handleSignOut}
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-destructive/10 hover:text-destructive"
-      >
-        <LogOut className="h-4 w-4" /> Sign out
-      </button>
     </nav>
   );
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur sm:px-6">
-        <div className="flex min-w-0 items-center gap-2">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                aria-label="Open menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] p-0">
-              <SheetHeader className="border-b border-border p-4">
-                <SheetTitle className="text-left">
-                  <Logo />
-                </SheetTitle>
-              </SheetHeader>
-              <div className="flex h-[calc(100%-4rem)] flex-col p-3">
-                {NavList}
-                <div className="mt-4 rounded-xl border border-border bg-card p-3">
-                  <div className="text-xs font-medium">{user.name}</div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {user.email}
-                  </div>
-                  {orgLabel && (
-                    <div className="mt-1 text-[11px] font-semibold text-primary truncate">
-                      {orgLabel}
+      <header className="sticky top-0 z-30 h-12 border-b border-border bg-card/90 backdrop-blur-md">
+        <div className="flex h-full items-stretch justify-between">
+          {/* Left: Hamburger + Logo + Desktop Nav */}
+          <div className="flex items-stretch min-w-0">
+            <div className="md:hidden flex items-stretch border-r border-border">
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex w-12 items-center justify-center text-foreground/70 hover:bg-foreground hover:text-background transition-colors"
+                    aria-label={`Open ${roleLabel} menu`}
+                  >
+                    <Menu className="h-4 w-4" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] p-0 rounded-none border-r border-border bg-background">
+                  <SheetHeader className="border-b border-border p-4">
+                    <SheetTitle className="text-left">
+                      <Logo />
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex h-[calc(100%-4rem)] flex-col justify-between p-2">
+                    {NavList}
+                    <div className="rounded-[4px] border border-border bg-secondary/30 p-3 font-mono">
+                      <div className="text-xs font-bold text-foreground">{user.name}</div>
+                      <div className="truncate text-[11px] text-muted-foreground">{user.email}</div>
+                      {orgLabel && (
+                        <div className="mt-1 text-[11px] font-semibold text-primary truncate">
+                          {orgLabel}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-          <Link href="/" className="flex min-w-0 items-center gap-2">
-            <Logo />
-          </Link>
-        </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
 
-        <div className="hidden font-display text-base font-semibold md:block text-foreground/80">
-          {roleLabel} Panel
-        </div>
+            <Link href="/" className="flex items-center px-4 sm:px-5 border-r border-border">
+              <Logo />
+            </Link>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden text-right text-xs sm:block">
-            <div className="font-medium">{user.name}</div>
-            <div className="truncate text-muted-foreground">{user.email}</div>
-            {orgLabel && (
-              <div className="text-[11px] font-semibold text-primary truncate max-w-[200px]">
-                {orgLabel}
-              </div>
-            )}
+            <nav className="hidden md:flex items-stretch">
+              <Link
+                href={panelHref}
+                prefetch={false}
+                className={`flex items-center gap-2 px-4 border-r border-border font-mono text-[11px] uppercase tracking-[0.12em] font-semibold transition-colors ${
+                  pathname === panelHref
+                    ? "bg-primary text-primary-foreground shadow-2xs font-bold"
+                    : "text-foreground hover:bg-primary/10 hover:text-primary"
+                }`}
+              >
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span>{roleLabel} Panel</span>
+              </Link>
+              {NAV_ITEMS.map((n) => {
+                const Icon = n.icon;
+                const active = n.to === "/" ? false : pathname.startsWith(n.to);
+                return (
+                  <Link
+                    key={n.to}
+                    href={n.to}
+                    prefetch={false}
+                    className={`flex items-center gap-2 px-4 border-r border-border font-mono text-[11px] uppercase tracking-[0.12em] font-semibold transition-colors ${
+                      active
+                        ? "bg-primary text-primary-foreground shadow-2xs font-bold"
+                        : "text-foreground hover:bg-primary/10 hover:text-primary"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{n.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
-          <ThemeToggle />
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-            onClick={handleSignOut}
-          >
-            <LogOut className="mr-1.5 h-3.5 w-3.5" /> Sign out
-          </Button>
+
+          {/* Right: User identity, ThemeToggle, Sign out */}
+          <div className="flex items-stretch shrink-0">
+            <div className="hidden lg:flex items-center gap-2 px-3 border-l border-border font-mono text-[11px]">
+              <span className="h-1.5 w-1.5 bg-primary shrink-0" />
+              <span className="text-foreground font-bold">{user.name}</span>
+              {orgLabel ? (
+                <span className="text-primary truncate max-w-[140px] font-semibold">({orgLabel})</span>
+              ) : (
+                <span className="text-muted-foreground truncate max-w-[140px]">({user.email})</span>
+              )}
+            </div>
+
+            <div className="flex items-stretch border-l border-border">
+              <ThemeToggle className="h-full w-12 rounded-none hover:bg-primary/15 hover:text-primary transition-colors" />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="inline-flex items-center justify-center gap-1.5 border-l border-border bg-primary text-primary-foreground hover:bg-primary-deep px-4 sm:px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
+          </div>
         </div>
       </header>
       <main className="flex-1">{children}</main>

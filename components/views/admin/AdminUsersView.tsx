@@ -65,15 +65,27 @@ export function AdminUsersView() {
       </div>
 
       <Tabs defaultValue="cr" className="mt-4">
-        <TabsList className="rounded-[4px] border border-border bg-secondary/40 p-1 h-10">
-          <TabsTrigger value="cr" className="rounded-[4px] font-mono text-xs uppercase tracking-wider font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            Class Representatives
+        <TabsList className="w-full grid grid-cols-3 rounded-[4px] border border-border bg-secondary/40 p-1 h-auto sm:inline-flex sm:w-auto sm:h-10">
+          <TabsTrigger
+            value="cr"
+            className="rounded-[4px] font-mono text-[11px] sm:text-xs uppercase tracking-wider font-semibold py-1.5 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-center"
+          >
+            <span className="sm:hidden">CRs</span>
+            <span className="hidden sm:inline">Class Representatives</span>
           </TabsTrigger>
-          <TabsTrigger value="teacher" className="rounded-[4px] font-mono text-xs uppercase tracking-wider font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            Faculty / Teachers
+          <TabsTrigger
+            value="teacher"
+            className="rounded-[4px] font-mono text-[11px] sm:text-xs uppercase tracking-wider font-semibold py-1.5 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-center"
+          >
+            <span className="sm:hidden">Teachers</span>
+            <span className="hidden sm:inline">Faculty / Teachers</span>
           </TabsTrigger>
-          <TabsTrigger value="admin" className="rounded-[4px] font-mono text-xs uppercase tracking-wider font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            Administrators
+          <TabsTrigger
+            value="admin"
+            className="rounded-[4px] font-mono text-[11px] sm:text-xs uppercase tracking-wider font-semibold py-1.5 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-center"
+          >
+            <span className="sm:hidden">Admins</span>
+            <span className="hidden sm:inline">Administrators</span>
           </TabsTrigger>
         </TabsList>
         {(["cr", "teacher", "admin"] as Role[]).map((r) => (

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +9,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { KeyRound, Lock, ArrowRight } from "lucide-react";
+import { KeyRound, Lock, ArrowRight, ArrowLeft } from "lucide-react";
 import { PasswordInput } from "@/components/common/PasswordInput";
 
 const changePasswordSchema = z
@@ -27,6 +28,15 @@ type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export function ChangePasswordView() {
   const router = useRouter();
   const { user, isPending } = useAuth();
+
+  const dashLink =
+    user?.role === "admin"
+      ? "/admin"
+      : user?.role === "teacher"
+      ? "/teacher"
+      : user?.role === "cr"
+      ? "/cr"
+      : "/";
 
   const {
     register,
@@ -69,6 +79,17 @@ export function ChangePasswordView() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-12rem)] max-w-md flex-col justify-center px-4 py-12 sm:px-6">
+      <div className="mb-4">
+        <Button
+          asChild
+          variant="outline"
+          className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-8 px-3 transition-colors"
+        >
+          <Link href={dashLink}>
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to Dashboard
+          </Link>
+        </Button>
+      </div>
       <div className="rounded-[4px] border border-border bg-card p-6 sm:p-8 shadow-2xs">
         <div className="flex flex-col items-center text-center">
           <div className="grid h-10 w-10 place-items-center rounded-[4px] bg-primary/10 text-primary">

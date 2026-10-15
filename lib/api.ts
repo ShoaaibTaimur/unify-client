@@ -18,7 +18,6 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
 
   let res: Response;
   try {
-    // authClient.fetch automatically includes HTTP-only cookies and handles 401 refresh retries
     res = await authClient.fetch(getTargetUrl(path), {
       cache: "no-store",
       credentials: "include",

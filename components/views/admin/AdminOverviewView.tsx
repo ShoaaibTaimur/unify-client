@@ -82,7 +82,7 @@ export function AdminOverviewView() {
     {
       label: "Total Users",
       value: userList.length,
-      sub: `${crCount} CRs · ${teacherCount} Teachers`,
+      sub: `${crCount} CRs · ${teacherCount} Teachers · ${adminCount} Admins`,
       icon: Users,
       color: "text-emerald-500 bg-emerald-500/10",
       loading: users.isLoading,

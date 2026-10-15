@@ -6,35 +6,11 @@ const API_URL = (
   process.env.NEXT_PUBLIC_API_URL!
 ).replace(/\/$/, "");
 
-const STORAGE_KEY = "unify_auth_user";
-
-function getStoredUser(): User | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function setStoredUser(user: User | null) {
-  if (typeof window === "undefined") return;
-  try {
-    if (user) {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    } else {
-      sessionStorage.removeItem(STORAGE_KEY);
-    }
-  } catch {}
-}
-
 let ongoingRefreshPromise: Promise<boolean> | null = null;
 let lastKnownUser: User | null = null;
 
 function notifyAuthChange(user: User | null) {
   lastKnownUser = user;
-  setStoredUser(user);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: { user } }));
   }
@@ -42,8 +18,6 @@ function notifyAuthChange(user: User | null) {
 
 export const authClient = {
   getCachedUser(): User | null {
-    if (lastKnownUser) return lastKnownUser;
-    lastKnownUser = getStoredUser();
     return lastKnownUser;
   },
 
@@ -65,8 +39,6 @@ export const authClient = {
     return { user: data.user };
   },
 
-
-
   async signOut(): Promise<void> {
     try {
       await fetch(`${API_URL}/api/auth/logout`, {
@@ -80,7 +52,7 @@ export const authClient = {
 
   /**
    * Verification sequence:
-   * 1. Check access token with GET /api/auth/me (validating lifetime & signature).
+   * 1. Check access token cookie with GET /api/auth/me (validating lifetime & signature).
    * 2. If 401 (token expired/invalid), attempt refresh with POST /api/auth/refresh.
    * 3. If refresh succeeds, return new user.
    * 4. If refresh fails, clear session.
@@ -149,10 +121,9 @@ export const authClient = {
     return ongoingRefreshPromise;
   },
 
-
-
   /**
    * Authenticated HTTP request wrapper with automatic single-retry token refresh on 401.
+   * Relies entirely on HttpOnly cookies sent via credentials: "include".
    */
   async fetch(
     input: string | URL | Request,
@@ -184,7 +155,6 @@ export const authClient = {
         return fetch(input, {
           ...init,
           credentials: "include",
-          headers: init?.headers,
         });
       }
     }

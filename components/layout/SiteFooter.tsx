@@ -2,32 +2,42 @@
 
 import { useState } from "react";
 import { Logo } from "./Logo";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 function AboutDialog() {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="text-muted-foreground transition-colors duration-200 hover:text-foreground hover:scale-105 active:scale-95">About</button>
+        <button className="font-mono text-xs uppercase tracking-wider font-semibold text-muted-foreground hover:text-primary transition-colors">
+          About
+        </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="mb-2 flex justify-center"><Logo size={40} /></div>
-          <DialogTitle className="text-center font-display text-2xl">About UNIFY</DialogTitle>
-          <DialogDescription className="text-center">
-            One place for every academic activity in your university.
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto rounded-[4px] border border-border bg-card p-6 shadow-2xs">
+        <DialogHeader className="space-y-2">
+          <div className="flex justify-center mb-1">
+            <Logo size={36} />
+          </div>
+          <DialogTitle className="text-center font-display text-2xl font-bold tracking-tight text-foreground">
+            About UNIFY
+          </DialogTitle>
+          <DialogDescription className="text-center font-mono text-xs uppercase tracking-wider text-muted-foreground">
+            One place for every academic activity in your university
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 py-2 text-sm leading-relaxed text-muted-foreground">
+        <div className="space-y-3 py-3 font-mono text-xs leading-relaxed text-muted-foreground">
           <p>
-            <strong className="text-foreground">UNIFY</strong> is a unified academic activity portal built to help university students, Class Representatives (CRs), teachers, and administrators organize class schedules and academic deadlines.
+            <strong className="text-foreground font-semibold">UNIFY</strong> is a unified academic activity portal built to help university students, Class Representatives (CRs), teachers, and administrators organize class schedules and academic deadlines.
           </p>
           <p>
-            It consolidates Class Tests (CTs), Lab Tests, Viva, Assignments, Presentations, and Term Exams into a single real-time dashboard — organized by <span className="font-medium text-foreground">Department</span>, <span className="font-medium text-foreground">Batch</span>, and <span className="font-medium text-foreground">Section</span>.
+            It consolidates Class Tests (CTs), Lab Tests, Viva, Assignments, Presentations, and Term Exams into a single real-time dashboard — organized by <span className="font-semibold text-primary">Department</span>, <span className="font-semibold text-primary">Batch</span>, and <span className="font-semibold text-primary">Section</span>.
           </p>
         </div>
       </DialogContent>
@@ -40,30 +50,39 @@ function MadeByDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="text-muted-foreground transition-colors duration-200 hover:text-foreground hover:scale-105 active:scale-95">Made by</button>
+        <button className="font-mono text-xs uppercase tracking-wider font-semibold text-muted-foreground hover:text-primary transition-colors">
+          Made by
+        </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl text-center">Made by</DialogTitle>
-          <DialogDescription className="text-center">
-            UNIFY is crafted and maintained by DevMotive.
+      <DialogContent className="sm:max-w-sm rounded-[4px] border border-border bg-card p-6 shadow-2xs">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="font-display text-2xl font-bold tracking-tight text-center text-foreground">
+            Made by
+          </DialogTitle>
+          <DialogDescription className="font-mono text-xs uppercase tracking-wider text-center text-muted-foreground">
+            UNIFY is crafted and maintained by DevMotive
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-center gap-5 py-4">
+        <div className="flex flex-col items-center gap-4 py-2">
           <a
             href="https://devmotive.dev"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md w-full"
+            className="group flex flex-col items-center gap-3 rounded-[4px] border border-border bg-secondary/30 p-6 shadow-2xs transition-colors hover:border-primary/50 hover:bg-secondary/60 w-full"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/devmotive_logo.png"
               alt="DevMotive logo"
-              className="h-16 w-16 rounded-xl object-contain"
+              className="h-16 w-16 rounded-[4px] object-contain"
             />
             <div className="text-center">
-              <div className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">DevMotive</div>
+              <div className="font-display text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                DevMotive
+              </div>
+              <p className="mt-1 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                devmotive.dev ↗
+              </p>
             </div>
           </a>
         </div>
@@ -74,20 +93,20 @@ function MadeByDialog() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-border/60 bg-background/50">
+    <footer className="mt-16 border-t border-border bg-card/40">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div>
           <Logo />
-          <p className="mt-3 max-w-sm text-sm text-muted-foreground">
+          <p className="mt-2 font-mono text-xs text-muted-foreground">
             One place for every academic activity.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-xs uppercase tracking-wider">
           <a
             href="https://examsync.kiron.dev/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary font-medium hover:underline transition-colors"
+            className="font-semibold text-primary hover:underline transition-colors"
           >
             Exam Seat Plan (ExamSync) ↗
           </a>
@@ -95,11 +114,9 @@ export function SiteFooter() {
           <MadeByDialog />
         </div>
       </div>
-      <div className="border-t border-border/60 py-4 text-center text-xs text-muted-foreground">
+      <div className="border-t border-border py-4 text-center font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
         © {new Date().getFullYear()} UNIFY — All rights reserved.
       </div>
     </footer>
   );
 }
-
-export { Button };

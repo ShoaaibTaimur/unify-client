@@ -113,9 +113,9 @@ export function CRDashboardView() {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-2 shrink-0">
             <Button
-              className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9 px-4 shadow-2xs transition-colors"
+              className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9 px-4 shadow-2xs transition-colors w-full sm:w-auto justify-center"
               onClick={() => {
                 setEditing(null);
                 setOpen(true);
@@ -125,7 +125,7 @@ export function CRDashboardView() {
             </Button>
             <Button
               variant="outline"
-              className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-9 px-4 transition-colors"
+              className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-9 px-4 transition-colors w-full sm:w-auto justify-center"
               onClick={() => setCsvOpen(true)}
             >
               <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /> Import CSV Routine
@@ -162,27 +162,11 @@ export function CRDashboardView() {
               Total {list.length} activities scheduled for {formatted || "your batch & section"}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-8 px-3 transition-colors"
-              onClick={() => setCsvOpen(true)}
-            >
-              <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /> Import CSV
-            </Button>
+          <div className="flex items-center gap-2">
             <Button asChild variant="outline" className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-8 px-3 transition-colors">
               <Link href="/activities">
-                View all <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                View all in calendar <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Link>
-            </Button>
-            <Button
-              className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-8 px-3 transition-colors"
-              onClick={() => {
-                setEditing(null);
-                setOpen(true);
-              }}
-            >
-              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add activity
             </Button>
           </div>
         </div>

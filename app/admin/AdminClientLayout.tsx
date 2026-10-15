@@ -106,7 +106,7 @@ export function AdminClientLayout({
   }
 
   const NavList = (
-    <nav className="flex-1 space-y-1">
+    <nav className="flex flex-col p-2 font-mono text-xs uppercase tracking-wider">
       {ADMIN_NAV.map((n) => {
         const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
         const Icon = n.icon;
@@ -114,9 +114,10 @@ export function AdminClientLayout({
           <Link
             key={n.to}
             href={n.to}
-            className={`flex items-center gap-3 rounded-[4px] px-3 py-2.5 font-mono text-xs uppercase tracking-wider font-semibold transition-colors ${
+            prefetch={false}
+            className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold transition-colors border-b border-border/40 ${
               active
-                ? "bg-primary text-primary-foreground shadow-2xs"
+                ? "bg-primary text-primary-foreground font-bold shadow-2xs"
                 : "text-foreground/80 hover:bg-primary/10 hover:text-primary"
             }`}
           >
@@ -136,24 +137,23 @@ export function AdminClientLayout({
             <div className="md:hidden flex items-stretch border-r border-border">
               <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-full w-12 rounded-none hover:bg-primary/10 hover:text-primary"
+                  <button
+                    type="button"
+                    className="flex w-12 items-center justify-center text-foreground/70 hover:bg-foreground hover:text-background transition-colors"
                     aria-label="Open admin menu"
                   >
                     <Menu className="h-4 w-4" />
-                  </Button>
+                  </button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[280px] bg-card p-0 border-r border-border">
+                <SheetContent side="left" className="w-[300px] p-0 rounded-none border-r border-border bg-background">
                   <SheetHeader className="border-b border-border p-4">
                     <SheetTitle className="text-left">
                       <Logo />
                     </SheetTitle>
                   </SheetHeader>
-                  <div className="flex h-[calc(100%-4rem)] flex-col p-3">
+                  <div className="flex h-[calc(100%-4rem)] flex-col justify-between p-2">
                     {NavList}
-                    <div className="mt-4 rounded-[4px] border border-border bg-secondary/30 p-3 font-mono">
+                    <div className="rounded-[4px] border border-border bg-secondary/30 p-3 font-mono">
                       <div className="text-xs font-bold text-foreground">{user.name}</div>
                       <div className="truncate text-[11px] text-muted-foreground">
                         {user.email}
@@ -207,7 +207,7 @@ export function AdminClientLayout({
                 await logout();
                 router.push("/login");
               }}
-              className="inline-flex items-center justify-center gap-1.5 border-l border-border px-4 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 border-l border-border bg-primary text-primary-foreground hover:bg-primary-deep px-4 sm:px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Sign out</span>
