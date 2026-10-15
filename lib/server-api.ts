@@ -41,8 +41,7 @@ async function serverFetch<T>(
   try {
     const res = await fetch(`${API_URL}${path}`, {
       signal: controller.signal,
-      next: token ? undefined : { revalidate: reval },
-      cache: token ? "no-store" : undefined,
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         ...(token

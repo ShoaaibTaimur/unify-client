@@ -52,8 +52,11 @@ export function TeacherDashboardView() {
 
   const del = useMutation({
     mutationFn: (a: Activity) => api.deleteActivity(a.id),
-    onSuccess: () => {
+    onSuccess: (_, a) => {
       toast.success("Activity deleted");
+      qc.setQueriesData({ queryKey: ["activities"] }, (old: unknown) =>
+        Array.isArray(old) ? old.filter((item: Activity) => item.id !== a.id) : old
+      );
       qc.invalidateQueries({ queryKey: ["activities"] });
       router.refresh();
     },
