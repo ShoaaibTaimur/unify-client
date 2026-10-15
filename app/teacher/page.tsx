@@ -1,46 +1,11 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { TeacherDashboardView } from "@/components/views/portal/TeacherDashboardView";
-import { serverApi } from "@/lib/server-api";
 
 export const metadata: Metadata = {
   title: "Teacher Dashboard — UNIFY",
   description: "Faculty Teacher activity scheduling and management console.",
 };
 
-export const dynamic = "force-dynamic";
-
-export default async function TeacherDashboardPage() {
-  const user = await serverApi.getCurrentUser();
-  if (user && user.role !== "teacher") {
-    redirect(user.role === "admin" ? "/admin" : user.role === "cr" ? "/cr" : "/");
-  }
-
-  const queryClient = new QueryClient();
-
-  await Promise.allSettled([
-    queryClient.prefetchQuery({
-      queryKey: ["departments"],
-      queryFn: () => serverApi.listDepartments(),
-    }),
-    user?.departmentId
-      ? queryClient.prefetchQuery({
-          queryKey: ["batches", user.departmentId],
-          queryFn: () => serverApi.listBatches(user.departmentId),
-        })
-      : Promise.resolve(),
-    user?.departmentId
-      ? queryClient.prefetchQuery({
-          queryKey: ["activities", { departmentId: user.departmentId }],
-          queryFn: () => serverApi.listActivities({ departmentId: user.departmentId }),
-        })
-      : Promise.resolve(),
-  ]);
-
-  return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <TeacherDashboardView />
-    </HydrationBoundary>
-  );
+export default function TeacherDashboardPage() {
+  return <TeacherDashboardView />;
 }

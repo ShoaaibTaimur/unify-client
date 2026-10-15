@@ -6,8 +6,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-import { serverApi } from "@/lib/server-api";
-
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
@@ -26,8 +24,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
-  const user = await serverApi.getCurrentUser();
+export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
@@ -50,7 +47,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body>
-        <Providers initialUser={user}>
+        <Providers>
           <RootLayout>{children}</RootLayout>
         </Providers>
         <Analytics />

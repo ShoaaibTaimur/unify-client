@@ -1,24 +1,15 @@
 import type { Metadata } from "next";
 import { AdminClientLayout } from "./AdminClientLayout";
-import { serverApi } from "@/lib/server-api";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Admin Console — UNIFY",
   description: "Administrative console for managing UNIFY departments, users, and activities.",
 };
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await serverApi.getCurrentUser();
-
-  if (user && user.role !== "admin") {
-    redirect(user.role === "teacher" ? "/teacher" : user.role === "cr" ? "/cr" : "/");
-  }
-
-  return <AdminClientLayout initialUser={user}>{children}</AdminClientLayout>;
+  return <AdminClientLayout>{children}</AdminClientLayout>;
 }

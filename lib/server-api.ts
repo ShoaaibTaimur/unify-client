@@ -24,12 +24,18 @@ async function serverFetch<T>(
 
   const token = await getAccessToken();
 
-  if (!token && (path === "/api/auth/me" || path.startsWith("/api/auth/"))) {
+  const isAuthRequired =
+    path === "/api/users" ||
+    path.startsWith("/api/users/") ||
+    path === "/api/auth/me" ||
+    path.startsWith("/api/auth/");
+
+  if (!token && isAuthRequired) {
     return null as unknown as T;
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 6000);
+  const timeout = setTimeout(() => controller.abort(), 4000);
   const reval = options?.revalidate ?? 30;
 
   try {
