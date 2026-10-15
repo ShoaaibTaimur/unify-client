@@ -15,21 +15,18 @@ export function useOrgDetails(filter?: OrgFilter) {
   const departments = useQuery({
     queryKey: ["departments"],
     queryFn: () => api.listDepartments(),
-    staleTime: 5 * 60_000,
   });
 
   const batches = useQuery({
     queryKey: ["batches", depId],
     queryFn: () => (depId ? api.listBatches(depId) : []),
     enabled: Boolean(depId),
-    staleTime: 5 * 60_000,
   });
 
   const sections = useQuery({
     queryKey: ["sections", batId],
     queryFn: () => (batId && batId !== "all" ? api.listSections(batId) : []),
     enabled: Boolean(batId && batId !== "all"),
-    staleTime: 5 * 60_000,
   });
 
   const depName = departments.data?.find((d) => d.id === depId)?.name ?? "";

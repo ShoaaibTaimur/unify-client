@@ -138,10 +138,12 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.deleteUser(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       toast.success("User deleted");
+      qc.setQueriesData({ queryKey: ["users"] }, (old: unknown) =>
+        Array.isArray(old) ? old.filter((u: User) => u.id !== id) : old
+      );
       qc.invalidateQueries({ queryKey: ["users"] });
-      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -390,10 +392,14 @@ function CreateUserDialog({
         batchId: role === "cr" ? batchId || undefined : undefined,
         sectionId: role === "cr" ? sectionId || undefined : undefined,
       }),
-    onSuccess: () => {
+    onSuccess: (newUser) => {
       toast.success("User account created successfully");
+      if (newUser) {
+        qc.setQueriesData({ queryKey: ["users"] }, (old: unknown) =>
+          Array.isArray(old) ? [newUser, ...old] : [newUser]
+        );
+      }
       qc.invalidateQueries({ queryKey: ["users"] });
-      router.refresh();
       onOpenChange(false);
       setEmail("");
       setName("");
@@ -794,10 +800,16 @@ function EditUserDialog({
         sectionId: user.role === "cr" ? sectionId || null : null,
       });
     },
-    onSuccess: () => {
+    onSuccess: (updatedUser) => {
       toast.success("User assignment updated successfully");
+      if (updatedUser) {
+        qc.setQueriesData({ queryKey: ["users"] }, (old: unknown) =>
+          Array.isArray(old)
+            ? old.map((u: User) => (u.id === updatedUser.id ? updatedUser : u))
+            : old
+        );
+      }
       qc.invalidateQueries({ queryKey: ["users"] });
-      router.refresh();
       onOpenChange(false);
     },
     onError: (e) => toast.error((e as Error).message),

@@ -430,8 +430,12 @@ export function CsvImportDialog({ open, onOpenChange, defaultDepartmentId, defau
 
       const res = await api.createActivitiesBulk(itemsToCreate);
       toast.success(`Successfully imported ${res.count} exam routines across batches!`);
+      if (Array.isArray(res.activities) && res.activities.length > 0) {
+        qc.setQueriesData({ queryKey: ["activities"] }, (old: unknown) =>
+          Array.isArray(old) ? [...res.activities, ...old] : res.activities
+        );
+      }
       qc.invalidateQueries({ queryKey: ["activities"] });
-      router.refresh();
       onOpenChange(false);
       setParsedRows([]);
       setHealthReport(null);

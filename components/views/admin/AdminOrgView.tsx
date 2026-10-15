@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,6 @@ import { toast } from "sonner";
 import { Building2, Layers, GraduationCap, Pencil, Trash2 } from "lucide-react";
 
 export function AdminOrgView() {
-  const router = useRouter();
   const qc = useQueryClient();
   const deps = useQuery({
     queryKey: ["departments"],
@@ -47,11 +45,15 @@ export function AdminOrgView() {
   const [depName, setDepName] = useState("");
   const createDep = useMutation({
     mutationFn: (n: string) => api.createDepartment(n),
-    onSuccess: () => {
+    onSuccess: (newDep) => {
       toast.success("Department created");
       setDepName("");
+      if (newDep) {
+        qc.setQueriesData({ queryKey: ["departments"] }, (old: unknown) =>
+          Array.isArray(old) ? [...old, newDep] : [newDep]
+        );
+      }
       qc.invalidateQueries({ queryKey: ["departments"] });
-      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -60,11 +62,15 @@ export function AdminOrgView() {
   const [batchDep, setBatchDep] = useState("");
   const createBatch = useMutation({
     mutationFn: () => api.createBatch(batchDep, batchName),
-    onSuccess: () => {
+    onSuccess: (newBatch) => {
       toast.success("Batch created");
       setBatchName("");
+      if (newBatch) {
+        qc.setQueriesData({ queryKey: ["batches"] }, (old: unknown) =>
+          Array.isArray(old) ? [...old, newBatch] : [newBatch]
+        );
+      }
       qc.invalidateQueries({ queryKey: ["batches"] });
-      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -74,11 +80,15 @@ export function AdminOrgView() {
   const [secBatch, setSecBatch] = useState("");
   const createSection = useMutation({
     mutationFn: () => api.createSection(secBatch, secName),
-    onSuccess: () => {
+    onSuccess: (newSec) => {
       toast.success("Section created");
       setSecName("");
+      if (newSec) {
+        qc.setQueriesData({ queryKey: ["sections"] }, (old: unknown) =>
+          Array.isArray(old) ? [...old, newSec] : [newSec]
+        );
+      }
       qc.invalidateQueries({ queryKey: ["sections"] });
-      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -97,36 +107,76 @@ export function AdminOrgView() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!editingItem || !editingItem.name.trim()) return;
-      if (editingItem.type === "dep")
-        return api.updateDepartment(editingItem.id, editingItem.name.trim());
-      if (editingItem.type === "batch")
-        return api.updateBatch(editingItem.id, editingItem.name.trim());
-      return api.updateSection(editingItem.id, editingItem.name.trim());
+      if (editingItem.type === "dep") {
+        const data = await api.updateDepartment(editingItem.id, editingItem.name.trim());
+        return { type: "dep" as const, data };
+      }
+      if (editingItem.type === "batch") {
+        const data = await api.updateBatch(editingItem.id, editingItem.name.trim());
+        return { type: "batch" as const, data };
+      }
+      const data = await api.updateSection(editingItem.id, editingItem.name.trim());
+      return { type: "sec" as const, data };
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success("Updated successfully");
       setEditingItem(null);
+      if (res?.data) {
+        if (res.type === "dep") {
+          qc.setQueriesData({ queryKey: ["departments"] }, (old: unknown) =>
+            Array.isArray(old) ? old.map((d: any) => (d.id === res.data.id ? res.data : d)) : old
+          );
+        } else if (res.type === "batch") {
+          qc.setQueriesData({ queryKey: ["batches"] }, (old: unknown) =>
+            Array.isArray(old) ? old.map((b: any) => (b.id === res.data.id ? res.data : b)) : old
+          );
+        } else if (res.type === "sec") {
+          qc.setQueriesData({ queryKey: ["sections"] }, (old: unknown) =>
+            Array.isArray(old) ? old.map((s: any) => (s.id === res.data.id ? res.data : s)) : old
+          );
+        }
+      }
       qc.invalidateQueries({ queryKey: ["departments"] });
       qc.invalidateQueries({ queryKey: ["batches"] });
       qc.invalidateQueries({ queryKey: ["sections"] });
-      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (item: { type: "dep" | "batch" | "sec"; id: string }) => {
-      if (item.type === "dep") return api.deleteDepartment(item.id);
-      if (item.type === "batch") return api.deleteBatch(item.id);
-      return api.deleteSection(item.id);
+      if (item.type === "dep") {
+        await api.deleteDepartment(item.id);
+        return item;
+      }
+      if (item.type === "batch") {
+        await api.deleteBatch(item.id);
+        return item;
+      }
+      await api.deleteSection(item.id);
+      return item;
     },
-    onSuccess: () => {
+    onSuccess: (deleted) => {
       toast.success("Deleted successfully");
       setDeletingItem(null);
+      if (deleted) {
+        if (deleted.type === "dep") {
+          qc.setQueriesData({ queryKey: ["departments"] }, (old: unknown) =>
+            Array.isArray(old) ? old.filter((d: any) => d.id !== deleted.id) : old
+          );
+        } else if (deleted.type === "batch") {
+          qc.setQueriesData({ queryKey: ["batches"] }, (old: unknown) =>
+            Array.isArray(old) ? old.filter((b: any) => b.id !== deleted.id) : old
+          );
+        } else if (deleted.type === "sec") {
+          qc.setQueriesData({ queryKey: ["sections"] }, (old: unknown) =>
+            Array.isArray(old) ? old.filter((s: any) => s.id !== deleted.id) : old
+          );
+        }
+      }
       qc.invalidateQueries({ queryKey: ["departments"] });
       qc.invalidateQueries({ queryKey: ["batches"] });
       qc.invalidateQueries({ queryKey: ["sections"] });
-      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });

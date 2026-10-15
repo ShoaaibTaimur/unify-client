@@ -68,7 +68,6 @@ export function CRDashboardView() {
         Array.isArray(old) ? old.filter((item: Activity) => item.id !== a.id) : old
       );
       qc.invalidateQueries({ queryKey: ["activities"] });
-      router.refresh();
     },
   });
 

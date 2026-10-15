@@ -132,10 +132,20 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
       if (editing) return api.updateActivity(editing.id, base);
       return api.createActivity(base);
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       toast.success(editing ? "Activity updated" : "Activity created");
+      if (saved) {
+        if (editing) {
+          qc.setQueriesData({ queryKey: ["activities"] }, (old: unknown) =>
+            Array.isArray(old) ? old.map((item: Activity) => (item.id === saved.id ? saved : item)) : old
+          );
+        } else {
+          qc.setQueriesData({ queryKey: ["activities"] }, (old: unknown) =>
+            Array.isArray(old) ? [saved, ...old] : [saved]
+          );
+        }
+      }
       qc.invalidateQueries({ queryKey: ["activities"] });
-      router.refresh();
       onOpenChange(false);
     },
     onError: (e) => toast.error((e as Error).message),
@@ -429,7 +439,6 @@ export function useActivityList(filter?: { departmentId?: string; batchId?: stri
   return useQuery({
     queryKey: ["activities", filter],
     queryFn: () => api.listActivities(filter),
-    staleTime: 60_000,
   });
 }
 

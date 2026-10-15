@@ -40,7 +40,6 @@ export function AdminActivitiesView() {
         Array.isArray(old) ? old.filter((item: Activity) => item.id !== a.id) : old
       );
       qc.invalidateQueries({ queryKey: ["activities"] });
-      router.refresh();
     },
   });
 
@@ -48,9 +47,9 @@ export function AdminActivitiesView() {
     mutationFn: () => api.clearAllActivities(),
     onSuccess: (res) => {
       toast.success(`Cleared all ${res.deletedCount} activities`);
+      qc.setQueriesData({ queryKey: ["activities"] }, () => []);
       qc.invalidateQueries({ queryKey: ["activities"] });
       setConfirmClearAll(false);
-      router.refresh();
     },
     onError: (e) => toast.error((e as Error).message),
   });
