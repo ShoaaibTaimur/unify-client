@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { customAuth } from "@/lib/auth";
 import {
   ActivityForm,
   ManageActivitiesTable,
@@ -33,11 +32,11 @@ import {
 import type { Activity, User } from "@/types";
 import { toast } from "sonner";
 import { useOrgDetails } from "@/hooks/use-org-details";
-import { useSession } from "@/hooks/use-session";
+import { useAuth } from "@/lib/auth";
 
-export function CRDashboardView({ initialUser }: { initialUser?: User | null } = {}) {
+export function CRDashboardView() {
   const router = useRouter();
-  const { user } = useSession(initialUser);
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);

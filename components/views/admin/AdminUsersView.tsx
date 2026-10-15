@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { customAuth } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -365,7 +364,7 @@ function CreateUserDialog({
   const qc = useQueryClient();
   const createMutation = useMutation({
     mutationFn: () =>
-      customAuth.createUser({
+      api.createUser({
         email,
         name,
         password,

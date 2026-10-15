@@ -1,25 +1,14 @@
-import type { Activity, Batch, Department, Section, User } from "@/types";
+import type { Activity, Batch, Department, Section, User, Role } from "@/types";
 import { authClient } from "./auth";
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+const API_URL = (process.env.NEXT_PUBLIC_API_URL !).replace(/\/$/, ""); // DO NOT TOUCH THIS IN ANY CASE
 
-export const isApiConfigured = Boolean(API_URL);
 
-function requireApiUrl(): string {
-  if (!API_URL) {
-    throw new Error(
-      "Backend not configured. Set NEXT_PUBLIC_API_URL to your deployed API URL (e.g. https://your-backend.vercel.app)."
-    );
-  }
-  return API_URL;
-}
-
-function getTargetUrl(path: string): string {
-  if (typeof window !== "undefined") {
-    // In browser: relative URL leverages same-origin Next.js rewrite / Route Handlers
+export function getTargetUrl(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
-  return `${API_URL}${path}`;
+  return `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
@@ -32,7 +21,7 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
     // authClient.fetch automatically includes HTTP-only cookies and handles 401 refresh retries
     res = await authClient.fetch(getTargetUrl(path), {
       cache: "no-store",
-      credentials: "same-origin",
+      credentials: "include",
       ...init,
       signal: controller.signal,
       headers: {
@@ -70,8 +59,6 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   if (res.status === 204) return undefined as T;
   return res.json();
 }
-
-export type Role = "student" | "cr" | "teacher" | "admin";
 
 export const api = {
   /* -------- Bootstrap / Aggregated -------- */
@@ -205,17 +192,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ temporaryPassword }),
     }),
-  login: async (
-    email: string,
-    password: string
-  ): Promise<{ token: string; user: User }> => {
-    const res = await authClient.signIn({ email, password });
-    return { token: "", user: res.user };
-  },
-  logout: async (): Promise<{ ok: true }> => {
-    await authClient.signOut();
-    return { ok: true };
-  },
+
   changePassword: (
     current: string,
     next: string
@@ -226,12 +203,3 @@ export const api = {
     }),
 };
 
-export interface CreateUserInput {
-  name: string;
-  email: string;
-  password: string;
-  role: Role;
-  departmentId?: string;
-  batchId?: string;
-  sectionId?: string;
-}

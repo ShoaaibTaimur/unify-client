@@ -75,7 +75,7 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
 
   const activities = useQuery({
     queryKey: getActivityQueryKey(cls),
-    queryFn: () => api.listActivities(hasSelectedClass(cls) ? cls! : undefined),
+    queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
     enabled: true,
   });
 
@@ -215,11 +215,14 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                           e.stopPropagation();
                           setSelectedActivity(a);
                         }}
-                        className="truncate rounded-md px-2 py-0.5 text-[11px] font-medium text-white transition-transform hover:scale-[1.03] shadow-xs cursor-pointer"
-                        style={{ background: ACTIVITY_COLOR[a.activityType] }}
+                        className="flex items-center gap-1.5 truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors bg-secondary/80 hover:bg-secondary hover:border-primary/40 border border-border/50 text-foreground shadow-2xs cursor-pointer"
                         title={`${activityLabel(a.activityType)} — ${a.subject} (${a.title})`}
                       >
-                        {a.subject}
+                        <span
+                          className="h-1.5 w-1.5 rounded-full shrink-0"
+                          style={{ background: ACTIVITY_COLOR[a.activityType] }}
+                        />
+                        <span className="truncate">{a.subject}</span>
                       </div>
                     ))}
                     {items.length > 3 && (
@@ -296,9 +299,12 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                   />
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
-                      style={{ background: ACTIVITY_COLOR[act.activityType] }}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-secondary/80 px-2 py-0.5 text-[11px] font-medium text-foreground shrink-0"
                     >
+                      <span
+                        className="h-1.5 w-1.5 rounded-full shrink-0"
+                        style={{ background: ACTIVITY_COLOR[act.activityType] }}
+                      />
                       {activityLabel(act.activityType)}
                     </span>
                     <div className="flex items-center gap-2">

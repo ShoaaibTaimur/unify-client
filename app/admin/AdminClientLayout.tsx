@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { customAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import type { User } from "@/types";
 import { Logo } from "@/components/layout/Logo";
 import { Button } from "@/components/ui/button";
@@ -60,7 +60,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   },
 ];
 
-import { useSession } from "@/hooks/use-session";
+
 
 export function AdminClientLayout({
   children,
@@ -71,7 +71,9 @@ export function AdminClientLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isPending } = useSession(initialUser);
+  const { user: authUser, isPending: authPending, logout } = useAuth();
+  const user = authUser ?? initialUser ?? null;
+  const isPending = authPending && !user;
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -172,7 +174,7 @@ export function AdminClientLayout({
             size="sm"
             className="rounded-full"
             onClick={async () => {
-              await customAuth.logout();
+              await logout();
               router.push("/login");
             }}
           >

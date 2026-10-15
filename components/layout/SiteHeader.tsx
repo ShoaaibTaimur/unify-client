@@ -43,7 +43,7 @@ export function SiteHeader() {
   const activities = useQuery({
     queryKey: getActivityQueryKey(cls),
     enabled: true,
-    queryFn: () => api.listActivities(hasSelectedClass(cls) ? cls! : undefined),
+    queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
   });
 
   const [mounted, setMounted] = useState(false);

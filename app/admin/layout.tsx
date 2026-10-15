@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AdminClientLayout } from "./AdminClientLayout";
-import { getServerUser } from "@/lib/auth/server";
+import { serverApi } from "@/lib/server-api";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
@@ -13,11 +14,18 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getServerUser();
+  const user = await serverApi.getCurrentUser();
+
   if (!user) {
-    redirect("/login?from=/admin");
-  }
-  if (user.role !== "admin") {
+    const cookieStore = await cookies();
+    const hasAnyToken =
+      cookieStore.has("access_token") ||
+      cookieStore.has("refresh_token");
+
+    if (!hasAnyToken) {
+      redirect("/login?from=/admin");
+    }
+  } else if (user.role !== "admin") {
     redirect(user.role === "teacher" ? "/teacher" : user.role === "cr" ? "/cr" : "/");
   }
 

@@ -36,60 +36,66 @@ export function ActivityCard({
     <>
       <div
         onClick={handleClick}
-        className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-primary/50 active:scale-[0.98] min-w-0 max-w-full"
+        className="group relative cursor-pointer overflow-hidden rounded-xl border border-border/70 bg-card p-4 sm:p-4.5 shadow-xs transition-all duration-200 ease-out hover:border-primary/40 hover:bg-card/90 active:scale-[0.99] min-w-0 max-w-full"
       >
-        <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: color }} />
-        <div className="flex items-start justify-between gap-3 min-w-0 max-w-full">
+        <span aria-hidden className="absolute inset-y-0 left-0 w-1 rounded-l-xl" style={{ background: color }} />
+        <div className="flex items-start justify-between gap-3 min-w-0 max-w-full pl-1">
           <div className="min-w-0 flex-1 max-w-full">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-full">
+            <div className="flex flex-wrap items-center gap-1.5 max-w-full">
               <span
-                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] sm:text-[11px] font-medium uppercase tracking-wide text-white shrink-0"
-                style={{ background: color }}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-secondary/80 px-2 py-0.5 text-[11px] font-medium text-foreground shrink-0"
               >
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: color }} />
                 {activityLabel(activity.activityType)}
               </span>
-              <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 shrink-0">
+              <span className="font-mono text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 shrink-0">
                 {activity.title}
               </span>
               {(!activity.batchId || activity.batchId === "all") ? (
-                <span className="shrink-0 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                  Dept-wide
+                <span className="shrink-0 rounded-md bg-secondary/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground border border-border/40">
+                  Dept
                 </span>
               ) : (!activity.sectionId || activity.sectionId === "all") ? (
-                <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  Batch-wide
+                <span className="shrink-0 rounded-md bg-secondary/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground border border-border/40">
+                  Batch
                 </span>
               ) : null}
             </div>
-            <h3 className="mt-2 truncate font-display text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+
+            <h3 className="mt-2 truncate font-display text-base font-semibold text-foreground group-hover:text-primary transition-colors">
               {activity.subject}
             </h3>
+
             {!compact && activity.description && (
-              <p className="mt-1 line-clamp-2 text-xs sm:text-sm text-muted-foreground whitespace-pre-line break-words">{activity.description}</p>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground whitespace-pre-line break-words">
+                {activity.description}
+              </p>
             )}
-            {/* Prominent Date & Time Banner */}
-            <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 sm:px-3.5 sm:py-2.5 max-w-full">
-              <div className="flex items-center gap-1.5 sm:gap-2 text-primary font-bold text-xs sm:text-sm min-w-0">
-                <Clock className="h-4 w-4 shrink-0 text-primary" />
+
+            {/* Clean bottom metadata */}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 font-medium min-w-0">
+                <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
                 <span className="truncate">
                   {isRange
-                    ? `${formatAppDate(activity.startDate, "MMM d, yyyy")} – ${formatAppDate(activity.endDate, "MMM d, yyyy")}`
-                    : formatAppDate(activity.date, "EEEE, MMM d")}
+                    ? `${formatAppDate(activity.startDate, "MMM d")} – ${formatAppDate(activity.endDate, "MMM d, yyyy")}`
+                    : formatAppDate(activity.date, "EEE, MMM d, yyyy")}
                 </span>
               </div>
-              {displayTime && (
-                <div className="rounded-md bg-primary px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-xs shrink-0">
-                  {displayTime}
-                </div>
-              )}
-            </div>
-
-            {activity.room && (
-              <div className="mt-2.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="font-medium text-foreground truncate">{activity.room}</span>
+              <div className="flex items-center gap-2 shrink-0">
+                {activity.room && (
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    <MapPin className="h-3 w-3 text-muted-foreground/70" />
+                    <span>{activity.room}</span>
+                  </span>
+                )}
+                {displayTime && (
+                  <span className="font-mono text-[11px] font-medium text-foreground bg-secondary px-2 py-0.5 rounded border border-border/60">
+                    {displayTime}
+                  </span>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

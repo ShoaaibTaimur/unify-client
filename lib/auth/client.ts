@@ -1,30 +1,32 @@
-import type { User, LoginCredentials } from "@/types";
-
-export interface AuthSession {
-  user: User | null;
-  isAuthenticated: boolean;
-}
-
-export interface SignUpInput {
-  name: string;
-  email: string;
-  password: string;
-  role?: "student" | "cr" | "teacher";
-  departmentId?: string;
-  batchId?: string;
-  sectionId?: string;
-}
+import type { User, LoginCredentials, AuthSession } from "@/types";
 
 export const AUTH_EVENT = "unify:auth-changed";
+
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL!
+).replace(/\/$/, "");
+
 let ongoingRefreshPromise: Promise<boolean> | null = null;
+let lastKnownUser: User | null = null;
+
+function notifyAuthChange(user: User | null) {
+  lastKnownUser = user;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: { user } }));
+  }
+}
 
 export const authClient = {
+  getCachedUser(): User | null {
+    return lastKnownUser;
+  },
+
   async signIn(credentials: LoginCredentials): Promise<{ user: User }> {
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
-      credentials: "same-origin",
+      credentials: "include",
     });
 
     const data = await res.json().catch(() => null);
@@ -33,65 +35,57 @@ export const authClient = {
       throw new Error(data?.error || "Login failed");
     }
 
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event(AUTH_EVENT));
-    }
-
+    notifyAuthChange(data.user);
     return { user: data.user };
   },
 
-  async signUp(input: SignUpInput): Promise<{ user: User }> {
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
-      credentials: "same-origin",
-    });
 
-    const data = await res.json().catch(() => null);
-
-    if (!res.ok) {
-      throw new Error(data?.error || "Registration failed");
-    }
-
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event(AUTH_EVENT));
-    }
-
-    return { user: data.user };
-  },
 
   async signOut(): Promise<void> {
     try {
-      await fetch("/api/auth/logout", {
+      await fetch(`${API_URL}/api/auth/logout`, {
         method: "POST",
-        credentials: "same-origin",
+        credentials: "include",
       });
     } finally {
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event(AUTH_EVENT));
-      }
+      notifyAuthChange(null);
     }
   },
 
+  /**
+   * Verification sequence:
+   * 1. Check access token with GET /api/auth/me (validating lifetime & signature).
+   * 2. If 401 (token expired/invalid), attempt refresh with POST /api/auth/refresh.
+   * 3. If refresh succeeds, return new user.
+   * 4. If refresh fails, clear session.
+   */
   async getSession(): Promise<AuthSession> {
     try {
-      const res = await fetch("/api/auth/session", {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
         method: "GET",
-        credentials: "same-origin",
+        credentials: "include",
         cache: "no-store",
       });
 
-      if (!res.ok) {
-        return { user: null, isAuthenticated: false };
+      if (res.ok) {
+        const data = await res.json();
+        const user = data.user || null;
+        lastKnownUser = user;
+        return { user, isAuthenticated: Boolean(user) };
       }
 
-      const data = await res.json();
-      return {
-        user: data.user || null,
-        isAuthenticated: Boolean(data.isAuthenticated && data.user),
-      };
+      // Step 2: Access token expired or invalid, attempt refresh
+      if (res.status === 401) {
+        const refreshed = await this.refreshSession();
+        if (refreshed && lastKnownUser) {
+          return { user: lastKnownUser, isAuthenticated: true };
+        }
+      }
+
+      notifyAuthChange(null);
+      return { user: null, isAuthenticated: false };
     } catch {
+      notifyAuthChange(null);
       return { user: null, isAuthenticated: false };
     }
   },
@@ -103,29 +97,23 @@ export const authClient = {
 
     ongoingRefreshPromise = (async () => {
       try {
-        const res = await fetch("/api/auth/refresh", {
+        const res = await fetch(`${API_URL}/api/auth/refresh`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
+          credentials: "include",
         });
 
         if (res.ok) {
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event(AUTH_EVENT));
-          }
+          const data = await res.json();
+          const user = data.user || null;
+          notifyAuthChange(user);
           return true;
         }
 
-        if (res.status === 401 || res.status === 403) {
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event(AUTH_EVENT));
-          }
-          return false;
-        }
-
-        // 5xx / temporary error
+        notifyAuthChange(null);
         return false;
       } catch {
+        notifyAuthChange(null);
         return false;
       } finally {
         ongoingRefreshPromise = null;
@@ -135,27 +123,42 @@ export const authClient = {
     return ongoingRefreshPromise;
   },
 
+
+
   /**
-   * Authenticated HTTP request wrapper with automatic single-retry token refresh.
+   * Authenticated HTTP request wrapper with automatic single-retry token refresh on 401.
    */
-  async fetch(input: string | URL | Request, init?: RequestInit & { _isRetry?: boolean }): Promise<Response> {
+  async fetch(
+    input: string | URL | Request,
+    init?: RequestInit & { _isRetry?: boolean }
+  ): Promise<Response> {
     const isRetry = Boolean(init?._isRetry);
 
     const res = await fetch(input, {
       ...init,
-      credentials: "same-origin",
+      credentials: "include",
     });
 
-    const urlString = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-    const isAuthRoute = urlString.includes("/api/auth/");
+    const urlString =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+        ? input.toString()
+        : input.url;
 
-    // If 401 on non-auth route and not already retried, attempt refresh and retry once
+    const isAuthRoute =
+      urlString.includes("/api/auth/login") ||
+      urlString.includes("/api/auth/signup") ||
+      urlString.includes("/api/auth/refresh");
+
+    // If 401 on non-auth route and not already retried, refresh and retry once
     if (res.status === 401 && !isRetry && !isAuthRoute) {
       const refreshed = await this.refreshSession();
       if (refreshed) {
         return fetch(input, {
           ...init,
-          credentials: "same-origin",
+          credentials: "include",
+          headers: init?.headers,
         });
       }
     }

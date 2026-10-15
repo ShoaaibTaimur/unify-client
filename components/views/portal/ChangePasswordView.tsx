@@ -1,22 +1,45 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { api } from "@/lib/api";
-import { useSession } from "@/hooks/use-session";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { KeyRound, Lock, ArrowRight } from "lucide-react";
 import { PasswordInput } from "@/components/common/PasswordInput";
 
+const changePasswordSchema = z
+  .object({
+    oldPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(6, "New password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "New passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+
 export function ChangePasswordView() {
   const router = useRouter();
-  const { user, isPending } = useSession();
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { user, isPending } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
   if (isPending) {
     return (
@@ -34,21 +57,13 @@ export function ChangePasswordView() {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match");
-      return;
-    }
-    setLoading(true);
+  const onSubmit = async (data: ChangePasswordFormData) => {
     try {
-      await api.changePassword(oldPassword, newPassword);
+      await api.changePassword(data.oldPassword, data.newPassword);
       toast.success("Password changed successfully. Please sign in with your new credentials.");
       router.push("/login");
     } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setLoading(false);
+      toast.error((err as Error).message || "Failed to update password");
     }
   };
 
@@ -67,19 +82,22 @@ export function ChangePasswordView() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground">Current Password</label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <PasswordInput
-                required
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
+                {...register("oldPassword")}
                 placeholder="Current password"
                 className="h-11 rounded-xl pl-10 text-sm"
               />
             </div>
+            {errors.oldPassword && (
+              <p className="text-xs font-medium text-destructive mt-1">
+                {errors.oldPassword.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -87,13 +105,16 @@ export function ChangePasswordView() {
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <PasswordInput
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                {...register("newPassword")}
                 placeholder="Minimum 6 characters"
                 className="h-11 rounded-xl pl-10 text-sm"
               />
             </div>
+            {errors.newPassword && (
+              <p className="text-xs font-medium text-destructive mt-1">
+                {errors.newPassword.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -101,21 +122,24 @@ export function ChangePasswordView() {
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <PasswordInput
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                {...register("confirmPassword")}
                 placeholder="Re-enter new password"
                 className="h-11 rounded-xl pl-10 text-sm"
               />
             </div>
+            {errors.confirmPassword && (
+              <p className="text-xs font-medium text-destructive mt-1">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="mt-2 w-full h-11 rounded-xl text-sm font-semibold shadow-xs"
           >
-            {loading ? "Updating..." : "Update Password"}
+            {isSubmitting ? "Updating..." : "Update Password"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </form>

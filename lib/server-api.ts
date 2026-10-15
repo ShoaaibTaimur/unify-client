@@ -1,20 +1,35 @@
 import type { Activity, Batch, Department, Section, User } from "@/types";
-import { getAccessToken } from "./auth/cookies";
+import { cookies } from "next/headers";
 
 const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || ""
+  process.env.NEXT_PUBLIC_API_URL!
 ).replace(/\/$/, "");
+
+async function getAccessToken(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("access_token");
+    if (!cookie?.value) return null;
+    return decodeURIComponent(cookie.value);
+  } catch {
+    return null;
+  }
+}
 
 async function serverFetch<T>(
   path: string,
-  options?: { token?: string | null; revalidate?: number }
+  options?: { revalidate?: number }
 ): Promise<T> {
   if (!API_URL) return [] as unknown as T;
 
+  const token = await getAccessToken();
+
+  if (!token && (path === "/api/auth/me" || path.startsWith("/api/auth/"))) {
+    return null as unknown as T;
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
-
-  const token = options?.token ?? (await getAccessToken());
   const reval = options?.revalidate ?? 30;
 
   try {
@@ -26,9 +41,9 @@ async function serverFetch<T>(
         "Content-Type": "application/json",
         ...(token
           ? {
-              Authorization: `Bearer ${token}`,
-              Cookie: `access_token=${encodeURIComponent(token)}; unify_token=${encodeURIComponent(token)}`,
-            }
+            Authorization: `Bearer ${token}`,
+            Cookie: `access_token=${encodeURIComponent(token)}`,
+          }
           : {}),
       },
     });
@@ -91,10 +106,8 @@ export const serverApi = {
   },
 
   getCurrentUser: async (): Promise<User | null> => {
-    const token = await getAccessToken();
-    if (!token) return null;
-    const res = await serverFetch<{ user: User }>("/api/auth/me", { token });
-    return res && "user" in res ? res.user : null;
+    const res = await serverFetch<{ user: User }>("/api/auth/me");
+    return res && typeof res === "object" && "user" in res ? res.user : null;
   },
 
   listUsers: async (): Promise<User[]> => {

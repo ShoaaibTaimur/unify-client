@@ -37,7 +37,7 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
 
   const activities = useQuery({
     queryKey: getActivityQueryKey(cls),
-    queryFn: () => api.listActivities(hasSelectedClass(cls) ? cls! : undefined),
+    queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
     enabled: true,
   });
 

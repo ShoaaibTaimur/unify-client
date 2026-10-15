@@ -3,7 +3,6 @@ import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query
 import { HomeView } from "@/components/views/academic/HomeView";
 import { serverApi } from "@/lib/server-api";
 import { getServerClassSelection } from "@/lib/server-session";
-import { getServerUser } from "@/lib/auth/server";
 import { hasSelectedClass, getActivityQueryKey } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -14,10 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [cls, user] = await Promise.all([
-    getServerClassSelection(),
-    getServerUser(),
-  ]);
+  const cls = await getServerClassSelection();
 
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -43,7 +39,7 @@ export default async function HomePage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <HomeView initialClass={cls} initialUser={user} />
+      <HomeView initialClass={cls} />
     </HydrationBoundary>
   );
 }

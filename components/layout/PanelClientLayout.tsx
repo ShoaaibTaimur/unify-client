@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { customAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import type { User } from "@/types";
 import { Logo } from "@/components/layout/Logo";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useOrgDetails } from "@/hooks/use-org-details";
 
-import { useSession } from "@/hooks/use-session";
+
 
 type AllowedRole = "cr" | "teacher";
 
@@ -67,7 +67,9 @@ export function PanelClientLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isPending } = useSession(initialUser);
+  const { user: authUser, isPending: authPending, logout } = useAuth();
+  const user = authUser ?? initialUser ?? null;
+  const isPending = authPending && !user;
   const [open, setOpen] = useState(false);
 
   const { formatted, depName } = useOrgDetails({
@@ -112,7 +114,7 @@ export function PanelClientLayout({
   }
 
   const handleSignOut = async () => {
-    await customAuth.logout();
+    await logout();
     router.push("/login");
   };
 

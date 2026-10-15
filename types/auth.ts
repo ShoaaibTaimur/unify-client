@@ -12,19 +12,9 @@ export interface User {
   createdAt?: string;
 }
 
-export interface UserSession {
-  token: string;
-  user: User;
-}
-
 export interface LoginCredentials {
   email: string;
   password: string;
-}
-
-export interface ChangePasswordPayload {
-  current: string;
-  next: string;
 }
 
 export interface AuthSession {
@@ -32,12 +22,33 @@ export interface AuthSession {
   isAuthenticated: boolean;
 }
 
-export interface SignUpPayload {
+
+export interface CreateUserInput {
   name: string;
   email: string;
   password: string;
-  role?: Role;
+  role: Role;
   departmentId?: string;
   batchId?: string;
   sectionId?: string;
+}
+
+export interface UseSessionReturn {
+  user: User | null;
+  isPending: boolean;
+  isAuthenticated: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+export interface AuthContextValue {
+  user: User | null;
+  isAuthenticated: boolean;
+  loaded: boolean;
+  isPending: boolean;
+  login: (email: string, password: string) => Promise<User>;
+  logout: () => Promise<void>;
+  createUser: (input: CreateUserInput) => Promise<User>;
+  changePassword: (current: string, next: string) => Promise<void>;
+  refetch: () => Promise<void>;
 }

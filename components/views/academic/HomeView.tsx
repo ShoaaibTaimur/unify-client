@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { differenceInSeconds, isSameDay } from "date-fns";
 import { parseAppDate, formatAppDate, formatAppTime, combineDateAndTime, parseTimeComponents, isActivityExpired, isStaffUser } from "@/lib/date-utils";
 import { hasActiveExams, getActivityQueryKey } from "@/lib/utils";
-import { ArrowRight, PartyPopper, Settings2, ExternalLink } from "lucide-react";
+import { ArrowRight, PartyPopper, Settings2, ExternalLink, Clock, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function nextActivityDate(a: Activity): Date {
@@ -49,16 +49,16 @@ function ActivityCountdown({ targetDate }: { targetDate: Date }) {
   const items = countdown(totalSeconds);
 
   return (
-    <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-3" suppressHydrationWarning>
+    <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-2.5" suppressHydrationWarning>
       {items.map(([n, l]) => (
         <div
           key={l}
-          className="min-w-0 rounded-xl sm:rounded-2xl bg-white/10 px-1.5 sm:px-3 py-2.5 sm:py-4 text-center backdrop-blur-sm"
+          className="min-w-0 rounded-xl border border-border/60 bg-secondary/50 px-2 py-3 text-center"
         >
-          <div className="font-display text-xl sm:text-3xl font-semibold tabular-nums truncate">
+          <div className="font-mono text-2xl sm:text-3xl font-bold tracking-tight tabular-nums text-foreground truncate">
             {n}
           </div>
-          <div className="mt-0.5 text-[9px] sm:text-[10px] uppercase tracking-widest opacity-80 truncate">
+          <div className="mt-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
             {l}
           </div>
         </div>
@@ -69,13 +69,11 @@ function ActivityCountdown({ targetDate }: { targetDate: Date }) {
 
 export function HomeView({
   initialClass,
-  initialUser,
 }: {
   initialClass?: ClassSelection | null;
-  initialUser?: User | null;
 } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
-  const { user } = useAuth(initialUser);
+  const { user } = useAuth();
   const isStaff = isStaffUser(user);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedNextActivity, setSelectedNextActivity] = useState<Activity | null>(null);
@@ -88,7 +86,7 @@ export function HomeView({
 
   const activities = useQuery({
     queryKey: getActivityQueryKey(cls),
-    queryFn: () => api.listActivities(hasSelectedClass(cls) ? cls! : undefined),
+    queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
     enabled: true,
   });
 
@@ -207,30 +205,24 @@ export function HomeView({
       />
 
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-b from-primary/5 via-transparent to-transparent py-10 sm:py-16">
+      <section className="relative overflow-hidden border-b border-border/60 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent py-8 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
             <div className="min-w-0 max-w-full">
               {meta ? (
                 <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary truncate">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary animate-pulse" />
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                   <span className="truncate">{meta}</span>
                 </div>
               ) : (
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-secondary px-3 py-1 text-xs font-semibold text-muted-foreground">
                   No class selected
                 </div>
               )}
-              <h1 className="mt-4 font-display text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight break-words max-w-full">
-                {meta ? (
-                  <>
-                    <span className="text-primary">{meta}</span>
-                  </>
-                ) : (
-                  "Welcome to UNIFY"
-                )}
+              <h1 className="mt-3 font-display text-2xl sm:text-4xl font-bold tracking-tight text-foreground break-words max-w-full">
+                {meta ? "Class Schedule" : "Welcome to UNIFY"}
               </h1>
-              <p className="mt-2 max-w-xl text-sm sm:text-base text-muted-foreground">
+              <p className="mt-1.5 max-w-xl text-sm sm:text-base text-muted-foreground">
                 {meta
                   ? "Everything happening in your class — at a glance."
                   : "Pick your class to see your activities."}
@@ -241,20 +233,20 @@ export function HomeView({
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full sm:w-auto rounded-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary font-bold justify-center text-xs sm:text-sm"
+                  className="w-full sm:w-auto rounded-full border-border/80 text-foreground hover:bg-secondary font-medium justify-center text-xs sm:text-sm shadow-xs"
                 >
                   <a
                     href="https://examsync.kiron.dev/"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <ExternalLink className="mr-1.5 h-3.5 w-3.5 shrink-0" /> Exam Seat Plan ↗
+                    <ExternalLink className="mr-1.5 h-3.5 w-3.5 shrink-0 text-primary" /> Exam Seat Plan ↗
                   </a>
                 </Button>
               )}
               <Button
                 variant="outline"
-                className="w-full sm:w-auto rounded-full justify-center text-xs sm:text-sm"
+                className="w-full sm:w-auto rounded-full justify-center text-xs sm:text-sm shadow-xs"
                 onClick={() => {
                   setClassSelection({
                     departmentId: "",
@@ -268,7 +260,7 @@ export function HomeView({
               </Button>
               <Button
                 asChild
-                className="w-full sm:w-auto rounded-full justify-center text-xs sm:text-sm"
+                className="w-full sm:w-auto rounded-full justify-center text-xs sm:text-sm shadow-xs"
               >
                 <Link href="/activities" className="w-full sm:w-auto">
                   View all activities <ArrowRight className="ml-1.5 h-3.5 w-3.5 shrink-0" />
@@ -343,49 +335,64 @@ export function HomeView({
         {/* Countdown Sidebar */}
         <aside className="order-first min-w-0 max-w-full lg:order-last">
           {isDataLoading ? (
-            <div className="sticky top-24 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[color:var(--primary)] to-[color:var(--primary-deep)] p-5 sm:p-6 shadow-card">
-              <div className="h-3 w-20 rounded bg-white/20 animate-pulse" />
-              <div className="mt-4 h-7 w-3/4 rounded bg-white/20 animate-pulse" />
+            <div className="sticky top-24 overflow-hidden rounded-2xl border border-border/80 border-t-2 border-t-primary bg-card p-5 sm:p-6 shadow-xs">
+              <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+              <div className="mt-4 h-7 w-3/4 rounded bg-muted animate-pulse" />
               <div className="mt-5 grid grid-cols-3 gap-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 rounded-xl bg-white/20 animate-pulse" />
+                  <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />
                 ))}
               </div>
             </div>
           ) : (
             <div
               onClick={() => { if (next) setSelectedNextActivity(next); }}
-              className={`sticky top-24 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-[color:var(--primary)] to-[color:var(--primary-deep)] p-5 sm:p-6 text-primary-foreground shadow-card transition-all duration-300 ${
-                next ? "cursor-pointer hover:scale-[1.01] hover:shadow-xl active:scale-[0.99]" : ""
+              className={`sticky top-24 overflow-hidden rounded-2xl border border-border/80 border-t-2 border-t-primary bg-card p-5 sm:p-6 shadow-xs transition-all duration-200 ${
+                next ? "cursor-pointer hover:border-primary/40 active:scale-[0.99]" : ""
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-medium uppercase tracking-widest opacity-70 truncate">
-                  Next activity
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                    Next activity
+                  </p>
+                </div>
                 {next && (
-                  <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider backdrop-blur-xs">
+                  <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground border border-border/60">
                     Details
                   </span>
                 )}
               </div>
               {next ? (
                 <>
-                  <h3 className="mt-2 font-display text-xl sm:text-2xl font-bold leading-tight break-words">
+                  <h3 className="mt-3 font-display text-xl sm:text-2xl font-bold tracking-tight text-foreground leading-tight break-words">
                     {next.subject}
                   </h3>
-                  <p className="mt-1 font-mono text-xs sm:text-sm font-semibold opacity-90 break-words">{next.title}</p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">
+                      {next.title}
+                    </span>
+                    {next.room && (
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3 text-muted-foreground/70" />
+                        <span>{next.room}</span>
+                      </span>
+                    )}
+                  </div>
                   <ActivityCountdown targetDate={nextActivityDate(next)} />
-                  <p className="mt-5 text-xs sm:text-sm opacity-80" suppressHydrationWarning>
-                    Starts{" "}
-                    {formatAppDate(nextActivityDate(next), "EEEE, MMMM d")}
-                    {formatAppTime(next.time, next.startDate ? null : next.date)
-                      ? ` at ${formatAppTime(next.time, next.startDate ? null : next.date)}`
-                      : ""}
-                  </p>
+                  <div className="mt-5 border-t border-border/60 pt-3 flex items-center gap-1.5 text-xs text-muted-foreground" suppressHydrationWarning>
+                    <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+                    <span className="truncate">
+                      Starts {formatAppDate(nextActivityDate(next), "EEEE, MMMM d")}
+                      {formatAppTime(next.time, next.startDate ? null : next.date)
+                        ? ` at ${formatAppTime(next.time, next.startDate ? null : next.date)}`
+                        : ""}
+                    </span>
+                  </div>
                 </>
               ) : (
-                <div className="py-6 text-center text-sm opacity-80">
+                <div className="py-8 text-center text-sm text-muted-foreground">
                   No upcoming activities scheduled.
                 </div>
               )}

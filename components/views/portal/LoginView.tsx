@@ -1,14 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { customAuth } from "@/lib/auth";
-import { useSession } from "@/hooks/use-session";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { PasswordInput } from "@/components/common/PasswordInput";
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 function getSafeRedirectUrl(target: string | null): string | null {
   if (!target) return null;
@@ -28,10 +41,19 @@ function isRoleAuthorized(role: string, target: string): boolean {
 export function LoginView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user: currentSessionUser, isPending: sessionPending } = useSession();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { user: currentSessionUser, isPending: sessionPending, login } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   useEffect(() => {
     if (!sessionPending && currentSessionUser) {
@@ -50,11 +72,9 @@ export function LoginView() {
     }
   }, [currentSessionUser, sessionPending, searchParams, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      const user = await customAuth.login(email, password);
+      const user = await login(data.email, data.password);
       toast.success(`Welcome back, ${user.name}!`);
 
       const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
@@ -70,14 +90,24 @@ export function LoginView() {
         router.push("/");
       }
     } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setLoading(false);
+      toast.error((err as Error).message || "Failed to sign in");
     }
   };
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-12rem)] max-w-md flex-col justify-center px-4 py-12 sm:px-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        asChild
+        className="mb-4 self-start rounded-xl text-xs text-muted-foreground hover:text-foreground group"
+      >
+        <Link href="/">
+          <ArrowLeft className="mr-1.5 h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          Back to Home
+        </Link>
+      </Button>
+
       <div className="rounded-3xl border border-border bg-card p-8 shadow-card backdrop-blur-xl">
         <div className="flex flex-col items-center text-center">
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -91,20 +121,23 @@ export function LoginView() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground">Email</label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...register("email")}
                 placeholder="name@university.edu"
                 className="h-11 rounded-xl pl-10 text-sm"
               />
             </div>
+            {errors.email && (
+              <p className="text-xs font-medium text-destructive mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -112,23 +145,40 @@ export function LoginView() {
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <PasswordInput
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register("password")}
                 placeholder="••••••••"
                 className="h-11 rounded-xl pl-10 text-sm"
               />
             </div>
+            {errors.password && (
+              <p className="text-xs font-medium text-destructive mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="mt-2 w-full h-11 rounded-xl text-sm font-semibold shadow-xs"
           >
-            {loading ? "Signing in..." : "Sign in to Portal"}
+            {isSubmitting ? "Signing in..." : "Sign in to Portal"}
           </Button>
         </form>
+
+        <div className="mt-6 text-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="rounded-xl text-xs text-muted-foreground hover:text-foreground group"
+          >
+            <Link href="/">
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+              Back to Home
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

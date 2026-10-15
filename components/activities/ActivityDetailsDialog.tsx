@@ -26,10 +26,8 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
         {/* Header Block */}
         <DialogHeader className="space-y-2 text-left">
           <div className="flex flex-wrap items-center gap-2">
-            <span
-              className="inline-flex items-center rounded-full px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-white shadow-xs"
-              style={{ background: color }}
-            >
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-secondary/80 px-2.5 py-1 text-xs font-medium text-foreground shrink-0">
+              <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
               {activityLabel(activity.activityType)}
             </span>
 

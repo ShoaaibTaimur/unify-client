@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { AdminOverviewView } from "@/components/views/admin/AdminOverviewView";
-import { getServerUser } from "@/lib/auth/server";
 import { serverApi } from "@/lib/server-api";
 
 export const metadata: Metadata = {
@@ -13,7 +12,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
-  const user = await getServerUser();
+  const user = await serverApi.getCurrentUser();
   if (!user) {
     redirect("/login?from=/admin");
   }

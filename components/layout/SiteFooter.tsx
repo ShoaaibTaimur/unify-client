@@ -51,7 +51,7 @@ function MadeByDialog() {
         </DialogHeader>
         <div className="flex flex-col items-center gap-5 py-4">
           <a
-            href="https://devmotive.site"
+            href="https://devmotive.dev"
             target="_blank"
             rel="noopener noreferrer"
             className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md w-full"
@@ -64,7 +64,6 @@ function MadeByDialog() {
             />
             <div className="text-center">
               <div className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">DevMotive</div>
-              <div className="mt-0.5 text-sm text-muted-foreground">devmotive.site ↗</div>
             </div>
           </a>
         </div>
