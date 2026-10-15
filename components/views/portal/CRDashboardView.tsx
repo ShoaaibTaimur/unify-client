@@ -58,7 +58,7 @@ export function CRDashboardView() {
         }
       : undefined;
 
-  const activities = useActivityList(filter);
+  const activities = useActivityList(filter, Boolean(user?.departmentId && user?.batchId));
 
   const del = useMutation({
     mutationFn: (a: Activity) => api.deleteActivity(a.id),

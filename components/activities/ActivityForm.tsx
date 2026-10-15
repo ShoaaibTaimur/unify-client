@@ -435,10 +435,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export function useActivityList(filter?: { departmentId?: string; batchId?: string; sectionId?: string }) {
+export function useActivityList(
+  filter?: { departmentId?: string; batchId?: string; sectionId?: string },
+  enabled = true
+) {
   return useQuery({
     queryKey: ["activities", filter],
     queryFn: () => api.listActivities(filter),
+    enabled,
   });
 }
 

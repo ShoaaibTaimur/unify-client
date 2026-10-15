@@ -42,7 +42,7 @@ export function SiteHeader() {
   const { cls } = useClassSelection();
   const activities = useQuery({
     queryKey: getActivityQueryKey(cls),
-    enabled: true,
+    enabled: hasSelectedClass(cls),
     queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
   });
 

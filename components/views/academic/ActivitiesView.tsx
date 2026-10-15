@@ -6,7 +6,6 @@ import { api } from "@/lib/api";
 import { ACTIVITY_TYPES, type Activity, type ActivityType, type ClassSelection } from "@/types";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { getActivityQueryKey } from "@/lib/utils";
-import { useAuth } from "@/lib/auth";
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog";
 import { Input } from "@/components/ui/input";
@@ -20,7 +19,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { combineDateAndTime, isActivityExpired, isStaffUser } from "@/lib/date-utils";
+import { combineDateAndTime, isActivityExpired } from "@/lib/date-utils";
 
 type StatusFilter = "all" | "upcoming" | "completed";
 
@@ -30,8 +29,6 @@ function startDateOf(a: Activity): Date {
 
 export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
-  const { user } = useAuth();
-  const isStaff = isStaffUser(user);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -45,18 +42,13 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
   const activities = useQuery({
     queryKey: getActivityQueryKey(cls),
     queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
-    enabled: true,
+    enabled: hasSelectedClass(cls),
   });
 
   const filtered = useMemo(() => {
     const now = new Date();
     const needle = q.trim().toLowerCase();
     return (activities.data ?? [])
-      .filter((a) => {
-        // Common users cannot view activities expired more than 1 hour ago
-        if (!isStaff && isActivityExpired(a, now)) return false;
-        return true;
-      })
       .filter((a) => type === "all" || a.activityType === type)
       .filter((a) => {
         if (status === "all") return true;
@@ -70,7 +62,7 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
           .some((f) => f!.toLowerCase().includes(needle));
       })
       .sort((a, b) => startDateOf(a).getTime() - startDateOf(b).getTime());
-  }, [activities.data, q, type, status, isStaff]);
+  }, [activities.data, q, type, status]);
 
   const activeFilterCount = (type !== "all" ? 1 : 0) + (status !== "all" ? 1 : 0);
 

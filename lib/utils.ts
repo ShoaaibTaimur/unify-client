@@ -37,6 +37,6 @@ export function hasActiveExams(activities: Activity[] | undefined | null): boole
  * across Dashboard, Activities, Calendar, and Header without cache misses or hydration drift.
  */
 export function getActivityQueryKey(cls?: ClassSelection | null): string[] {
-  if (!cls || !cls.departmentId || !cls.batchId) return ["activities", "all"];
+  if (!cls || !cls.departmentId || !cls.batchId) return ["activities", "unselected"];
   return ["activities", cls.departmentId, cls.batchId, cls.sectionId || "all"];
 }

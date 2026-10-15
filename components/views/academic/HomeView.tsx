@@ -12,7 +12,7 @@ import { ActivityCard } from "@/components/activities/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/activities/ActivityDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { differenceInSeconds, isSameDay } from "date-fns";
-import { parseAppDate, formatAppDate, formatAppTime, combineDateAndTime, parseTimeComponents, isActivityExpired, isStaffUser } from "@/lib/date-utils";
+import { parseAppDate, formatAppDate, formatAppTime, combineDateAndTime, parseTimeComponents } from "@/lib/date-utils";
 import { hasActiveExams, getActivityQueryKey } from "@/lib/utils";
 import { ArrowRight, PartyPopper, Settings2, ExternalLink, Clock, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,7 +71,6 @@ export function HomeView({
 } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
   const { user } = useAuth();
-  const isStaff = isStaffUser(user);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedNextActivity, setSelectedNextActivity] = useState<Activity | null>(null);
 
@@ -84,7 +83,7 @@ export function HomeView({
   const activities = useQuery({
     queryKey: getActivityQueryKey(cls),
     queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
-    enabled: true,
+    enabled: hasSelectedClass(cls),
   });
 
   const departments = useQuery({
@@ -114,9 +113,6 @@ export function HomeView({
   const todayList = useMemo(() => {
     return list
       .filter((a) => {
-        // Exclude activities whose scheduled time was > 1 hour ago for common users
-        if (!isStaff && isActivityExpired(a, now)) return false;
-
         if (a.startDate && a.endDate) {
           const s = parseAppDate(a.startDate);
           const e = parseAppDate(a.endDate);
@@ -142,13 +138,13 @@ export function HomeView({
         if (!hasTimeA && hasTimeB) return 1;
         return 0;
       });
-  }, [list, now, isStaff]);
+  }, [list, now]);
 
   const upcomingList = useMemo(() => {
     return list
-      .filter((a) => (!isStaff ? !isActivityExpired(a, now) : true) && nextActivityDate(a) >= now)
+      .filter((a) => nextActivityDate(a) >= now)
       .sort((a, b) => nextActivityDate(a).getTime() - nextActivityDate(b).getTime());
-  }, [list, now, isStaff]);
+  }, [list, now]);
 
   const next = upcomingList[0] ?? null;
   const upNext2 = upcomingList.slice(1, 3);

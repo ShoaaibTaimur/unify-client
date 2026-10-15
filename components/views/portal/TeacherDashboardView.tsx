@@ -48,7 +48,7 @@ export function TeacherDashboardView() {
   const filter = user?.departmentId
     ? { departmentId: user.departmentId }
     : undefined;
-  const activities = useActivityList(filter);
+  const activities = useActivityList(filter, Boolean(user?.departmentId));
 
   const del = useMutation({
     mutationFn: (a: Activity) => api.deleteActivity(a.id),

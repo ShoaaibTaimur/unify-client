@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { getActivityQueryKey } from "@/lib/utils";
-import { useAuth } from "@/lib/auth";
 import {
   addMonths,
   eachDayOfInterval,
@@ -29,7 +28,7 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
-import { parseAppDate, formatAppTime, parseTimeComponents, isActivityExpired, isStaffUser, combineDateAndTime } from "@/lib/date-utils";
+import { parseAppDate, formatAppTime, parseTimeComponents, combineDateAndTime } from "@/lib/date-utils";
 import { activityLabel } from "@/components/activities/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/activities/ActivityDetailsDialog";
 import {
@@ -60,8 +59,6 @@ function dayActivities(day: Date, list: Activity[]) {
 
 export function CalendarView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
-  const { user } = useAuth();
-  const isStaff = isStaffUser(user);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cursor, setCursor] = useState(new Date());
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
@@ -76,15 +73,12 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
   const activities = useQuery({
     queryKey: getActivityQueryKey(cls),
     queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
-    enabled: true,
+    enabled: hasSelectedClass(cls),
   });
 
   const visibleActivities = useMemo(() => {
-    const list = activities.data ?? [];
-    if (isStaff) return list;
-    const now = new Date();
-    return list.filter((a) => !isActivityExpired(a, now));
-  }, [activities.data, isStaff]);
+    return activities.data ?? [];
+  }, [activities.data]);
 
   const start = startOfWeek(startOfMonth(cursor));
   const end = endOfWeek(endOfMonth(cursor));
