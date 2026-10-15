@@ -373,10 +373,10 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
                       key={preset.value}
                       type="button"
                       onClick={() => setTimeVal(preset.value)}
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium border transition-colors ${
+                      className={`rounded-[4px] px-2.5 py-1 font-mono text-[11px] font-semibold border transition-colors ${
                         timeVal === preset.value
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background border-border text-foreground hover:bg-accent"
+                          ? "bg-primary text-primary-foreground border-primary shadow-2xs"
+                          : "bg-card border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50"
                       }`}
                     >
                       {preset.label}
@@ -386,7 +386,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
               </div>
 
               <Field label="Room / Venue">
-                <Input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 402 or Lab 3" className="rounded-xl bg-background" />
+                <Input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 402 or Lab 3" className="rounded-[4px] font-mono text-xs bg-background" />
               </Field>
             </div>
           )}
@@ -397,17 +397,17 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="Topics covered, syllabus details, exam guidelines, links (https://...)..."
-              className="rounded-xl font-mono text-xs leading-relaxed"
+              className="rounded-[4px] font-mono text-xs leading-relaxed"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 font-mono text-[11px] text-muted-foreground">
               Preserves multiline formatting, lists, and links when viewed by students.
             </p>
           </Field>
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={!canSubmit || mutation.isPending} onClick={() => mutation.mutate()}>
+          <Button variant="ghost" className="rounded-[4px] font-mono text-xs uppercase" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={!canSubmit || mutation.isPending} className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold shadow-2xs" onClick={() => mutation.mutate()}>
             {mutation.isPending ? "Saving…" : editing ? "Save changes" : "Create activity"}
           </Button>
         </DialogFooter>
@@ -466,10 +466,10 @@ export function ManageActivitiesTable({
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <div className="overflow-hidden rounded-[4px] border border-border bg-card shadow-2xs">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
-            <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <thead className="border-b border-border bg-secondary/40 text-[10px] font-mono font-bold uppercase tracking-[0.14em] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left">Subject Name</th>
                 <th className="px-4 py-3 text-left">Type</th>
@@ -481,42 +481,42 @@ export function ManageActivitiesTable({
             <tbody>
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                  <td colSpan={5} className="px-4 py-10 text-center font-mono text-xs text-muted-foreground">
                     No activities found.
                   </td>
                 </tr>
               )}
               {paginatedItems.map((a) => (
-                <tr key={a.id} className="border-b border-border/60 last:border-b-0 hover:bg-muted/20 transition-colors">
+                <tr key={a.id} className="border-b border-border/60 last:border-b-0 hover:bg-secondary/20 transition-colors">
                   <td className="px-4 py-3 font-medium">
                     <div className="font-bold text-foreground flex items-center gap-2">
                       <span>{a.subject}</span>
                       {(!a.batchId || a.batchId === "all") ? (
-                        <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                          Dept-wide (All Batches)
+                        <span className="inline-flex items-center rounded-[4px] bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary border border-primary/20">
+                          Dept-wide
                         </span>
                       ) : (!a.sectionId || a.sectionId === "all") ? (
-                        <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        <span className="inline-flex items-center rounded-[4px] bg-secondary px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground border border-border">
                           Batch-wide
                         </span>
                       ) : null}
                     </div>
                   </td>
-                  <td className="px-4 py-3">{ACTIVITY_TYPES.find((t) => t.value === a.activityType)?.label}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ACTIVITY_TYPES.find((t) => t.value === a.activityType)?.label}</td>
                   <td className="px-4 py-3 font-mono text-xs font-bold text-primary">{a.title}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap font-mono text-xs text-foreground/90">
                     {a.startDate
                       ? `${formatAppDate(a.startDate, "PPP")} – ${formatAppDate(a.endDate, "PPP")}`
                       : `${formatAppDate(a.date, "PPP")}${formatAppTime(a.time, a.date) ? `, ${formatAppTime(a.time, a.date)}` : ""}`}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <Button size="sm" variant="ghost" onClick={() => onEdit(a)}>
+                    <Button size="sm" variant="ghost" className="rounded-[4px] font-mono text-[11px] uppercase tracking-wider hover:bg-primary/10 hover:text-primary mr-1" onClick={() => onEdit(a)}>
                       Edit
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-destructive hover:bg-destructive/10"
+                      className="rounded-[4px] font-mono text-[11px] uppercase tracking-wider text-destructive hover:bg-destructive/10"
                       onClick={() => setDeletingActivity(a)}
                     >
                       Delete
@@ -530,7 +530,7 @@ export function ManageActivitiesTable({
 
         {/* Pagination Bar */}
         {totalItems > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border bg-muted/30 px-4 py-3 text-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border bg-secondary/20 px-4 py-2.5 font-mono text-xs">
             <div className="text-muted-foreground">
               Showing <strong className="text-foreground font-semibold">{startIdx + 1}</strong> to{" "}
               <strong className="text-foreground font-semibold">{Math.min(startIdx + pageSize, totalItems)}</strong> of{" "}
@@ -547,10 +547,10 @@ export function ManageActivitiesTable({
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="h-8 w-16 rounded-xl bg-background text-xs">
+                  <SelectTrigger className="h-7 w-16 rounded-[4px] border border-border bg-card font-mono text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-[4px]">
                     <SelectItem value="5">5</SelectItem>
                     <SelectItem value="10">10</SelectItem>
                     <SelectItem value="20">20</SelectItem>
@@ -567,20 +567,20 @@ export function ManageActivitiesTable({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 w-8 p-0 rounded-xl"
+                    className="h-7 w-7 p-0 rounded-[4px] border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                     disabled={validPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 w-8 p-0 rounded-xl"
+                    className="h-7 w-7 p-0 rounded-[4px] border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                     disabled={validPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>

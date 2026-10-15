@@ -52,30 +52,35 @@ export function AdminUsersView() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h1 className="font-display text-4xl font-semibold">Users</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage CRs, Teachers, and Admins across the university.
+      <div className="flex flex-col gap-1 border-b border-border pb-5">
+        <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-primary font-bold">
+          USER ACCESS CONTROL
+        </div>
+        <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+          User Management
+        </h1>
+        <p className="font-mono text-xs text-muted-foreground">
+          Manage CRs, Teachers, and Admins across all departments and academic cohorts.
         </p>
       </div>
 
-      <Tabs defaultValue="cr" className="mt-6">
-        <TabsList className="rounded-full">
-          <TabsTrigger value="cr" className="rounded-full">
-            CRs
+      <Tabs defaultValue="cr" className="mt-4">
+        <TabsList className="rounded-[4px] border border-border bg-secondary/40 p-1 h-10">
+          <TabsTrigger value="cr" className="rounded-[4px] font-mono text-xs uppercase tracking-wider font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Class Representatives
           </TabsTrigger>
-          <TabsTrigger value="teacher" className="rounded-full">
-            Teachers
+          <TabsTrigger value="teacher" className="rounded-[4px] font-mono text-xs uppercase tracking-wider font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Faculty / Teachers
           </TabsTrigger>
-          <TabsTrigger value="admin" className="rounded-full">
-            Admins
+          <TabsTrigger value="admin" className="rounded-[4px] font-mono text-xs uppercase tracking-wider font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Administrators
           </TabsTrigger>
         </TabsList>
         {(["cr", "teacher", "admin"] as Role[]).map((r) => (
-          <TabsContent key={r} value={r} className="mt-4">
+          <TabsContent key={r} value={r} className="mt-6">
             {users.isLoading ? (
-              <div className="space-y-3">
-                {[1,2,3,4].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+              <div className="space-y-2">
+                {[1,2,3,4].map((i) => <Skeleton key={i} className="h-12 w-full rounded-[4px]" />)}
               </div>
             ) : (
               <UserTable
@@ -133,23 +138,23 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-display text-2xl font-semibold capitalize">
-            {role}s
+          <h2 className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-foreground">
+            {role} Accounts
           </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Manage {role} accounts and permissions across departments.
+          <p className="font-mono text-[11px] text-muted-foreground">
+            Manage {role} accounts and permissions across academic departments.
           </p>
         </div>
-        <Button className="rounded-xl" onClick={() => setCreating(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Create{" "}
+        <Button className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9 px-4 shadow-2xs transition-colors" onClick={() => setCreating(true)}>
+          <Plus className="mr-1.5 h-3.5 w-3.5" /> Create{" "}
           {role === "cr" ? "CR" : role}
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <div className="overflow-hidden rounded-[4px] border border-border bg-card shadow-2xs">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <thead className="border-b border-border bg-secondary/40 text-[10px] font-mono font-bold uppercase tracking-[0.14em] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left">Name</th>
                 <th className="px-4 py-3 text-left">Email</th>
@@ -164,9 +169,9 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                 <tr>
                   <td
                     colSpan={4}
-                    className="px-4 py-10 text-center text-muted-foreground"
+                    className="px-4 py-10 text-center font-mono text-xs text-muted-foreground"
                   >
-                    No {role}s yet. Click &quot;+ Create {role.toUpperCase()}&quot; to
+                    No {role} accounts yet. Click &quot;+ Create {role.toUpperCase()}&quot; to
                     add one.
                   </td>
                 </tr>
@@ -180,11 +185,11 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                 return (
                   <tr
                     key={u.id}
-                    className="border-b border-border/60 last:border-b-0 hover:bg-muted/20 transition-colors"
+                    className="border-b border-border/60 last:border-b-0 hover:bg-secondary/20 transition-colors"
                   >
-                    <td className="px-4 py-3 font-medium">{u.name}</td>
-                    <td className="px-4 py-3">{u.email}</td>
-                    <td className="px-4 py-3 text-xs font-medium text-foreground/80">
+                    <td className="px-4 py-3 font-medium text-foreground">{u.name}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.email}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-semibold text-foreground/80">
                       {orgText}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -192,25 +197,25 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 gap-1.5 rounded-xl text-xs hover:bg-muted"
+                          className="h-7 gap-1 rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-wider font-semibold transition-colors"
                           onClick={() => setEditingUser(u)}
                         >
-                          <Pencil className="h-3.5 w-3.5 text-primary" />
+                          <Pencil className="h-3 w-3 text-primary" />
                           Edit
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 gap-1.5 rounded-xl text-xs hover:bg-muted"
+                          className="h-7 gap-1 rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-wider font-semibold transition-colors"
                           onClick={() => setResettingUser(u)}
                         >
-                          <KeyRound className="h-3.5 w-3.5 text-amber-500" />
-                          Reset Password
+                          <KeyRound className="h-3 w-3 text-primary" />
+                          Reset
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 rounded-xl text-xs text-destructive hover:bg-destructive/10"
+                          className="h-7 rounded-[4px] font-mono text-[11px] uppercase tracking-wider text-destructive hover:bg-destructive/10 transition-colors"
                           disabled={deleteMutation.isPending}
                           onClick={() => setDeletingUser(u)}
                         >
@@ -227,7 +232,7 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
 
         {/* User Pagination Bar */}
         {totalItems > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border bg-muted/30 px-4 py-3 text-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border bg-secondary/20 px-4 py-2.5 font-mono text-xs">
             <div className="text-muted-foreground">
               Showing <strong className="text-foreground font-semibold">{startIdx + 1}</strong> to{" "}
               <strong className="text-foreground font-semibold">{Math.min(startIdx + pageSize, totalItems)}</strong> of{" "}
@@ -244,10 +249,10 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="h-8 w-16 rounded-xl bg-background text-xs">
+                  <SelectTrigger className="h-7 w-16 rounded-[4px] border border-border bg-card font-mono text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-[4px]">
                     <SelectItem value="5">5</SelectItem>
                     <SelectItem value="10">10</SelectItem>
                     <SelectItem value="20">20</SelectItem>
@@ -264,20 +269,20 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 w-8 p-0 rounded-xl"
+                    className="h-7 w-7 p-0 rounded-[4px] border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                     disabled={validPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 w-8 p-0 rounded-xl"
+                    className="h-7 w-7 p-0 rounded-[4px] border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                     disabled={validPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
@@ -616,7 +621,7 @@ function ResetPasswordDialog({
 
         {result ? (
           <div className="space-y-4 py-2">
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-xs text-emerald-700 dark:text-emerald-400">
+            <div className="rounded-[4px] border border-emerald-500/20 bg-emerald-500/10 p-4 font-mono text-xs text-emerald-700 dark:text-emerald-400">
               <p className="font-semibold text-emerald-800 dark:text-emerald-300">
                 Temporary password generated!
               </p>

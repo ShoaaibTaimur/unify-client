@@ -83,11 +83,11 @@ export function PanelClientLayout({
     if (isPending) return;
 
     if (!user) {
-      router.push(`/login?from=${encodeURIComponent(pathname)}`);
+      router.replace(`/login?from=${encodeURIComponent(pathname)}`);
       return;
     }
     if (user.mustChangePassword) {
-      router.push("/change-password");
+      router.replace("/change-password");
       return;
     }
     if (user.role !== role) {

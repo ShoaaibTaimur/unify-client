@@ -87,28 +87,31 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
         onOpenChange={setDialogOpen}
         initial={cls}
       />
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="font-display text-4xl">All activities</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Everything scheduled for your class.
-            </p>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-2">
+          <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-primary font-bold">
+            ACADEMIC SCHEDULE
           </div>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            Academic Activities
+          </h1>
+          <p className="font-mono text-xs text-muted-foreground">
+            All scheduled tests, exams, assignments, and academic deadlines.
+          </p>
         </div>
 
-        {/* Search + filters */}
-        <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-border bg-card p-3 shadow-card md:flex-row md:items-center">
+        {/* Search + status filter bar */}
+        <div className="mt-6 flex flex-col rounded-none border border-border bg-card md:flex-row divide-y md:divide-y-0 md:divide-x divide-border">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search title, subject, room, description…"
-              className="h-11 rounded-2xl border-0 bg-muted/40 pl-11 text-base focus-visible:ring-primary"
+              placeholder="FILTER BY TITLE, CODE, SUBJECT, ROOM…"
+              className="h-11 rounded-none border-0 bg-transparent pl-11 font-mono text-xs tracking-wider placeholder:text-muted-foreground/50 focus-visible:ring-0"
             />
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-stretch divide-x divide-border">
             <FilterPill
               label="Upcoming"
               active={status === "upcoming"}
@@ -128,35 +131,39 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
         </div>
 
         {/* Type pills */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant={type === "all" ? "default" : "outline"}
-            className="rounded-full text-xs"
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            className={`h-7 px-3 font-mono text-[10px] uppercase tracking-wider font-semibold border transition-colors ${type === "all"
+                ? "bg-primary text-primary-foreground border-primary font-bold shadow-2xs"
+                : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+              }`}
             onClick={() => setType("all")}
           >
             All Types
-          </Button>
+          </button>
           {ACTIVITY_TYPES.map((t) => (
-            <Button
+            <button
               key={t.value}
-              size="sm"
-              variant={type === t.value ? "default" : "outline"}
-              className="rounded-full text-xs"
+              type="button"
+              className={`h-7 px-3 font-mono text-[10px] uppercase tracking-wider font-semibold border transition-colors ${type === t.value
+                  ? "bg-primary text-primary-foreground border-primary font-bold shadow-2xs"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+                }`}
               onClick={() => setType(t.value)}
             >
               {t.label}
-            </Button>
+            </button>
           ))}
         </div>
 
         {/* List */}
         <div className="mt-6 space-y-3">
           {((!loaded && !initialClass) || (hasSelectedClass(cls) && activities.isLoading && !activities.data)) ? (
-            [1,2,3,4,5].map((i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)
+            [1, 2, 3, 4, 5].map((i) => <div key={i} className="h-24 w-full bg-muted/50 border border-border animate-pulse" />)
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-sm text-muted-foreground">
-              No activities found for this filter.
+            <div className="border border-dashed border-border bg-card p-12 text-center font-mono text-xs text-muted-foreground">
+              [NO ACTIVITIES MATCH THE CURRENT FILTER]
             </div>
           ) : (
             filtered.map((a) => <ActivityCard key={a.id} activity={a} />)
@@ -179,11 +186,10 @@ function FilterPill({
   return (
     <button
       onClick={onClick}
-      className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
-        active
-          ? "bg-primary text-primary-foreground shadow-xs"
-          : "bg-transparent text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-      }`}
+      className={`px-4 h-11 font-mono text-[11px] uppercase tracking-[0.12em] font-bold transition-colors flex items-center justify-center whitespace-nowrap ${active
+          ? "bg-primary text-primary-foreground shadow-2xs"
+          : "bg-transparent text-muted-foreground hover:bg-primary/10 hover:text-primary"
+        }`}
     >
       {label}
     </button>

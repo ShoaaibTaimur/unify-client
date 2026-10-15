@@ -13,27 +13,26 @@ export const dynamic = "force-dynamic";
 
 export default async function CRDashboardPage() {
   const user = await serverApi.getCurrentUser();
-  if (!user) {
-    redirect("/login?from=/cr");
-  }
-  if (user.role !== "cr") {
+  if (user && user.role !== "cr") {
     redirect(user.role === "admin" ? "/admin" : user.role === "teacher" ? "/teacher" : "/");
   }
 
   const queryClient = new QueryClient();
 
-  const filter = {
-    departmentId: user.departmentId,
-    batchId: user.batchId,
-    sectionId: user.sectionId,
-  };
+  if (user) {
+    const filter = {
+      departmentId: user.departmentId,
+      batchId: user.batchId,
+      sectionId: user.sectionId,
+    };
 
-  await Promise.allSettled([
-    queryClient.prefetchQuery({
-      queryKey: ["activities", filter],
-      queryFn: () => serverApi.listActivities(filter),
-    }),
-  ]);
+    await Promise.allSettled([
+      queryClient.prefetchQuery({
+        queryKey: ["activities", filter],
+        queryFn: () => serverApi.listActivities(filter),
+      }),
+    ]);
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

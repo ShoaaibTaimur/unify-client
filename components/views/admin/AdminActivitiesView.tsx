@@ -56,46 +56,53 @@ export function AdminActivitiesView() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-4xl font-semibold">Activities</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage all class tests, lab tests, viva, assignments, and exams across the university.
-          </p>
+      <div className="flex flex-col gap-3 border-b border-border pb-5">
+        <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-primary font-bold">
+          ACTIVITIES REGISTRY
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {list.length > 0 && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+              Academic Activities
+            </h1>
+            <p className="font-mono text-xs text-muted-foreground mt-0.5">
+              Manage all class tests, lab tests, viva, assignments, and exams across the university.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {list.length > 0 && (
+              <Button
+                variant="destructive"
+                className="rounded-[4px] gap-2 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-9 px-3.5"
+                disabled={clearAllMutation.isPending}
+                onClick={() => setConfirmClearAll(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Clear All ({list.length})
+              </Button>
+            )}
             <Button
-              variant="destructive"
-              className="rounded-full gap-2 text-xs"
-              disabled={clearAllMutation.isPending}
-              onClick={() => setConfirmClearAll(true)}
+              variant="outline"
+              className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-9 px-3.5 transition-colors"
+              onClick={() => setCsvOpen(true)}
             >
-              <Trash2 className="h-4 w-4" /> Clear All Activities ({list.length})
+              <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /> Import CSV Routine
             </Button>
-          )}
-          <Button
-            variant="outline"
-            className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
-            onClick={() => setCsvOpen(true)}
-          >
-            <FileSpreadsheet className="mr-2 h-4 w-4" /> Import CSV Routine
-          </Button>
-          <Button
-            className="rounded-full"
-            onClick={() => {
-              setEditing(null);
-              setOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Create activity
-          </Button>
+            <Button
+              className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9 px-4 shadow-2xs transition-colors"
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              <Plus className="mr-1.5 h-3.5 w-3.5" /> Create activity
+            </Button>
+          </div>
         </div>
       </div>
 
       {activities.isLoading ? (
-        <div className="space-y-3">
-          {[1,2,3,4,5].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+        <div className="space-y-2">
+          {[1,2,3,4,5].map((i) => <Skeleton key={i} className="h-12 w-full rounded-[4px]" />)}
         </div>
       ) : (
         <ManageActivitiesTable

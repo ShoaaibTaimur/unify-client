@@ -130,22 +130,22 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
             </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start sm:self-auto">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 rounded-full"
+              className="h-8 w-8 rounded-none border border-border hover:border-primary/60 hover:bg-primary/10 hover:text-primary transition-colors"
               onClick={() => setCursor(subMonths(cursor, 1))}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="min-w-[140px] text-center font-display text-lg font-semibold">
+            <span className="min-w-[140px] text-center font-mono text-xs uppercase tracking-[0.14em] font-bold">
               {format(cursor, "MMMM yyyy")}
             </span>
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 rounded-full"
+              className="h-8 w-8 rounded-none border border-border hover:border-primary/60 hover:bg-primary/10 hover:text-primary transition-colors"
               onClick={() => setCursor(addMonths(cursor, 1))}
             >
               <ChevronRight className="h-4 w-4" />
@@ -153,7 +153,7 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full text-xs font-semibold ml-2"
+              className="rounded-none border border-border text-[11px] font-mono uppercase tracking-wider font-semibold ml-1 h-8 px-3 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
               onClick={() => setCursor(new Date())}
             >
               Today
@@ -162,15 +162,15 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
         </div>
 
         {/* Grid */}
-        <div className="mt-6 overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-          <div className="grid grid-cols-7 border-b border-border bg-muted/40 text-center text-xs font-semibold text-muted-foreground">
+        <div className="mt-6 overflow-hidden rounded-none border border-border bg-card">
+          <div className="grid grid-cols-7 border-b border-border bg-secondary/40 text-center font-mono text-[10px] uppercase tracking-[0.14em] font-bold text-muted-foreground">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div key={d} className="py-3">
+              <div key={d} className="py-2.5">
                 {d}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 divide-x divide-y divide-border/60">
+          <div className="grid grid-cols-7 divide-x divide-y divide-border">
             {days.map((day) => {
               const inMonth = isSameMonth(day, cursor);
               const items = dayActivities(day, visibleActivities).sort((a, b) => {
@@ -192,15 +192,15 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                   onClick={() => {
                     if (items.length > 0) setSelectedDay(day);
                   }}
-                  className={`min-h-[110px] p-1.5 transition-colors sm:p-2.5 ${
-                    inMonth ? "bg-card" : "bg-muted/10 text-muted-foreground/40"
-                  } ${items.length > 0 ? "cursor-pointer hover:bg-muted/30" : ""}`}
+                  className={`min-h-[110px] p-1.5 transition-colors sm:p-2 ${
+                    inMonth ? "bg-card" : "bg-muted/15 text-muted-foreground/40"
+                  } ${items.length > 0 ? "cursor-pointer hover:bg-secondary/30" : ""}`}
                 >
                   <div className="flex items-center justify-between">
                     <span
-                      className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
+                      className={`inline-flex px-1.5 py-0.5 font-mono text-[11px] font-semibold ${
                         isToday
-                          ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                          ? "bg-primary text-primary-foreground font-bold"
                           : ""
                       }`}
                     >
@@ -215,11 +215,11 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                           e.stopPropagation();
                           setSelectedActivity(a);
                         }}
-                        className="flex items-center gap-1.5 truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium transition-colors bg-secondary/80 hover:bg-secondary hover:border-primary/40 border border-border/50 text-foreground shadow-2xs cursor-pointer"
+                        className="flex items-center gap-1.5 truncate rounded-none px-1.5 py-0.5 font-mono text-[10px] transition-colors bg-secondary/80 hover:bg-primary/15 hover:text-primary hover:border-primary/50 border border-border/70 text-foreground cursor-pointer"
                         title={`${activityLabel(a.activityType)} — ${a.subject} (${a.title})`}
                       >
                         <span
-                          className="h-1.5 w-1.5 rounded-full shrink-0"
+                          className="h-1.5 w-1.5 rounded-none shrink-0"
                           style={{ background: ACTIVITY_COLOR[a.activityType] }}
                         />
                         <span className="truncate">{a.subject}</span>
@@ -290,7 +290,7 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                     setSelectedActivity(act);
                     setSelectedDay(null);
                   }}
-                  className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-xs transition-all hover:border-primary/50 hover:shadow-md"
+                  className="group relative cursor-pointer overflow-hidden rounded-[4px] border border-border bg-card p-4 shadow-2xs transition-all hover:border-primary/50"
                 >
                   <span
                     aria-hidden

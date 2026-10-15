@@ -13,10 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
   const user = await serverApi.getCurrentUser();
-  if (!user) {
-    redirect("/login?from=/admin");
-  }
-  if (user.role !== "admin") {
+  if (user && user.role !== "admin") {
     redirect(user.role === "teacher" ? "/teacher" : user.role === "cr" ? "/cr" : "/");
   }
 

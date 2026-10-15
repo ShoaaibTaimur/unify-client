@@ -68,27 +68,27 @@ export function SiteHeader() {
     : "/login";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md transition-colors duration-300">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-        <div className="flex min-w-0 items-center gap-6">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className="flex h-12 items-stretch justify-between">
+        {/* Left: Logo & Navigation */}
+        <div className="flex min-w-0 items-stretch">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full md:hidden hover:scale-105 active:scale-95 transition-transform"
+              <button
+                type="button"
+                className="flex w-12 items-center justify-center border-r border-border text-foreground/70 hover:bg-foreground hover:text-background md:hidden transition-colors"
                 aria-label="Open menu"
               >
-                <Menu className="h-5 w-5" />
-              </Button>
+                <Menu className="h-4 w-4" />
+              </button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] p-0">
+            <SheetContent side="left" className="w-[300px] p-0 rounded-none border-r border-border bg-background">
               <SheetHeader className="border-b border-border p-4">
                 <SheetTitle className="text-left">
                   <Logo />
                 </SheetTitle>
               </SheetHeader>
-              <nav className="flex flex-col p-3">
+              <nav className="flex flex-col p-2 font-mono text-xs uppercase tracking-wider">
                 {NAV.map((n) => {
                   const active = pathname === n.to;
                   const Icon = n.icon;
@@ -97,11 +97,10 @@ export function SiteHeader() {
                       key={n.to}
                       href={n.to}
                       prefetch={false}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                        active
-                          ? "bg-primary text-primary-foreground shadow-xs"
-                          : "text-foreground/80 hover:bg-muted hover:translate-x-1"
-                      }`}
+                      className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold transition-colors border-b border-border/40 ${active
+                          ? "bg-primary text-primary-foreground"
+                          : "text-foreground/80 hover:bg-primary/10 hover:text-primary"
+                        }`}
                     >
                       <Icon className="h-4 w-4" /> {n.label}
                     </Link>
@@ -112,40 +111,41 @@ export function SiteHeader() {
                     href="https://examsync.kiron.dev/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 transition-all duration-200 mt-1"
+                    className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-colors border-b border-border/40"
                   >
-                    <ExternalLink className="h-4 w-4" /> Exam Seat Plan ↗
+                    <ExternalLink className="h-4 w-4" /> Seat Plan ↗
                   </a>
                 )}
-                <div className="my-3 border-t border-border" />
+                <div className="my-2 border-t border-border" />
                 {user ? (
                   <Link
                     href={dashLink}
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:translate-x-1 transition-all duration-200"
+                    className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-foreground/80 hover:bg-primary/10 hover:text-primary transition-colors"
                   >
-                    <UserCircle2 className="h-4 w-4 text-primary" />
-                    {user.role[0].toUpperCase() + user.role.slice(1)} panel
+                    <UserCircle2 className="h-4 w-4" />
+                    {user.role} Panel
                   </Link>
                 ) : (
                   <Link
                     href="/login"
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/80 hover:bg-muted hover:translate-x-1 transition-all duration-200"
+                    className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-foreground/80 hover:bg-primary/10 hover:text-primary transition-colors"
                   >
-                    <LogIn className="h-4 w-4 text-primary" /> Sign in
+                    <LogIn className="h-4 w-4" /> Sign In
                   </Link>
                 )}
               </nav>
             </SheetContent>
           </Sheet>
+
           <Link
             href="/"
-            className="flex min-w-0 items-center gap-2 hover:scale-105 active:scale-95 transition-transform duration-200"
+            className="flex items-center border-r border-border px-4 sm:px-6 hover:opacity-80 transition-opacity"
           >
             <Logo />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-stretch md:flex">
             {NAV.map((n) => {
               const active = pathname === n.to;
               const Icon = n.icon;
@@ -154,15 +154,12 @@ export function SiteHeader() {
                   key={n.to}
                   href={n.to}
                   prefetch={false}
-                  className={`group relative flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
-                    active
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                  }`}
+                  className={`group flex items-center gap-2 border-r border-border/60 px-4 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap transition-colors ${active
+                      ? "bg-primary text-primary-foreground font-bold shadow-2xs"
+                      : "text-muted-foreground hover:bg-primary/15 hover:text-primary"
+                    }`}
                 >
-                  <Icon
-                    className={`h-4 w-4 transition-transform duration-200 ${active ? "scale-110" : "group-hover:scale-110"}`}
-                  />
+                  <Icon className="h-3.5 w-3.5" />
                   <span>{n.label}</span>
                 </Link>
               );
@@ -172,38 +169,34 @@ export function SiteHeader() {
                 href="https://examsync.kiron.dev/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-bold text-primary hover:bg-primary/10 hover:text-primary transition-all duration-200 border border-primary/30 ml-1"
+                className="group flex items-center gap-1.5 border-r border-border/60 px-4 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
               >
                 <span>Seat Plan</span>
-                <ExternalLink className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ExternalLink className="h-3 w-3" />
               </a>
             )}
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
+        {/* Right: Class Indicator, Theme Toggle & User CTA */}
+        <div className="flex shrink-0 items-stretch">
+          <div className="flex items-stretch border-l border-border">
+            <ThemeToggle className="h-full w-12 rounded-none hover:bg-primary/15 hover:text-primary transition-colors" />
+          </div>
           {user ? (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="hidden md:inline-flex rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs"
+            <Link
+              href={dashLink}
+              className="inline-flex items-center justify-center border-l border-border bg-secondary text-foreground hover:bg-primary hover:text-primary-foreground px-4 sm:px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors"
             >
-              <Link href={dashLink}>
-                {user.role[0].toUpperCase() + user.role.slice(1)} panel
-              </Link>
-            </Button>
+              {user.role} Panel
+            </Link>
           ) : (
-            <Button
-              asChild
-              size="sm"
-              className="hidden md:inline-flex rounded-full hover:scale-105 active:scale-95 transition-transform duration-200 shadow-xs"
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center border-l border-border bg-primary text-primary-foreground hover:bg-primary-deep px-4 sm:px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors"
             >
-              <Link href="/login">
-                Sign in
-              </Link>
-            </Button>
+              Sign In
+            </Link>
           )}
         </div>
       </div>

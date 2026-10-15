@@ -13,10 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TeacherDashboardPage() {
   const user = await serverApi.getCurrentUser();
-  if (!user) {
-    redirect("/login?from=/teacher");
-  }
-  if (user.role !== "teacher") {
+  if (user && user.role !== "teacher") {
     redirect(user.role === "admin" ? "/admin" : user.role === "cr" ? "/cr" : "/");
   }
 
@@ -27,16 +24,18 @@ export default async function TeacherDashboardPage() {
       queryKey: ["departments"],
       queryFn: () => serverApi.listDepartments(),
     }),
-    user.departmentId
+    user?.departmentId
       ? queryClient.prefetchQuery({
           queryKey: ["batches", user.departmentId],
           queryFn: () => serverApi.listBatches(user.departmentId),
         })
       : Promise.resolve(),
-    queryClient.prefetchQuery({
-      queryKey: ["activities", { departmentId: user.departmentId }],
-      queryFn: () => serverApi.listActivities({ departmentId: user.departmentId }),
-    }),
+    user?.departmentId
+      ? queryClient.prefetchQuery({
+          queryKey: ["activities", { departmentId: user.departmentId }],
+          queryFn: () => serverApi.listActivities({ departmentId: user.departmentId }),
+        })
+      : Promise.resolve(),
   ]);
 
   return (

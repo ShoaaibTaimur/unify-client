@@ -137,16 +137,20 @@ export function AdminOrgView() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h1 className="font-display text-4xl font-semibold">Organization</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Departments, batches, and sections — manage and edit everything in one
-          place.
+      <div className="flex flex-col gap-1 border-b border-border pb-5">
+        <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-primary font-bold">
+          ORGANIZATION ARCHITECTURE
+        </div>
+        <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+          Academic Structure
+        </h1>
+        <p className="font-mono text-xs text-muted-foreground">
+          Departments, batches, and sections — manage and edit academic hierarchy in one place.
         </p>
       </div>
 
       {/* Add forms */}
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <FormCard
           icon={Building2}
           title="Add department"
@@ -156,12 +160,12 @@ export function AdminOrgView() {
             value={depName}
             onChange={(e) => setDepName(e.target.value)}
             placeholder="e.g. CSE"
-            className="rounded-xl"
+            className="rounded-[4px] font-mono text-xs"
           />
           <Button
             type="submit"
             disabled={!depName || createDep.isPending}
-            className="w-full rounded-xl"
+            className="w-full rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9"
           >
             Add department
           </Button>
@@ -173,10 +177,10 @@ export function AdminOrgView() {
           onSubmit={() => batchName && batchDep && createBatch.mutate()}
         >
           <Select value={batchDep} onValueChange={setBatchDep}>
-            <SelectTrigger className="rounded-xl">
+            <SelectTrigger className="rounded-[4px] font-mono text-xs">
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-[4px]">
               {deps.data?.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
                   {d.name}
@@ -188,12 +192,12 @@ export function AdminOrgView() {
             value={batchName}
             onChange={(e) => setBatchName(e.target.value)}
             placeholder="e.g. Batch 17"
-            className="rounded-xl"
+            className="rounded-[4px] font-mono text-xs"
           />
           <Button
             type="submit"
             disabled={!batchName || !batchDep || createBatch.isPending}
-            className="w-full rounded-xl"
+            className="w-full rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9"
           >
             Add batch
           </Button>
@@ -211,10 +215,10 @@ export function AdminOrgView() {
               setSecBatch("");
             }}
           >
-            <SelectTrigger className="rounded-xl">
+            <SelectTrigger className="rounded-[4px] font-mono text-xs">
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-[4px]">
               {deps.data?.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
                   {d.name}
@@ -227,12 +231,12 @@ export function AdminOrgView() {
             onValueChange={setSecBatch}
             disabled={!secDep}
           >
-            <SelectTrigger className="rounded-xl">
+            <SelectTrigger className="rounded-[4px] font-mono text-xs">
               <SelectValue
                 placeholder={secDep ? "Select batch" : "Select department first"}
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-[4px]">
               {secFilteredBatches.map((b) => (
                 <SelectItem key={b.id} value={b.id}>
                   {b.name}
@@ -244,12 +248,12 @@ export function AdminOrgView() {
             value={secName}
             onChange={(e) => setSecName(e.target.value)}
             placeholder="e.g. Section A"
-            className="rounded-xl"
+            className="rounded-[4px] font-mono text-xs"
           />
           <Button
             type="submit"
             disabled={!secName || !secBatch || createSection.isPending}
-            className="w-full rounded-xl"
+            className="w-full rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9"
           >
             Add section
           </Button>
@@ -257,17 +261,21 @@ export function AdminOrgView() {
       </div>
 
       {/* Hierarchy view */}
-      <div className="mt-10">
-        <h2 className="font-display text-2xl font-semibold">Structure</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Every department, its batches, and their sections.
-        </p>
+      <div className="space-y-4 pt-4">
+        <div>
+          <h2 className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-foreground">
+            Structure
+          </h2>
+          <p className="font-mono text-[11px] text-muted-foreground">
+            Every department, its batches, and their sections.
+          </p>
+        </div>
 
-        <div className="mt-4 space-y-4">
+        <div className="space-y-4">
           {(deps.isLoading || batches.isLoading || sections.isLoading) ? (
-            [1,2,3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-2xl" />)
+            [1,2,3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-[4px]" />)
           ) : (deps.data ?? []).length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            <div className="rounded-[4px] border border-dashed border-border bg-card p-8 text-center font-mono text-xs text-muted-foreground">
               No departments yet. Add one above to get started.
             </div>
           ) : null}
@@ -278,18 +286,18 @@ export function AdminOrgView() {
             return (
               <section
                 key={d.id}
-                className="rounded-2xl border border-border bg-card p-5 shadow-card"
+                className="rounded-[4px] border border-border bg-card p-5 shadow-2xs"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                      <Building2 className="h-5 w-5" />
+                    <div className="grid h-9 w-9 place-items-center rounded-[4px] bg-primary/10 text-primary">
+                      <Building2 className="h-4 w-4" />
                     </div>
                     <div>
-                      <div className="font-display text-lg font-semibold">
+                      <div className="font-mono text-base font-bold text-foreground">
                         {d.name}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="font-mono text-[11px] text-muted-foreground">
                         {depBatches.length} batch
                         {depBatches.length === 1 ? "" : "es"}
                       </div>
@@ -299,18 +307,18 @@ export function AdminOrgView() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                      className="h-8 w-8 rounded-[4px] text-muted-foreground hover:text-foreground hover:bg-primary/10"
                       onClick={() =>
                         setEditingItem({ type: "dep", id: d.id, name: d.name })
                       }
                       title="Edit Department"
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      className="h-8 w-8 rounded-[4px] text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       onClick={() =>
                         setDeletingItem({
                           type: "dep",
@@ -320,14 +328,14 @@ export function AdminOrgView() {
                       }
                       title="Delete Department"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {depBatches.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">
+                    <div className="rounded-[4px] border border-dashed border-border p-4 font-mono text-xs text-muted-foreground">
                       No batches in this department yet.
                     </div>
                   )}
@@ -338,15 +346,15 @@ export function AdminOrgView() {
                     return (
                       <div
                         key={b.id}
-                        className="rounded-xl border border-border bg-background/60 p-4"
+                        className="rounded-[4px] border border-border bg-secondary/35 p-3.5"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Layers className="h-4 w-4 text-primary" />
-                            <div className="font-medium text-foreground">
+                            <Layers className="h-3.5 w-3.5 text-primary" />
+                            <div className="font-mono text-xs font-bold text-foreground">
                               {b.name}
                             </div>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="font-mono text-[11px] text-muted-foreground">
                               ({batchSections.length} sections)
                             </span>
                           </div>
@@ -354,7 +362,7 @@ export function AdminOrgView() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
+                              className="h-7 w-7 rounded-[4px] text-muted-foreground hover:text-foreground hover:bg-primary/10"
                               onClick={() =>
                                 setEditingItem({
                                   type: "batch",
@@ -364,12 +372,12 @@ export function AdminOrgView() {
                               }
                               title="Edit Batch"
                             >
-                              <Pencil className="h-3.5 w-3.5" />
+                              <Pencil className="h-3 w-3" />
                             </Button>
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              className="h-7 w-7 rounded-[4px] text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                               onClick={() =>
                                 setDeletingItem({
                                   type: "batch",
@@ -379,23 +387,23 @@ export function AdminOrgView() {
                               }
                               title="Delete Batch"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </div>
 
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {batchSections.length === 0 && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="font-mono text-[11px] text-muted-foreground">
                               No sections yet.
                             </span>
                           )}
                           {batchSections.map((s) => (
                             <div
                               key={s.id}
-                              className="group inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground"
+                              className="group inline-flex items-center gap-1.5 rounded-[4px] border border-border bg-card px-2.5 py-1 font-mono text-[11px] font-medium text-foreground"
                             >
-                              <GraduationCap className="h-3 w-3" />
+                              <GraduationCap className="h-3 w-3 text-primary" />
                               <span>{s.name}</span>
                               <button
                                 onClick={() =>
@@ -408,7 +416,7 @@ export function AdminOrgView() {
                                 className="text-muted-foreground hover:text-foreground"
                                 title="Edit Section"
                               >
-                                <Pencil className="h-3 w-3" />
+                                <Pencil className="h-2.5 w-2.5" />
                               </button>
                               <button
                                 onClick={() =>
@@ -421,7 +429,7 @@ export function AdminOrgView() {
                                 className="text-muted-foreground hover:text-destructive"
                                 title="Delete Section"
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2 className="h-2.5 w-2.5" />
                               </button>
                             </div>
                           ))}
@@ -523,15 +531,15 @@ function FormCard({
         e.preventDefault();
         onSubmit();
       }}
-      className="rounded-2xl border border-border bg-card p-5 shadow-card"
+      className="rounded-[4px] border border-border bg-card p-5 shadow-2xs"
     >
       <div className="flex items-center gap-2">
-        <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+        <div className="grid h-8 w-8 place-items-center rounded-[4px] bg-primary/10 text-primary">
           <Icon className="h-4 w-4" />
         </div>
-        <h3 className="font-display text-base font-semibold">{title}</h3>
+        <h3 className="font-mono text-xs font-bold uppercase tracking-[0.12em] text-foreground">{title}</h3>
       </div>
-      <div className="mt-4 space-y-2">{children}</div>
+      <div className="mt-4 space-y-2.5">{children}</div>
     </form>
   );
 }

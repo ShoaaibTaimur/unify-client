@@ -80,11 +80,11 @@ export function AdminClientLayout({
     if (isPending) return;
 
     if (!user) {
-      router.push(`/login?from=${encodeURIComponent(pathname)}`);
+      router.replace(`/login?from=${encodeURIComponent(pathname)}`);
       return;
     }
     if (user.mustChangePassword) {
-      router.push("/change-password");
+      router.replace("/change-password");
       return;
     }
     if (user.role !== "admin") {
@@ -114,10 +114,10 @@ export function AdminClientLayout({
           <Link
             key={n.to}
             href={n.to}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-3 rounded-[4px] px-3 py-2.5 font-mono text-xs uppercase tracking-wider font-semibold transition-colors ${
               active
-                ? "bg-primary text-primary-foreground"
-                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                ? "bg-primary text-primary-foreground shadow-2xs"
+                : "text-foreground/80 hover:bg-primary/10 hover:text-primary"
             }`}
           >
             <Icon className="h-4 w-4" /> {n.label}
@@ -129,60 +129,93 @@ export function AdminClientLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur sm:px-6">
-        <div className="flex min-w-0 items-center gap-2">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                aria-label="Open admin menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] bg-sidebar p-0">
-              <SheetHeader className="border-b border-border p-4">
-                <SheetTitle className="text-left">
-                  <Logo />
-                </SheetTitle>
-              </SheetHeader>
-              <div className="flex h-[calc(100%-4rem)] flex-col p-3">
-                {NavList}
-                <div className="mt-4 rounded-xl border border-border bg-card p-3">
-                  <div className="text-xs font-medium">{user.name}</div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {user.email}
+      <header className="sticky top-0 z-30 h-12 border-b border-border bg-card/90 backdrop-blur-md">
+        <div className="flex h-full items-stretch justify-between">
+          {/* Left: Brand + Desktop Nav */}
+          <div className="flex items-stretch min-w-0">
+            <div className="md:hidden flex items-stretch border-r border-border">
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-full w-12 rounded-none hover:bg-primary/10 hover:text-primary"
+                    aria-label="Open admin menu"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[280px] bg-card p-0 border-r border-border">
+                  <SheetHeader className="border-b border-border p-4">
+                    <SheetTitle className="text-left">
+                      <Logo />
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex h-[calc(100%-4rem)] flex-col p-3">
+                    {NavList}
+                    <div className="mt-4 rounded-[4px] border border-border bg-secondary/30 p-3 font-mono">
+                      <div className="text-xs font-bold text-foreground">{user.name}</div>
+                      <div className="truncate text-[11px] text-muted-foreground">
+                        {user.email}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-          <Link href="/" className="flex min-w-0 items-center gap-2">
-            <Logo />
-          </Link>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="hidden text-right text-xs sm:block">
-            <div className="font-medium">{user.name}</div>
-            <div className="truncate text-muted-foreground">{user.email}</div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            <Link href="/" className="flex items-center px-4 sm:px-5 border-r border-border">
+              <Logo />
+            </Link>
+
+            <nav className="hidden md:flex items-stretch">
+              {ADMIN_NAV.map((n) => {
+                const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
+                const Icon = n.icon;
+                return (
+                  <Link
+                    key={n.to}
+                    href={n.to}
+                    className={`flex items-center gap-2 px-4 border-r border-border font-mono text-[11px] uppercase tracking-[0.12em] font-semibold transition-colors ${
+                      active
+                        ? "bg-primary text-primary-foreground shadow-2xs font-bold"
+                        : "text-foreground hover:bg-primary/10 hover:text-primary"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{n.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
-          <ThemeToggle />
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-            onClick={async () => {
-              await logout();
-              router.push("/login");
-            }}
-          >
-            <LogOut className="mr-1.5 h-3.5 w-3.5" /> Sign out
-          </Button>
+
+          {/* Right: User status, ThemeToggle, Logout */}
+          <div className="flex items-stretch shrink-0">
+            <div className="hidden lg:flex items-center gap-2 px-3 border-l border-border font-mono text-[11px]">
+              <span className="h-1.5 w-1.5 bg-primary shrink-0" />
+              <span className="text-foreground font-bold">{user.name}</span>
+              <span className="text-muted-foreground truncate max-w-[140px]">({user.email})</span>
+            </div>
+
+            <div className="flex items-stretch border-l border-border">
+              <ThemeToggle className="h-full w-12 rounded-none hover:bg-primary/15 hover:text-primary transition-colors" />
+            </div>
+
+            <button
+              onClick={async () => {
+                await logout();
+                router.push("/login");
+              }}
+              className="inline-flex items-center justify-center gap-1.5 border-l border-border px-4 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
+          </div>
         </div>
       </header>
-      <main className="flex-1 p-4 sm:p-6 lg:p-10">{children}</main>
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">{children}</main>
     </div>
   );
 }

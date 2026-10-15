@@ -10,17 +10,22 @@ export function Stat({
   value: number;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-      <div className="flex items-center gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary [&>svg]:h-5 [&>svg]:w-5">
+    <div className="rounded-[4px] border border-border bg-card p-4 transition-all hover:border-primary/60 hover:shadow-2xs group">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 bg-primary shrink-0" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-semibold">
+            {label}
+          </span>
+        </div>
+        <div className="text-muted-foreground/70 group-hover:text-primary transition-colors [&>svg]:h-4 [&>svg]:w-4">
           {icon}
         </div>
-        <div className="min-w-0">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">
-            {label}
-          </div>
-          <div className="font-display text-3xl leading-tight">{value}</div>
-        </div>
+      </div>
+      <div className="mt-3">
+        <span className="font-mono text-3xl font-bold text-foreground group-hover:text-primary transition-colors">
+          {value}
+        </span>
       </div>
     </div>
   );

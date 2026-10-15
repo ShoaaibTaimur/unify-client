@@ -6,16 +6,15 @@ import { authClient, AUTH_EVENT } from "@/lib/auth/client";
 
 
 export function useSession(initialUser?: User | null): UseSessionReturn {
-  const [user, setUser] = useState<User | null>(
-    initialUser !== undefined ? initialUser : authClient.getCachedUser()
-  );
-  const [isPending, setIsPending] = useState(
-    initialUser === undefined && !authClient.getCachedUser()
-  );
+  const cachedUser = authClient.getCachedUser();
+  const effectiveUser = initialUser || cachedUser || null;
+
+  const [user, setUser] = useState<User | null>(effectiveUser);
+  const [isPending, setIsPending] = useState<boolean>(!effectiveUser);
   const [error, setError] = useState<Error | null>(null);
   const hasFetchedInitialRef = useRef(false);
 
-  const refetch = useCallback(async () => {
+  const refetch = useCallback(async (): Promise<void> => {
     try {
       const session = await authClient.getSession();
       setUser(session.user);
@@ -29,13 +28,21 @@ export function useSession(initialUser?: User | null): UseSessionReturn {
   }, []);
 
   useEffect(() => {
-    // If we have no cached or initial user, verify session on mount
+    if (initialUser) {
+      setUser(initialUser);
+      setIsPending(false);
+    }
+  }, [initialUser]);
+
+  useEffect(() => {
     if (!hasFetchedInitialRef.current) {
       hasFetchedInitialRef.current = true;
-      if (!initialUser && !authClient.getCachedUser()) {
+      if (!user) {
+        setIsPending(true);
         refetch();
       } else {
-        setIsPending(false);
+        // Silently verify in background
+        refetch();
       }
     }
 
@@ -51,7 +58,7 @@ export function useSession(initialUser?: User | null): UseSessionReturn {
 
     window.addEventListener(AUTH_EVENT, handleAuthChange);
     return () => window.removeEventListener(AUTH_EVENT, handleAuthChange);
-  }, [initialUser, refetch]);
+  }, [user, refetch]);
 
   return {
     user,

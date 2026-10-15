@@ -68,113 +68,110 @@ export function TeacherDashboardView() {
   ).length;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-card">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      <div className="rounded-[4px] border border-border bg-card p-5 sm:p-6 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              <GraduationCap className="h-3.5 w-3.5 text-primary" />
-              Teacher Dashboard · {depName || (orgLoading ? "Loading department..." : "Department")}
+            <div className="inline-flex items-center gap-2 border border-border bg-secondary/50 px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-foreground">
+              <span className="h-1.5 w-1.5 bg-primary shrink-0" />
+              <span>TEACHER DASHBOARD · {depName || (orgLoading ? "LOADING..." : "DEPARTMENT")}</span>
             </div>
-            <h1 className="mt-3 font-display text-3xl sm:text-4xl font-bold">
+            <h1 className="mt-3 font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
               Welcome back, {user.name}!
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Faculty scheduling and activity management for {depName || "your department"}.
-            </p>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 border-t border-border/60 text-xs">
-              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+            <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-border font-mono text-[11px]">
+              <div className="inline-flex items-center gap-1.5 rounded-[4px] border border-border bg-secondary/35 px-2.5 py-1 text-foreground">
                 <Building2 className="h-3.5 w-3.5 text-primary" />
-                <span>Department: <strong className="text-primary font-semibold">{depName || "Loading..."}</strong></span>
+                <span>Department: <strong className="text-primary font-bold">{depName || "Loading..."}</strong></span>
               </div>
-              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-foreground">
+              <div className="inline-flex items-center gap-1.5 rounded-[4px] border border-border bg-secondary/35 px-2.5 py-1 text-foreground">
                 <UserIcon className="h-3.5 w-3.5 text-primary" />
                 <span>Faculty: <strong>{user.name}</strong></span>
               </div>
-              <div className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-muted-foreground">
+              <div className="inline-flex items-center gap-1.5 rounded-[4px] border border-border bg-secondary/35 px-2.5 py-1 text-muted-foreground">
                 <Mail className="h-3.5 w-3.5 text-primary" />
                 <span>{user.email}</span>
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
-              className="rounded-full"
+              className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9 px-4 shadow-2xs transition-colors"
               onClick={() => {
                 setEditing(null);
                 setOpen(true);
               }}
             >
-              <Plus className="mr-2 h-4 w-4" /> Add activity
+              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add activity
             </Button>
             <Button
               variant="outline"
-              className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+              className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-9 px-4 transition-colors"
               onClick={() => setCsvOpen(true)}
             >
-              <FileSpreadsheet className="mr-2 h-4 w-4" /> Import Routine CSV
+              <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /> Import Routine CSV
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
-          icon={<CalendarDays className="h-5 w-5 text-primary" />}
+          icon={<CalendarDays className="h-4 w-4" />}
           value={upcomingCount}
-          label="Upcoming"
+          label="Upcoming Activities"
         />
         <StatCard
-          icon={<CheckCircle className="h-5 w-5 text-emerald-500" />}
+          icon={<CheckCircle className="h-4 w-4 text-emerald-500" />}
           value={list.length - upcomingCount}
           label="Completed"
         />
         <StatCard
-          icon={<Briefcase className="h-5 w-5 text-blue-500" />}
+          icon={<Briefcase className="h-4 w-4 text-primary" />}
           value={list.length}
           label={depName ? `${depName} Total` : "Department Total"}
         />
       </div>
 
-      <div className="mt-10">
+      <div className="space-y-4 pt-2">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-display text-2xl">
+            <h2 className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-foreground">
               Recent activities in {depName || "your department"}
             </h2>
-            <p className="text-xs text-muted-foreground">
-              Total {list.length} activities in {depName || "your department"}
+            <p className="font-mono text-[11px] text-muted-foreground">
+              Total {list.length} activities scheduled in {depName || "your department"}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
-              className="rounded-full border-primary/30 text-primary hover:bg-primary/10 hover:text-primary"
+              className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-8 px-3 transition-colors"
               onClick={() => setCsvOpen(true)}
             >
-              <FileSpreadsheet className="mr-1.5 h-4 w-4" /> Import CSV Routine
+              <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /> Import CSV
             </Button>
-            <Button asChild variant="outline" className="rounded-full">
+            <Button asChild variant="outline" className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-8 px-3 transition-colors">
               <Link href="/activities">
-                View all <ArrowRight className="ml-1.5 h-4 w-4" />
+                View all <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Link>
             </Button>
             <Button
-              className="rounded-full"
+              className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-8 px-3 transition-colors"
               onClick={() => {
                 setEditing(null);
                 setOpen(true);
               }}
             >
-              <Plus className="mr-2 h-4 w-4" /> Add activity
+              <Plus className="mr-1.5 h-3.5 w-3.5" /> Add activity
             </Button>
           </div>
         </div>
-        <div className="mt-4">
+        <div>
           {activities.isLoading ? (
-            <div className="space-y-3">
-              {[1,2,3].map((i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+            <div className="space-y-2">
+              {[1,2,3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-[4px]" />)}
             </div>
           ) : (
             <ManageActivitiesTable

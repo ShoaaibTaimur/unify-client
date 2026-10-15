@@ -25,6 +25,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 function getSafeRedirectUrl(target: string | null): string | null {
   if (!target) return null;
+  if (target === "/login" || target.startsWith("/login?") || target === "/change-password") return null;
   if (target.startsWith("/") && !target.startsWith("//") && !target.includes("\\")) {
     return target;
   }
@@ -79,15 +80,15 @@ export function LoginView() {
 
       const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
       if (fromParam && isRoleAuthorized(user.role, fromParam)) {
-        router.push(fromParam);
+        router.replace(fromParam);
       } else if (user.role === "admin") {
-        router.push("/admin");
+        router.replace("/admin");
       } else if (user.role === "cr") {
-        router.push("/cr");
+        router.replace("/cr");
       } else if (user.role === "teacher") {
-        router.push("/teacher");
+        router.replace("/teacher");
       } else {
-        router.push("/");
+        router.replace("/");
       }
     } catch (err) {
       toast.error((err as Error).message || "Failed to sign in");
@@ -97,61 +98,61 @@ export function LoginView() {
   return (
     <div className="mx-auto flex min-h-[calc(100vh-12rem)] max-w-md flex-col justify-center px-4 py-12 sm:px-6">
       <Button
-        variant="ghost"
+        variant="outline"
         size="sm"
         asChild
-        className="mb-4 self-start rounded-xl text-xs text-muted-foreground hover:text-foreground group"
+        className="mb-4 self-start rounded-[4px] border border-border font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/10 group transition-colors"
       >
         <Link href="/">
-          <ArrowLeft className="mr-1.5 h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
           Back to Home
         </Link>
       </Button>
 
-      <div className="rounded-3xl border border-border bg-card p-8 shadow-card backdrop-blur-xl">
+      <div className="rounded-[4px] border border-border bg-card p-6 sm:p-8 shadow-2xs">
         <div className="flex flex-col items-center text-center">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-            <ShieldCheck className="h-6 w-6" />
+          <div className="grid h-10 w-10 place-items-center rounded-[4px] bg-primary/10 text-primary">
+            <ShieldCheck className="h-5 w-5" />
           </div>
-          <h1 className="mt-4 font-display text-3xl font-bold tracking-tight">
+          <h1 className="mt-3 font-display text-2xl font-bold tracking-tight text-foreground">
             Portal Sign In
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
             Access CR, Teacher, or Admin management console
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground">Email</label>
+            <label className="font-mono text-[11px] uppercase tracking-wider font-semibold text-foreground">Email</label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="email"
                 {...register("email")}
                 placeholder="name@university.edu"
-                className="h-11 rounded-xl pl-10 text-sm"
+                className="h-10 rounded-[4px] font-mono text-xs pl-10 border border-border bg-background"
               />
             </div>
             {errors.email && (
-              <p className="text-xs font-medium text-destructive mt-1">
+              <p className="font-mono text-[11px] text-destructive mt-1">
                 {errors.email.message}
               </p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground">Password</label>
+            <label className="font-mono text-[11px] uppercase tracking-wider font-semibold text-foreground">Password</label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <PasswordInput
                 {...register("password")}
                 placeholder="••••••••"
-                className="h-11 rounded-xl pl-10 text-sm"
+                className="h-10 rounded-[4px] font-mono text-xs pl-10 border border-border bg-background"
               />
             </div>
             {errors.password && (
-              <p className="text-xs font-medium text-destructive mt-1">
+              <p className="font-mono text-[11px] text-destructive mt-1">
                 {errors.password.message}
               </p>
             )}
@@ -160,25 +161,11 @@ export function LoginView() {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="mt-2 w-full h-11 rounded-xl text-sm font-semibold shadow-xs"
+            className="mt-2 w-full h-10 rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold shadow-2xs transition-colors"
           >
             {isSubmitting ? "Signing in..." : "Sign in to Portal"}
           </Button>
         </form>
-
-        <div className="mt-6 text-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="rounded-xl text-xs text-muted-foreground hover:text-foreground group"
-          >
-            <Link href="/">
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-              Back to Home
-            </Link>
-          </Button>
-        </div>
       </div>
     </div>
   );

@@ -16,16 +16,7 @@ export default async function AdminLayout({
 }) {
   const user = await serverApi.getCurrentUser();
 
-  if (!user) {
-    const cookieStore = await cookies();
-    const hasAnyToken =
-      cookieStore.has("access_token") ||
-      cookieStore.has("refresh_token");
-
-    if (!hasAnyToken) {
-      redirect("/login?from=/admin");
-    }
-  } else if (user.role !== "admin") {
+  if (user && user.role !== "admin") {
     redirect(user.role === "teacher" ? "/teacher" : user.role === "cr" ? "/cr" : "/");
   }
 
