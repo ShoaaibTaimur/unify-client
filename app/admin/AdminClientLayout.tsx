@@ -23,6 +23,7 @@ import {
   Menu,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { toast } from "sonner";
 
 export type AdminNavItem = {
   to: string;
@@ -204,10 +205,14 @@ export function AdminClientLayout({
 
             <button
               onClick={async () => {
-                await logout();
-                router.push("/login");
+                try {
+                  await logout();
+                  router.replace("/login");
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Failed to sign out");
+                }
               }}
-              className="inline-flex items-center justify-center gap-1.5 border-l border-border bg-primary text-primary-foreground hover:bg-primary-deep px-4 sm:px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 border-l border-border bg-primary text-primary-foreground hover:bg-primary-deep px-4 sm:px-5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Sign out</span>

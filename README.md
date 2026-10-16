@@ -15,7 +15,7 @@
 - **Framework**: Next.js 15 (App Router)
 - **UI Library**: React 19, TypeScript 5
 - **Styling**: Tailwind CSS v4 (`@tailwindcss/postcss`), Shadcn UI, Radix Primitives
-- **Data & State**: TanStack React Query v5, Browser LocalStorage Session
+- **Data & State**: TanStack React Query v5, Redux Toolkit session state, backend-owned HttpOnly auth cookies
 - **Icons & UI Utilities**: Lucide Icons, Date-fns v4, Sonner Toasts, Recharts
 - **Backend API**: Node.js, Express.js REST API, JWT Authentication, Zod
 - **Analytics & Hosting**: Vercel Analytics, Vercel Serverless

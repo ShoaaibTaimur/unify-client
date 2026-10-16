@@ -1,4 +1,5 @@
 export type Role = "student" | "cr" | "teacher" | "admin";
+export type AuthStatus = "idle" | "checking" | "authenticated" | "anonymous" | "offline";
 
 export interface User {
   id: string;
@@ -33,19 +34,14 @@ export interface CreateUserInput {
   sectionId?: string;
 }
 
-export interface UseSessionReturn {
+export interface UseAuthReturn {
   user: User | null;
-  isPending: boolean;
-  isAuthenticated: boolean;
-  error: Error | null;
-  refetch: () => Promise<void>;
-}
-
-export interface AuthContextValue {
-  user: User | null;
+  status: AuthStatus;
   isAuthenticated: boolean;
   loaded: boolean;
   isPending: boolean;
+  isOffline: boolean;
+  error: string | null;
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   createUser: (input: CreateUserInput) => Promise<User>;

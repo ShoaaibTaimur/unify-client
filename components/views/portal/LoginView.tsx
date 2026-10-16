@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { PasswordInput } from "@/components/common/PasswordInput";
+import { getSafeRedirectUrl, isRoleAuthorized } from "@/lib/auth/redirect";
 
 const loginSchema = z.object({
   email: z
@@ -22,22 +23,6 @@ const loginSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
-
-function getSafeRedirectUrl(target: string | null): string | null {
-  if (!target) return null;
-  if (target === "/login" || target.startsWith("/login?") || target === "/change-password") return null;
-  if (target.startsWith("/") && !target.startsWith("//") && !target.includes("\\")) {
-    return target;
-  }
-  return null;
-}
-
-function isRoleAuthorized(role: string, target: string): boolean {
-  if (target.startsWith("/admin")) return role === "admin";
-  if (target.startsWith("/teacher")) return role === "teacher";
-  if (target.startsWith("/cr")) return role === "cr";
-  return true;
-}
 
 export function LoginView() {
   const router = useRouter();

@@ -1,5 +1,5 @@
 import type { Activity, Batch, Department, Section, User, Role } from "@/types";
-import { authClient } from "./auth";
+import { authClient } from "./auth/client";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL !).replace(/\/$/, ""); // DO NOT TOUCH THIS IN ANY CASE
 
@@ -201,4 +201,3 @@ export const api = {
       body: JSON.stringify({ current, next }),
     }),
 };
-

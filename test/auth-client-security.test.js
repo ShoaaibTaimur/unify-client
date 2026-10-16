@@ -1,138 +1,113 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-test("Frontend Auth Client Security Controls", async (t) => {
-  await t.test("Open redirect prevention rejects malicious redirect URLs", () => {
-    function getSafeRedirectUrl(target) {
-      if (!target) return null;
-      if (target.startsWith("/") && !target.startsWith("//") && !target.includes("\\")) {
-        return target;
-      }
-      return null;
-    }
+process.env.NEXT_PUBLIC_API_URL = "https://api.unify.test";
 
+const validUser = {
+  id: "usr-1",
+  email: "test@unify.edu",
+  name: "Test User",
+  role: "student",
+  mustChangePassword: false,
+};
+
+function jsonResponse(status, body) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+test("production authentication client security controls", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const { authClient, AuthClientError } = await import("../lib/auth/client.ts");
+  const { getSafeRedirectUrl, isRoleAuthorized } = await import("../lib/auth/redirect.ts");
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  await t.test("rejects external and role-conflicting redirects", () => {
     assert.equal(getSafeRedirectUrl("/admin"), "/admin");
-    assert.equal(getSafeRedirectUrl("/cr?section=A"), "/cr?section=A");
-    assert.equal(getSafeRedirectUrl("https://evil.com"), null);
-    assert.equal(getSafeRedirectUrl("//evil.com"), null);
-    assert.equal(getSafeRedirectUrl("/\\evil.com"), null);
-    assert.equal(getSafeRedirectUrl("javascript:alert(1)"), null);
+    assert.equal(getSafeRedirectUrl("https://evil.example"), null);
+    assert.equal(getSafeRedirectUrl("//evil.example"), null);
+    assert.equal(getSafeRedirectUrl("/\\evil.example"), null);
+    assert.equal(getSafeRedirectUrl("/login?from=/admin"), null);
+    assert.equal(isRoleAuthorized("student", "/admin"), false);
+    assert.equal(isRoleAuthorized("admin", "/admin/users"), true);
   });
 
-  await t.test("Cookie attributes accept backend lifetimes and enforce HTTP-only and SameSite=Lax", () => {
-    function getCookieOptions(maxAge, isProd = true) {
-      return {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: "lax",
-        path: "/",
-        maxAge,
-      };
-    }
-
-    // Dynamic backend lifetimes
-    const backendAccessTokenLifetime = 1800;
-    const backendRefreshTokenLifetime = 1209600;
-
-    const accessOpts = getCookieOptions(backendAccessTokenLifetime, true);
-    assert.equal(accessOpts.httpOnly, true, "access_token must be HttpOnly");
-    assert.equal(accessOpts.secure, true, "access_token must be Secure in prod");
-    assert.equal(accessOpts.sameSite, "lax");
-    assert.equal(accessOpts.maxAge, 1800, "MaxAge dynamically matches backend configuration");
-
-    const refreshOpts = getCookieOptions(backendRefreshTokenLifetime, true);
-    assert.equal(refreshOpts.httpOnly, true, "refresh_token must be HttpOnly");
-    assert.equal(refreshOpts.secure, true, "refresh_token must be Secure in prod");
-    assert.equal(refreshOpts.maxAge, 1209600, "MaxAge dynamically matches backend configuration");
-  });
-
-  await t.test("Single-flight refresh coordination prevents concurrent refresh race conditions", async () => {
-    let refreshNetworkCalls = 0;
-    let ongoingRefreshPromise = null;
-
-    async function mockRefreshSession() {
-      if (ongoingRefreshPromise) {
-        return ongoingRefreshPromise;
-      }
-
-      ongoingRefreshPromise = (async () => {
-        refreshNetworkCalls++;
-        await new Promise((resolve) => setTimeout(resolve, 30));
-        return true;
-      })().finally(() => {
-        ongoingRefreshPromise = null;
-      });
-
-      return ongoingRefreshPromise;
-    }
-
-    // Fire 5 simultaneous refresh requests
-    const results = await Promise.all([
-      mockRefreshSession(),
-      mockRefreshSession(),
-      mockRefreshSession(),
-      mockRefreshSession(),
-      mockRefreshSession(),
-    ]);
-
-    assert.deepEqual(results, [true, true, true, true, true]);
-    assert.equal(refreshNetworkCalls, 1, "Only a single network refresh call should execute for concurrent requests");
-  });
-
-  await t.test("401 retry happens at most once and 403 never triggers refresh loop", async () => {
-    let callCount = 0;
-    let refreshCount = 0;
-
-    async function mockFetch(path, init = {}) {
-      callCount++;
-      const isRetry = Boolean(init._isRetry);
-
-      // Simulating a protected endpoint returning 401 on first call
-      if (!isRetry) {
-        refreshCount++;
-        // Retry with _isRetry = true
-        return mockFetch(path, { ...init, _isRetry: true });
-      }
-
-      // On retry, if still 401, return response directly without further retry
-      return { status: 401, ok: false };
-    }
-
-    const response = await mockFetch("/api/activities");
-    assert.equal(callCount, 2, "Request should be retried at most once");
-    assert.equal(refreshCount, 1);
-    assert.equal(response.status, 401);
-
-    // 403 Forbidden check: never triggers refresh
-    let forbiddenRefreshTriggered = false;
-    async function mockForbiddenFetch() {
-      const res = { status: 403, ok: false };
-      if (res.status === 401) {
-        forbiddenRefreshTriggered = true;
-      }
-      return res;
-    }
-
-    const forbiddenRes = await mockForbiddenFetch();
-    assert.equal(forbiddenRes.status, 403);
-    assert.equal(forbiddenRefreshTriggered, false, "403 must never trigger refresh");
-  });
-
-  await t.test("Auth responses never leak tokens in body", () => {
-    // Simulating safe user response from /api/auth/login BFF
-    const bffLoginResponse = {
-      ok: true,
-      user: {
-        id: "usr-1",
-        email: "test@unify.edu",
-        name: "Test",
-        role: "student",
-      },
+  await t.test("login uses cookies and accepts user-only response", async () => {
+    let request;
+    let requestInit;
+    globalThis.fetch = async (input, init) => {
+      request = input;
+      requestInit = init;
+      return jsonResponse(200, { user: validUser });
     };
 
-    assert.equal("accessToken" in bffLoginResponse, false, "accessToken must never be in JSON");
-    assert.equal("refreshToken" in bffLoginResponse, false, "refreshToken must never be in JSON");
-    assert.equal("token" in bffLoginResponse, false, "token must never be in JSON");
-    assert.equal("passwordHash" in bffLoginResponse.user, false, "passwordHash must never be in user");
+    const result = await authClient.signIn({
+      email: " TEST@UNIFY.EDU ",
+      password: "secret",
+    });
+
+    assert.deepEqual(result.user, validUser);
+    assert.equal(requestInit.credentials, "include");
+    assert.equal(request, "https://api.unify.test/api/auth/login");
+    assert.deepEqual(JSON.parse(requestInit.body), {
+      email: "test@unify.edu",
+      password: "secret",
+    });
+  });
+
+  await t.test("coordinates concurrent refresh into one network flow", async () => {
+    let calls = 0;
+    globalThis.fetch = async () => {
+      calls += 1;
+      if (calls === 1) return jsonResponse(401, { code: "TOKEN_EXPIRED" });
+      return jsonResponse(200, { user: validUser });
+    };
+
+    const [first, second, third] = await Promise.all([
+      authClient.refreshSession(),
+      authClient.refreshSession(),
+      authClient.refreshSession(),
+    ]);
+
+    assert.deepEqual([first, second, third], [validUser, validUser, validUser]);
+    assert.equal(calls, 2);
+  });
+
+  await t.test("retries protected 401 once after refresh", async () => {
+    let calls = 0;
+    globalThis.fetch = async (input) => {
+      calls += 1;
+      const url = typeof input === "string" ? input : input.url;
+      if (calls === 1 && url.endsWith("/api/users")) {
+        return jsonResponse(401, { code: "TOKEN_EXPIRED" });
+      }
+      if (url.endsWith("/api/auth/me")) {
+        return jsonResponse(401, { code: "TOKEN_EXPIRED" });
+      }
+      if (url.endsWith("/api/auth/refresh")) {
+        return jsonResponse(200, { user: validUser });
+      }
+      return jsonResponse(200, []);
+    };
+
+    const response = await authClient.fetch("https://api.unify.test/api/users");
+    assert.equal(response.status, 200);
+    assert.equal(calls, 4);
+  });
+
+  await t.test("preserves network failure as network state", async () => {
+    globalThis.fetch = async () => {
+      throw new TypeError("offline");
+    };
+
+    await assert.rejects(
+      () => authClient.getSession(),
+      (error) => error instanceof AuthClientError && error.kind === "network"
+    );
   });
 });

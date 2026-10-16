@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -27,7 +26,7 @@ type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 export function ChangePasswordView() {
   const router = useRouter();
-  const { user, isPending } = useAuth();
+  const { user, isPending, changePassword } = useAuth();
 
   const dashLink =
     user?.role === "admin"
@@ -69,9 +68,9 @@ export function ChangePasswordView() {
 
   const onSubmit = async (data: ChangePasswordFormData) => {
     try {
-      await api.changePassword(data.oldPassword, data.newPassword);
+      await changePassword(data.oldPassword, data.newPassword);
       toast.success("Password changed successfully. Please sign in with your new credentials.");
-      router.push("/login");
+      router.replace("/login");
     } catch (err) {
       toast.error((err as Error).message || "Failed to update password");
     }

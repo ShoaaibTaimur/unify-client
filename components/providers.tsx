@@ -1,7 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import { isServer, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider as ReduxProvider } from "react-redux";
 import { AuthProvider } from "@/lib/auth";
+import { makeStore, type AppStore } from "@/lib/store";
 import type { User } from "@/types";
 
 function makeQueryClient() {
@@ -42,9 +45,14 @@ export function Providers({
   initialUser?: User | null;
 }) {
   const queryClient = getQueryClient();
+  const storeRef = useRef<AppStore | null>(null);
+  if (!storeRef.current) storeRef.current = makeStore(initialUser);
+
   return (
-    <AuthProvider initialUser={initialUser}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </AuthProvider>
+    <ReduxProvider store={storeRef.current}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>{children}</AuthProvider>
+      </QueryClientProvider>
+    </ReduxProvider>
   );
 }

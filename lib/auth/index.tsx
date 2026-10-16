@@ -1,60 +1,98 @@
 "use client";
 
-import React, { createContext, useContext, useCallback } from "react";
-import type { User, CreateUserInput, AuthContextValue } from "@/types";
+import { useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import {
+  initializeSession,
+  loginSession,
+  logoutSession,
+  sessionEnded,
+} from "@/lib/store/auth-slice";
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
+import type { CreateUserInput, UseAuthReturn } from "@/types";
 import { authClient, AUTH_EVENT } from "./client";
-import { useSession } from "@/hooks/use-session";
-import { api } from "../api";
 
 export { authClient, AUTH_EVENT };
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+  const userId = useAppSelector((state) => state.auth.user?.id ?? null);
+  const previousUserId = useRef<string | null>(userId);
 
-export function AuthProvider({
-  children,
-  initialUser,
-}: {
-  children: React.ReactNode;
-  initialUser?: User | null;
-}) {
-  const session = useSession(initialUser);
+  useEffect(() => {
+    void dispatch(initializeSession());
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await authClient.signIn({ email: email.trim(), password });
-    return res.user;
-  }, []);
+    return authClient.subscribe((event) => {
+      if (event.type === "signed-out") {
+        dispatch(sessionEnded());
+        return;
+      }
+      void dispatch(initializeSession());
+    });
+  }, [dispatch]);
+
+  useEffect(() => {
+    const previous = previousUserId.current;
+    if (previous && previous !== userId) queryClient.clear();
+    previousUserId.current = userId;
+  }, [queryClient, userId]);
+
+  useEffect(() => {
+    const verifyOnFocus = () => {
+      if (document.visibilityState === "visible") void dispatch(initializeSession());
+    };
+    document.addEventListener("visibilitychange", verifyOnFocus);
+    return () => document.removeEventListener("visibilitychange", verifyOnFocus);
+  }, [dispatch]);
+
+  return children;
+}
+
+export function useAuth(): UseAuthReturn {
+  const dispatch = useAppDispatch();
+  const auth = useAppSelector((state) => state.auth);
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      return dispatch(loginSession({ email, password })).unwrap();
+    },
+    [dispatch]
+  );
 
   const logout = useCallback(async () => {
-    await authClient.signOut();
-  }, []);
+    await dispatch(logoutSession()).unwrap();
+  }, [dispatch]);
 
   const createUser = useCallback(async (input: CreateUserInput) => {
     return api.createUser(input);
   }, []);
 
-  const changePassword = useCallback(async (current: string, next: string) => {
-    await api.changePassword(current, next);
-  }, []);
+  const changePassword = useCallback(
+    async (current: string, next: string) => {
+      await api.changePassword(current, next);
+      dispatch(sessionEnded());
+    },
+    [dispatch]
+  );
 
-  const value: AuthContextValue = {
-    user: session.user,
-    isAuthenticated: session.isAuthenticated,
-    loaded: !session.isPending,
-    isPending: session.isPending,
+  const refetch = useCallback(async () => {
+    await dispatch(initializeSession()).unwrap();
+  }, [dispatch]);
+
+  return {
+    user: auth.user,
+    status: auth.status,
+    isAuthenticated: auth.status === "authenticated",
+    loaded: auth.status !== "idle" && auth.status !== "checking",
+    isPending: auth.status === "idle" || auth.status === "checking",
+    isOffline: auth.status === "offline",
+    error: auth.error,
     login,
     logout,
     createUser,
     changePassword,
-    refetch: session.refetch,
+    refetch,
   };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }

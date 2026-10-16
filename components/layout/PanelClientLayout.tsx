@@ -24,6 +24,7 @@ import {
   Search,
 } from "lucide-react";
 import { useOrgDetails } from "@/hooks/use-org-details";
+import { toast } from "sonner";
 
 
 
@@ -114,8 +115,12 @@ export function PanelClientLayout({
   }
 
   const handleSignOut = async () => {
-    await logout();
-    router.push("/login");
+    try {
+      await logout();
+      router.replace("/login");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to sign out");
+    }
   };
 
   const NavList = (
