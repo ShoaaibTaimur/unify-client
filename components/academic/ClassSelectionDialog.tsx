@@ -1,19 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { getClassSelection, setClassSelection } from "@/lib/session";
 import type { ClassSelection } from "@/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
+import { useBatchesQuery, useDepartmentsQuery, useSectionsQuery } from "@/lib/store/api-slice";
 
 export function ClassSelectionDialog({
   open, onOpenChange, initial,
 }: { open: boolean; onOpenChange: (v: boolean) => void; initial?: ClassSelection | null }) {
-  const qc = useQueryClient();
   const [departmentId, setDepartmentId] = useState(initial?.departmentId ?? "");
   const [batchId, setBatchId] = useState(initial?.batchId ?? "");
   const [sectionId, setSectionId] = useState(initial?.sectionId || "all");
@@ -27,15 +25,9 @@ export function ClassSelectionDialog({
     }
   }, [open, initial]);
 
-  const departments = useQuery({ queryKey: ["departments"], queryFn: () => api.listDepartments() });
-  const batches = useQuery({
-    queryKey: ["batches", departmentId], enabled: !!departmentId,
-    queryFn: () => api.listBatches(departmentId),
-  });
-  const sections = useQuery({
-    queryKey: ["sections", batchId], enabled: !!batchId,
-    queryFn: () => api.listSections(batchId),
-  });
+  const departments = useDepartmentsQuery();
+  const batches = useBatchesQuery(departmentId, { skip: !departmentId });
+  const sections = useSectionsQuery(batchId, { skip: !batchId });
 
   const canContinue = Boolean(departmentId && batchId);
 
@@ -86,7 +78,6 @@ export function ClassSelectionDialog({
           disabled={!canContinue}
           onClick={() => {
             setClassSelection({ departmentId, batchId, sectionId: sectionId || "all" });
-            qc.invalidateQueries({ queryKey: ["activities"] });
             onOpenChange(false);
           }}
         >

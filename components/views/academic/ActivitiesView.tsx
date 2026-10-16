@@ -1,11 +1,8 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { ACTIVITY_TYPES, type Activity, type ActivityType, type ClassSelection } from "@/types";
+import { useState, useEffect } from "react";
+import { ACTIVITY_TYPES, type ActivityStatusFilter, type ActivityType, type ClassSelection } from "@/types";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
-import { getActivityQueryKey } from "@/lib/utils";
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog";
 import { Input } from "@/components/ui/input";
@@ -19,13 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { combineDateAndTime, isActivityExpired } from "@/lib/date-utils";
-
-type StatusFilter = "all" | "upcoming" | "completed";
-
-function startDateOf(a: Activity): Date {
-  return combineDateAndTime(a.startDate ?? a.date, a.time);
-}
+import { getApiError, useActivitiesQuery } from "@/lib/store/api-slice";
 
 export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
@@ -33,36 +24,30 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
   const [filterOpen, setFilterOpen] = useState(false);
   const [q, setQ] = useState("");
   const [type, setType] = useState<ActivityType | "all">("all");
-  const [status, setStatus] = useState<StatusFilter>("upcoming");
+  const [status, setStatus] = useState<ActivityStatusFilter>("upcoming");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
     if (loaded && !hasSelectedClass(cls)) setDialogOpen(true);
   }, [cls, loaded]);
 
-  const activities = useQuery({
-    queryKey: getActivityQueryKey(cls),
-    queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
-    enabled: hasSelectedClass(cls),
-  });
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(q.trim()), 250);
+    return () => clearTimeout(timeout);
+  }, [q]);
 
-  const filtered = useMemo(() => {
-    const now = new Date();
-    const needle = q.trim().toLowerCase();
-    return (activities.data ?? [])
-      .filter((a) => type === "all" || a.activityType === type)
-      .filter((a) => {
-        if (status === "all") return true;
-        const done = isActivityExpired(a, now);
-        return status === "completed" ? done : !done;
-      })
-      .filter((a) => {
-        if (!needle) return true;
-        return [a.title, a.subject, a.description, a.room, a.activityType]
-          .filter(Boolean)
-          .some((f) => f!.toLowerCase().includes(needle));
-      })
-      .sort((a, b) => startDateOf(a).getTime() - startDateOf(b).getTime());
-  }, [activities.data, q, type, status]);
+  const activities = useActivitiesQuery(
+    cls
+      ? {
+          ...cls,
+          activityType: type === "all" ? undefined : type,
+          status,
+          search: debouncedSearch || undefined,
+        }
+      : undefined,
+    { skip: !hasSelectedClass(cls) }
+  );
+  const filtered = activities.data ?? [];
 
   const activeFilterCount = (type !== "all" ? 1 : 0) + (status !== "all" ? 1 : 0);
 
@@ -70,7 +55,7 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
     return (
       <div className="mx-auto max-w-md py-24 text-center">
         <p className="text-sm font-medium text-destructive">Failed to load activities.</p>
-        <p className="mt-1 text-xs text-muted-foreground">{(activities.error as Error)?.message}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{getApiError(activities.error)}</p>
         <button
           onClick={() => activities.refetch()}
           className="mt-4 rounded-[4px] bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
@@ -108,7 +93,7 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
                 Timeline Status
               </label>
               <div className="mt-2 grid grid-cols-3 gap-1.5">
-                {(["upcoming", "completed", "all"] as StatusFilter[]).map((s) => (
+                {(["upcoming", "completed", "all"] as ActivityStatusFilter[]).map((s) => (
                   <button
                     key={s}
                     type="button"

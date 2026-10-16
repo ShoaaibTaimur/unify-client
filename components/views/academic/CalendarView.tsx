@@ -1,20 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useState, useEffect } from "react";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
-import { getActivityQueryKey } from "@/lib/utils";
+import { useCalendarQuery } from "@/lib/store/api-slice";
 import {
   addMonths,
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
   format,
-  isSameDay,
-  isSameMonth,
-  startOfMonth,
-  startOfWeek,
   subMonths,
 } from "date-fns";
 import { ACTIVITY_COLOR, type Activity, type ClassSelection } from "@/types";
@@ -28,7 +19,7 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
-import { parseAppDate, formatAppTime, parseTimeComponents, combineDateAndTime } from "@/lib/date-utils";
+import { parseAppDate, formatAppTime } from "@/lib/date-utils";
 import { activityLabel } from "@/components/activities/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/activities/ActivityDetailsDialog";
 import {
@@ -38,24 +29,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-function dayActivities(day: Date, list: Activity[]) {
-  const dayStart = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-  const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 23, 59, 59, 999);
-
-  return list.filter((a) => {
-    if (a.startDate && a.endDate) {
-      const s = parseAppDate(a.startDate);
-      const e = parseAppDate(a.endDate);
-      if (!s || !e) return false;
-      const sStart = new Date(s.getFullYear(), s.getMonth(), s.getDate());
-      const eEnd = new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59, 999);
-      return dayStart <= eEnd && dayEnd >= sStart;
-    }
-    const d = parseAppDate(a.date);
-    return d ? isSameDay(d, day) : false;
-  });
-}
 
 export function CalendarView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
@@ -70,41 +43,16 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
     if (loaded && !hasSelectedClass(cls)) setDialogOpen(true);
   }, [cls, loaded]);
 
-  const activities = useQuery({
-    queryKey: getActivityQueryKey(cls),
-    queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
-    enabled: hasSelectedClass(cls),
-  });
-
-  const visibleActivities = useMemo(() => {
-    return activities.data ?? [];
-  }, [activities.data]);
-
-  const start = startOfWeek(startOfMonth(cursor));
-  const end = endOfWeek(endOfMonth(cursor));
-  const days = useMemo(
-    () => eachDayOfInterval({ start, end }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [start, end]
+  const calendar = useCalendarQuery(
+    { selection: cls!, month: format(cursor, "yyyy-MM") },
+    { skip: !hasSelectedClass(cls) }
   );
+  const days = calendar.data?.days ?? [];
+  const selectedDateKey = selectedDay ? format(selectedDay, "yyyy-MM-dd") : "";
+  const activeDayActivities =
+    days.find((day) => day.date === selectedDateKey)?.activities ?? [];
 
-  const activeDayActivities = useMemo(() => {
-    if (!selectedDay) return [];
-    return dayActivities(selectedDay, visibleActivities).sort((a, b) => {
-      const hasTimeA = Boolean(a.time && parseTimeComponents(a.time));
-      const hasTimeB = Boolean(b.time && parseTimeComponents(b.time));
-      if (hasTimeA && hasTimeB) {
-        const timeA = combineDateAndTime(a.startDate ?? a.date, a.time).getTime();
-        const timeB = combineDateAndTime(b.startDate ?? b.date, b.time).getTime();
-        return timeA - timeB;
-      }
-      if (hasTimeA && !hasTimeB) return -1;
-      if (!hasTimeA && hasTimeB) return 1;
-      return 0;
-    });
-  }, [selectedDay, visibleActivities]);
-
-  if ((!loaded && !initialClass) || (activities.isLoading && !activities.data)) {
+  if ((!loaded && !initialClass) || (calendar.isLoading && !calendar.data)) {
     return <PageLoader text="Loading calendar..." />;
   }
 
@@ -166,28 +114,17 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
           </div>
           <div className="grid grid-cols-7 divide-x divide-y divide-border">
             {days.map((day) => {
-              const inMonth = isSameMonth(day, cursor);
-              const items = dayActivities(day, visibleActivities).sort((a, b) => {
-                const hasTimeA = Boolean(a.time && parseTimeComponents(a.time));
-                const hasTimeB = Boolean(b.time && parseTimeComponents(b.time));
-                if (hasTimeA && hasTimeB) {
-                  const timeA = combineDateAndTime(a.startDate ?? a.date, a.time).getTime();
-                  const timeB = combineDateAndTime(b.startDate ?? b.date, b.time).getTime();
-                  return timeA - timeB;
-                }
-                if (hasTimeA && !hasTimeB) return -1;
-                if (!hasTimeA && hasTimeB) return 1;
-                return 0;
-              });
-              const isToday = isSameDay(day, new Date());
+              const dayDate = parseAppDate(day.date) ?? new Date();
+              const items = day.activities;
+              const isToday = day.date === format(new Date(), "yyyy-MM-dd");
               return (
                 <div
-                  key={day.toISOString()}
+                  key={day.date}
                   onClick={() => {
-                    if (items.length > 0) setSelectedDay(day);
+                    if (items.length > 0) setSelectedDay(dayDate);
                   }}
                   className={`min-h-[110px] p-1.5 transition-colors sm:p-2 ${
-                    inMonth ? "bg-card" : "bg-muted/15 text-muted-foreground/40"
+                    day.inMonth ? "bg-card" : "bg-muted/15 text-muted-foreground/40"
                   } ${items.length > 0 ? "cursor-pointer hover:bg-secondary/30" : ""}`}
                 >
                   <div className="flex items-center justify-between">
@@ -198,11 +135,11 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                           : ""
                       }`}
                     >
-                      {format(day, "d")}
+                      {format(dayDate, "d")}
                     </span>
                   </div>
                   <div className="mt-1 space-y-1">
-                    {items.slice(0, 3).map((a) => (
+                    {day.previewActivities.map((a) => (
                       <div
                         key={a.id}
                         onClick={(e) => {
@@ -219,9 +156,9 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                         <span className="truncate">{a.subject}</span>
                       </div>
                     ))}
-                    {items.length > 3 && (
+                    {day.overflowCount > 0 && (
                       <div className="pl-1 text-[11px] font-medium text-primary hover:underline">
-                        +{items.length - 3} more
+                        +{day.overflowCount} more
                       </div>
                     )}
                   </div>

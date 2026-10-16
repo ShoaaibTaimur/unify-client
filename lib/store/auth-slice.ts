@@ -1,20 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { authClient, AuthClientError } from "@/lib/auth/client";
-import type { AuthStatus, LoginCredentials, User } from "@/types";
-
-export interface AuthState {
-  user: User | null;
-  status: AuthStatus;
-  error: string | null;
-  lastVerifiedAt: number | null;
-}
-
-export interface AuthFailure {
-  message: string;
-  kind: "network" | "server" | "validation";
-  status?: number;
-  code?: string;
-}
+import type { AuthFailure, AuthState, LoginCredentials, User } from "@/types";
 
 const initialState: AuthState = {
   user: null,

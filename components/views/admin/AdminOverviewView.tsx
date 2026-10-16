@@ -1,8 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { api } from "@/lib/api";
 import {
   Building2,
   Users,
@@ -13,87 +11,45 @@ import {
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { combineDateAndTime } from "@/lib/date-utils";
+import { useAdminOverviewQuery } from "@/lib/store/api-slice";
 
 export function AdminOverviewView() {
-  const departments = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => api.listDepartments(),
-  });
-  const batches = useQuery({
-    queryKey: ["batches", "all"],
-    queryFn: () => api.listBatches(),
-  });
-  const sections = useQuery({
-    queryKey: ["sections", "all"],
-    queryFn: () => api.listSections(),
-  });
-  const users = useQuery({
-    queryKey: ["users"],
-    queryFn: () => api.listUsers(),
-  });
-  const activities = useQuery({
-    queryKey: ["activities", "all"],
-    queryFn: () => api.listActivities(),
-  });
-
-  // Don't block the whole page — show what's ready, skeleton what isn't
-  const depList = departments.data ?? [];
-  const batList = batches.data ?? [];
-  const secList = sections.data ?? [];
-  const userList = users.data ?? [];
-  const actList = activities.data ?? [];
-
-  const crCount = userList.filter((u) => u.role === "cr").length;
-  const teacherCount = userList.filter((u) => u.role === "teacher").length;
-  const adminCount = userList.filter((u) => u.role === "admin").length;
-
-  const now = new Date();
-  const upcomingCount = actList.filter(
-    (a) => combineDateAndTime(a.endDate ?? a.startDate ?? a.date, a.time) >= now
-  ).length;
-  const completedCount = actList.length - upcomingCount;
-
-  const recentActivities = [...actList]
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt ?? b.date ?? 0).getTime() -
-        new Date(a.createdAt ?? a.date ?? 0).getTime()
-    )
-    .slice(0, 2);
+  const overview = useAdminOverviewQuery();
+  const counts = overview.data?.counts;
+  const recentActivities = overview.data?.recentActivities ?? [];
 
   const kpis = [
     {
       label: "Departments",
-      value: depList.length,
+      value: counts?.departments ?? 0,
       sub: "Academic divisions",
       icon: Building2,
       color: "text-blue-500 bg-blue-500/10",
-      loading: departments.isLoading,
+      loading: overview.isLoading,
     },
     {
       label: "Batches",
-      value: batList.length,
-      sub: `${secList.length} active sections`,
+      value: counts?.batches ?? 0,
+      sub: `${counts?.sections ?? 0} active sections`,
       icon: Layers,
       color: "text-amber-500 bg-amber-500/10",
-      loading: batches.isLoading || sections.isLoading,
+      loading: overview.isLoading,
     },
     {
       label: "Total Users",
-      value: userList.length,
-      sub: `${crCount} CRs · ${teacherCount} Teachers · ${adminCount} Admins`,
+      value: counts?.users ?? 0,
+      sub: `${counts?.roles.cr ?? 0} CRs · ${counts?.roles.teacher ?? 0} Teachers · ${counts?.roles.admin ?? 0} Admins`,
       icon: Users,
       color: "text-emerald-500 bg-emerald-500/10",
-      loading: users.isLoading,
+      loading: overview.isLoading,
     },
     {
       label: "Total Activities",
-      value: actList.length,
-      sub: `${upcomingCount} upcoming entries`,
+      value: counts?.activities ?? 0,
+      sub: `${counts?.upcomingActivities ?? 0} upcoming entries`,
       icon: CalendarDays,
       color: "text-purple-500 bg-purple-500/10",
-      loading: activities.isLoading,
+      loading: overview.isLoading,
     },
   ];
 
@@ -159,7 +115,7 @@ export function AdminOverviewView() {
               </div>
               <Button asChild variant="outline" size="sm" className="rounded-[4px] border border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-8 px-3 transition-colors">
                 <Link href="/admin/activities">
-                  View all ({actList.length}) <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  View all ({counts?.activities ?? 0}) <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                 </Link>
               </Button>
             </div>

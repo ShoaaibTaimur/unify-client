@@ -12,11 +12,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { useAuth } from "@/lib/auth";
-import { hasActiveExams, getActivityQueryKey } from "@/lib/utils";
+import { useNavigationQuery } from "@/lib/store/api-slice";
 import {
   Menu,
   LayoutDashboard,
@@ -40,18 +38,10 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   const { cls } = useClassSelection();
-  const activities = useQuery({
-    queryKey: getActivityQueryKey(cls),
-    enabled: hasSelectedClass(cls),
-    queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
+  const navigation = useNavigationQuery(cls!, {
+    skip: pathname === "/" || !hasSelectedClass(cls),
   });
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const showSeatPlan = mounted && hasActiveExams(activities.data);
+  const showSeatPlan = navigation.data?.hasActiveExams ?? false;
 
   useEffect(() => {
     setOpen(false);
@@ -96,7 +86,6 @@ export function SiteHeader() {
                     <Link
                       key={n.to}
                       href={n.to}
-                      prefetch={false}
                       className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold transition-colors border-b border-border/40 ${active
                           ? "bg-primary text-primary-foreground"
                           : "text-foreground/80 hover:bg-primary/10 hover:text-primary"
@@ -153,7 +142,6 @@ export function SiteHeader() {
                 <Link
                   key={n.to}
                   href={n.to}
-                  prefetch={false}
                   className={`group flex items-center gap-2 border-r border-border/60 px-4 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap transition-colors ${active
                       ? "bg-primary text-primary-foreground font-bold shadow-2xs"
                       : "text-muted-foreground hover:bg-primary/15 hover:text-primary"

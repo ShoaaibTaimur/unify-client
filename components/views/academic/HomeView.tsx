@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
 import { hasSelectedClass, setClassSelection, useClassSelection } from "@/lib/session";
 import { useAuth } from "@/lib/auth";
 import type { Activity, ClassSelection, User } from "@/types";
@@ -11,11 +9,11 @@ import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/activities/ActivityDetailsDialog";
 import { Button } from "@/components/ui/button";
-import { differenceInSeconds, isSameDay } from "date-fns";
-import { parseAppDate, formatAppDate, formatAppTime, combineDateAndTime, parseTimeComponents } from "@/lib/date-utils";
-import { hasActiveExams, getActivityQueryKey } from "@/lib/utils";
+import { differenceInSeconds } from "date-fns";
+import { formatAppDate, formatAppTime, combineDateAndTime } from "@/lib/date-utils";
 import { ArrowRight, PartyPopper, Settings2, ExternalLink, Clock, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getApiError, usePublicDashboardQuery } from "@/lib/store/api-slice";
 
 function nextActivityDate(a: Activity): Date {
   return combineDateAndTime(a.startDate ?? a.date, a.time);
@@ -80,98 +78,25 @@ export function HomeView({
     }
   }, [cls, loaded]);
 
-  const activities = useQuery({
-    queryKey: getActivityQueryKey(cls),
-    queryFn: () => (hasSelectedClass(cls) ? api.listActivities(cls!) : Promise.resolve([])),
-    enabled: hasSelectedClass(cls),
-  });
+  const dashboard = usePublicDashboardQuery(hasSelectedClass(cls) ? cls : null);
+  const todayList = dashboard.data?.todayActivities ?? [];
+  const showSeatPlan = dashboard.data?.hasActiveExams ?? false;
+  const next = dashboard.data?.nextActivity ?? null;
+  const upNext2 = dashboard.data?.upNextActivities ?? [];
 
-  const departments = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => api.listDepartments(),
-  });
-  const batches = useQuery({
-    queryKey: ["batches", cls?.departmentId],
-    queryFn: () => (cls?.departmentId ? api.listBatches(cls.departmentId) : []),
-    enabled: !!cls?.departmentId,
-  });
-  const sections = useQuery({
-    queryKey: ["sections", cls?.batchId],
-    queryFn: () => (cls?.batchId && cls.batchId !== "all" ? api.listSections(cls.batchId) : []),
-    enabled: !!cls?.batchId && cls.batchId !== "all",
-  });
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const list = activities.data ?? [];
-  const showSeatPlan = mounted && hasActiveExams(list);
-  const now = new Date();
-
-  const todayList = useMemo(() => {
-    return list
-      .filter((a) => {
-        if (a.startDate && a.endDate) {
-          const s = parseAppDate(a.startDate);
-          const e = parseAppDate(a.endDate);
-          if (!s || !e) return false;
-          const sStart = new Date(s.getFullYear(), s.getMonth(), s.getDate());
-          const eEnd = new Date(e.getFullYear(), e.getMonth(), e.getDate(), 23, 59, 59, 999);
-          const nowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          return nowStart >= sStart && nowStart <= eEnd;
-        }
-        const d = parseAppDate(a.date);
-        return d ? isSameDay(d, now) : false;
-      })
-      .sort((a, b) => {
-        // Sort by earliest scheduled time first
-        const hasTimeA = Boolean(a.time && parseTimeComponents(a.time));
-        const hasTimeB = Boolean(b.time && parseTimeComponents(b.time));
-        if (hasTimeA && hasTimeB) {
-          const timeA = combineDateAndTime(a.startDate ?? a.date, a.time).getTime();
-          const timeB = combineDateAndTime(b.startDate ?? b.date, b.time).getTime();
-          return timeA - timeB;
-        }
-        if (hasTimeA && !hasTimeB) return -1;
-        if (!hasTimeA && hasTimeB) return 1;
-        return 0;
-      });
-  }, [list, now]);
-
-  const upcomingList = useMemo(() => {
-    return list
-      .filter((a) => nextActivityDate(a) >= now)
-      .sort((a, b) => nextActivityDate(a).getTime() - nextActivityDate(b).getTime());
-  }, [list, now]);
-
-  const next = upcomingList[0] ?? null;
-  const upNext2 = upcomingList.slice(1, 3);
-
-  const depName = departments.data?.find((d) => d.id === cls?.departmentId)?.name;
-  const batchName = batches.data?.find((b) => b.id === cls?.batchId)?.name;
-  const secName =
-    cls?.sectionId === "all"
-      ? "All Sections"
-      : sections.data?.find((s) => s.id === cls?.sectionId)?.name;
-
-  const meta =
-    depName && batchName
-      ? `${depName} · ${batchName}${secName ? ` · ${secName}` : ""}`
-      : null;
+  const meta = dashboard.data?.classLabel || null;
 
   const isDataLoading =
     (!loaded && !initialClass) ||
-    (hasSelectedClass(cls) && activities.isLoading && !activities.data);
+    (hasSelectedClass(cls) && dashboard.isLoading && !dashboard.data);
 
-  if (activities.isError) {
+  if (dashboard.isError) {
     return (
       <div className="mx-auto max-w-md py-24 text-center">
         <p className="text-sm font-medium text-destructive">Failed to load activities.</p>
-        <p className="mt-1 text-xs text-muted-foreground">{(activities.error as Error)?.message}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{getApiError(dashboard.error)}</p>
         <button
-          onClick={() => activities.refetch()}
+          onClick={() => dashboard.refetch()}
           className="mt-4 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
         >
           Retry

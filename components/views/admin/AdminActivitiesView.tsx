@@ -1,58 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import {
   ActivityForm,
   ManageActivitiesTable,
 } from "@/components/activities/ActivityForm";
 import { CsvImportDialog } from "@/components/activities/CsvImportDialog";
 import { Button } from "@/components/ui/button";
-import { PageLoader } from "@/components/common/PageLoader";
 import { Plus, FileSpreadsheet, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import type { Activity } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { getApiError, useActivitiesQuery, useClearActivitiesMutation, useDeleteActivityMutation } from "@/lib/store/api-slice";
 
 export function AdminActivitiesView() {
-  const router = useRouter();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);
-  const qc = useQueryClient();
+  const activities = useActivitiesQuery();
+  const [deleteActivity] = useDeleteActivityMutation();
+  const [clearActivities, clearState] = useClearActivitiesMutation();
 
-  const activities = useQuery({
-    queryKey: ["activities", "all"],
-    queryFn: () => api.listActivities(),
-  });
-
-  const del = useMutation({
-    mutationFn: (a: Activity) => api.deleteActivity(a.id),
-    onSuccess: (_, a) => {
+  const removeActivity = async (activity: Activity) => {
+    try {
+      await deleteActivity(activity.id).unwrap();
       toast.success("Activity deleted");
-      qc.setQueriesData({ queryKey: ["activities"] }, (old: unknown) =>
-        Array.isArray(old) ? old.filter((item: Activity) => item.id !== a.id) : old
-      );
-      qc.invalidateQueries({ queryKey: ["activities"] });
-    },
-  });
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  };
 
-  const clearAllMutation = useMutation({
-    mutationFn: () => api.clearAllActivities(),
-    onSuccess: (res) => {
+  const clearAll = async () => {
+    try {
+      const res = await clearActivities().unwrap();
       toast.success(`Cleared all ${res.deletedCount} activities`);
-      qc.setQueriesData({ queryKey: ["activities"] }, () => []);
-      qc.invalidateQueries({ queryKey: ["activities"] });
       setConfirmClearAll(false);
-    },
-    onError: (e) => toast.error((e as Error).message),
-  });
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  };
 
   const list = activities.data ?? [];
 
@@ -76,7 +66,7 @@ export function AdminActivitiesView() {
               <Button
                 variant="destructive"
                 className="rounded-[4px] gap-2 font-mono text-[11px] uppercase tracking-[0.12em] font-semibold h-9 px-3.5"
-                disabled={clearAllMutation.isPending}
+                disabled={clearState.isLoading}
                 onClick={() => setConfirmClearAll(true)}
               >
                 <Trash2 className="h-3.5 w-3.5" /> Clear All ({list.length})
@@ -113,7 +103,7 @@ export function AdminActivitiesView() {
             setEditing(a);
             setOpen(true);
           }}
-          onDelete={(a) => del.mutate(a)}
+          onDelete={(a) => void removeActivity(a)}
         />
       )}
 
@@ -131,8 +121,8 @@ export function AdminActivitiesView() {
         open={confirmClearAll}
         onOpenChange={setConfirmClearAll}
         itemName={`ALL ${list.length} activities university-wide`}
-        isPending={clearAllMutation.isPending}
-        onConfirm={() => clearAllMutation.mutate()}
+        isPending={clearState.isLoading}
+        onConfirm={() => void clearAll()}
       />
     </div>
   );

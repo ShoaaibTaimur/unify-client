@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { dataApi } from "@/lib/store/api-slice";
 import {
   initializeSession,
   loginSession,
@@ -10,15 +9,15 @@ import {
   sessionEnded,
 } from "@/lib/store/auth-slice";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import type { CreateUserInput, UseAuthReturn } from "@/types";
+import type { UseAuthReturn } from "@/types";
 import { authClient, AUTH_EVENT } from "./client";
 
 export { authClient, AUTH_EVENT };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  const queryClient = useQueryClient();
   const userId = useAppSelector((state) => state.auth.user?.id ?? null);
+  const lastVerifiedAt = useAppSelector((state) => state.auth.lastVerifiedAt);
   const previousUserId = useRef<string | null>(userId);
 
   useEffect(() => {
@@ -35,17 +34,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const previous = previousUserId.current;
-    if (previous && previous !== userId) queryClient.clear();
+    if (previous && previous !== userId) dispatch(dataApi.util.resetApiState());
     previousUserId.current = userId;
-  }, [queryClient, userId]);
+  }, [dispatch, userId]);
 
   useEffect(() => {
     const verifyOnFocus = () => {
-      if (document.visibilityState === "visible") void dispatch(initializeSession());
+      const verificationExpired =
+        !lastVerifiedAt || Date.now() - lastVerifiedAt > 5 * 60_000;
+      if (document.visibilityState === "visible" && verificationExpired) {
+        void dispatch(initializeSession());
+      }
     };
     document.addEventListener("visibilitychange", verifyOnFocus);
     return () => document.removeEventListener("visibilitychange", verifyOnFocus);
-  }, [dispatch]);
+  }, [dispatch, lastVerifiedAt]);
 
   return children;
 }
@@ -65,13 +68,9 @@ export function useAuth(): UseAuthReturn {
     await dispatch(logoutSession()).unwrap();
   }, [dispatch]);
 
-  const createUser = useCallback(async (input: CreateUserInput) => {
-    return api.createUser(input);
-  }, []);
-
   const changePassword = useCallback(
     async (current: string, next: string) => {
-      await api.changePassword(current, next);
+      await authClient.changePassword(current, next);
       dispatch(sessionEnded());
     },
     [dispatch]
@@ -91,7 +90,6 @@ export function useAuth(): UseAuthReturn {
     error: auth.error,
     login,
     logout,
-    createUser,
     changePassword,
     refetch,
   };

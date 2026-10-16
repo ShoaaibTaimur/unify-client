@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
-import type { User } from "@/types";
 import { Logo } from "@/components/layout/Logo";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -22,13 +21,13 @@ import {
   Menu,
   KeyRound,
   Search,
+  Network,
+  Users,
 } from "lucide-react";
-import { useOrgDetails } from "@/hooks/use-org-details";
 import { toast } from "sonner";
+import type { DashboardRole } from "@/types";
 
 
-
-type AllowedRole = "cr" | "teacher";
 
 const NAV_ITEMS = [
   {
@@ -53,32 +52,32 @@ const NAV_ITEMS = [
   },
 ];
 
+const ADMIN_NAV_ITEMS = [
+  { to: "/admin/organization", label: "Organization", icon: Network },
+  { to: "/admin/activities", label: "Activities", icon: CalendarDays },
+  { to: "/admin/users", label: "Users", icon: Users },
+];
+
 export function PanelClientLayout({
   children,
   role,
   roleLabel,
   panelHref,
-  initialUser,
 }: {
   children: React.ReactNode;
-  role: AllowedRole;
+  role: DashboardRole;
   roleLabel: string;
   panelHref: string;
-  initialUser?: User | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user: authUser, isPending: authPending, logout } = useAuth();
-  const user = authUser ?? initialUser ?? null;
+  const { user, isPending: authPending, logout } = useAuth();
   const isPending = authPending && !user;
   const [open, setOpen] = useState(false);
 
-  const { formatted, depName } = useOrgDetails({
-    departmentId: user?.departmentId,
-    batchId: user?.batchId,
-    sectionId: user?.sectionId,
-  });
-  const orgLabel = role === "teacher" ? depName : formatted;
+  const orgLabel =
+    role === "teacher" ? user?.departmentName : user?.organizationLabel;
+  const navItems = role === "admin" ? ADMIN_NAV_ITEMS : NAV_ITEMS;
 
   useEffect(() => {
     if (isPending) return;
@@ -136,7 +135,7 @@ export function PanelClientLayout({
       >
         <LayoutDashboard className="h-4 w-4" /> {roleLabel} Panel
       </Link>
-      {NAV_ITEMS.map((n) => {
+      {navItems.map((n) => {
         const Icon = n.icon;
         const active = n.to === "/" ? false : pathname.startsWith(n.to);
         return (
@@ -213,7 +212,7 @@ export function PanelClientLayout({
                 <LayoutDashboard className="h-3.5 w-3.5" />
                 <span>{roleLabel} Panel</span>
               </Link>
-              {NAV_ITEMS.map((n) => {
+              {navItems.map((n) => {
                 const Icon = n.icon;
                 const active = n.to === "/" ? false : pathname.startsWith(n.to);
                 return (
@@ -262,7 +261,7 @@ export function PanelClientLayout({
           </div>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className={role === "admin" ? "mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 lg:p-8" : "flex-1"}>{children}</main>
     </div>
   );
 }

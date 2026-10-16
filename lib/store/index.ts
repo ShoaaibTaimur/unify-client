@@ -1,15 +1,18 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer, sessionReceived } from "./auth-slice";
-import type { User } from "@/types";
+import { setupListeners } from "@reduxjs/toolkit/query";
+import { authReducer } from "./auth-slice";
+import { dataApi } from "./api-slice";
 
-export function makeStore(initialUser?: User | null) {
+export function makeStore() {
   const store = configureStore({
     reducer: {
       auth: authReducer,
+      [dataApi.reducerPath]: dataApi.reducer,
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(dataApi.middleware),
   });
-
-  if (initialUser) store.dispatch(sessionReceived(initialUser));
+  setupListeners(store.dispatch);
   return store;
 }
 

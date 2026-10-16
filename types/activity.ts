@@ -66,4 +66,8 @@ export interface ActivityFilter {
   batchId?: string;
   sectionId?: string;
   activityType?: ActivityType;
+  status?: "all" | "upcoming" | "completed";
+  search?: string;
 }
+
+export type ActivityStatusFilter = "all" | "upcoming" | "completed";

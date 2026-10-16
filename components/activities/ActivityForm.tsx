@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useEffect, useState } from "react";
 import { ACTIVITY_TYPES, type Activity, type ActivityType } from "@/types";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,11 +11,18 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { addDays, format, differenceInDays, parseISO } from "date-fns";
-import { useRouter } from "next/navigation";
 import { parseAppDate, formatAppDate, formatAppTime, to24HourTime } from "@/lib/date-utils";
-import { CalendarIcon, ClockIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarIcon, ClockIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import {
+  getApiError,
+  useBatchesQuery,
+  useCreateActivityMutation,
+  useDepartmentsQuery,
+  useSectionsQuery,
+  useUpdateActivityMutation,
+} from "@/lib/store/api-slice";
 
 interface Props {
   open: boolean;
@@ -41,8 +46,9 @@ const TIME_PRESETS = [
 ];
 
 export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseBatchSection, chooseDepartment, createdBy }: Props) {
-  const router = useRouter();
-  const qc = useQueryClient();
+  const fixedDepartmentId = fixed?.departmentId;
+  const fixedBatchId = fixed?.batchId;
+  const fixedSectionId = fixed?.sectionId;
   const [type, setType] = useState<ActivityType>("class-test");
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
@@ -56,11 +62,11 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
   const [startDateObj, setStartDateObj] = useState<Date | undefined>(new Date());
   const [endDateObj, setEndDateObj] = useState<Date | undefined>(addDays(new Date(), 3));
 
-  const [departmentId, setDepartmentId] = useState(fixed?.departmentId ?? "");
-  const [batchId, setBatchId] = useState(fixed?.batchId ?? "");
-  const [sectionId, setSectionId] = useState(fixed?.sectionId ?? "");
+  const [departmentId, setDepartmentId] = useState(fixedDepartmentId ?? "");
+  const [batchId, setBatchId] = useState(fixedBatchId ?? "");
+  const [sectionId, setSectionId] = useState(fixedSectionId ?? "");
 
-  const effectiveDepartmentId = fixed?.departmentId ?? departmentId;
+  const effectiveDepartmentId = fixedDepartmentId ?? departmentId;
   const allowChooseBatchSection = chooseBatchSection || chooseDepartment;
 
   useEffect(() => {
@@ -89,28 +95,24 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
       setSelectedDate(new Date()); setTimeVal("09:00");
       setStartDateObj(new Date());
       setEndDateObj(addDays(new Date(), 3));
-      setDepartmentId(fixed?.departmentId ?? "");
-      setBatchId(fixed?.batchId ?? ""); setSectionId(fixed?.sectionId ?? "all");
+      setDepartmentId(fixedDepartmentId ?? "");
+      setBatchId(fixedBatchId ?? ""); setSectionId(fixedSectionId ?? "all");
     }
-  }, [open, editing, fixed]);
+  }, [open, editing, fixedDepartmentId, fixedBatchId, fixedSectionId]);
 
-  const departments = useQuery({
-    queryKey: ["departments"], enabled: !!chooseDepartment,
-    queryFn: () => api.listDepartments(),
+  const departments = useDepartmentsQuery(undefined, { skip: !chooseDepartment });
+  const batches = useBatchesQuery(effectiveDepartmentId, {
+    skip: !effectiveDepartmentId || !allowChooseBatchSection,
   });
-  const batches = useQuery({
-    queryKey: ["batches", effectiveDepartmentId], enabled: !!effectiveDepartmentId && !!allowChooseBatchSection,
-    queryFn: () => api.listBatches(effectiveDepartmentId),
-  });
-  const sections = useQuery({
-    queryKey: ["sections", batchId], enabled: !!batchId,
-    queryFn: () => api.listSections(batchId),
-  });
+  const sections = useSectionsQuery(batchId, { skip: !batchId });
 
   const isExam = ACTIVITY_TYPES.find(t => t.value === type)?.isExam;
 
-  const mutation = useMutation({
-    mutationFn: async () => {
+  const [createActivity, createState] = useCreateActivityMutation();
+  const [updateActivity, updateState] = useUpdateActivityMutation();
+  const mutation = {
+    isPending: createState.isLoading || updateState.isLoading,
+    mutate: async () => {
       let combinedIso: string | undefined = undefined;
       if (!isExam && selectedDate) {
         const [hours, minutes] = (timeVal || "09:00").split(":");
@@ -129,35 +131,22 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
         startDate: isExam && startDateObj ? startDateObj.toISOString() : undefined,
         endDate: isExam && endDateObj ? endDateObj.toISOString() : undefined,
       };
-      if (editing) return api.updateActivity(editing.id, base);
-      return api.createActivity(base);
-    },
-    onSuccess: (saved) => {
-      toast.success(editing ? "Activity updated" : "Activity created");
-      if (saved) {
-        if (editing) {
-          qc.setQueriesData({ queryKey: ["activities"] }, (old: unknown) =>
-            Array.isArray(old) ? old.map((item: Activity) => (item.id === saved.id ? saved : item)) : old
-          );
-        } else {
-          qc.setQueriesData({ queryKey: ["activities"] }, (old: unknown) =>
-            Array.isArray(old) ? [saved, ...old] : [saved]
-          );
-        }
+      try {
+        if (editing) await updateActivity({ id: editing.id, patch: base }).unwrap();
+        else await createActivity(base).unwrap();
+        toast.success(editing ? "Activity updated" : "Activity created");
+        onOpenChange(false);
+      } catch (error) {
+        toast.error(getApiError(error));
       }
-      qc.invalidateQueries({ queryKey: ["activities"] });
-      onOpenChange(false);
     },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
   const canSubmit = title && subject && effectiveDepartmentId && (batchId || allowChooseBatchSection) && (isExam ? (startDateObj && endDateObj) : selectedDate);
 
-  const examDurationDays = useMemo(() => {
-    if (!startDateObj || !endDateObj) return null;
-    const diff = differenceInDays(endDateObj, startDateObj) + 1;
-    return diff > 0 ? diff : null;
-  }, [startDateObj, endDateObj]);
+  const duration =
+    startDateObj && endDateObj ? differenceInDays(endDateObj, startDateObj) + 1 : 0;
+  const examDurationDays = duration > 0 ? duration : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -209,7 +198,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
           {!allowChooseBatchSection && (
             <Field label="Target Section">
               {/* CR role: fixed.sectionId is always set — lock to their section only, no batch-wide option */}
-              {fixed?.sectionId ? (
+              {fixedSectionId ? (
                 <div className="flex h-10 w-full items-center rounded-xl border border-border bg-muted/40 px-3 text-sm text-foreground/80">
                   My Section Only
                 </div>
@@ -435,47 +424,16 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export function useActivityList(
-  filter?: { departmentId?: string; batchId?: string; sectionId?: string },
-  enabled = true
-) {
-  return useQuery({
-    queryKey: ["activities", filter],
-    queryFn: () => api.listActivities(filter),
-    enabled,
-  });
-}
-
 export function ManageActivitiesTable({
   activities,
   onEdit,
   onDelete,
-  initialPageSize = 10,
 }: {
   activities: Activity[];
   onEdit: (a: Activity) => void;
   onDelete: (a: Activity) => void;
-  initialPageSize?: number;
 }) {
   const [deletingActivity, setDeletingActivity] = useState<Activity | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(initialPageSize);
-
-  const sorted = useMemo(
-    () =>
-      [...activities].sort(
-        (a, b) =>
-          new Date(a.startDate ?? a.date!).getTime() -
-          new Date(b.startDate ?? b.date!).getTime()
-      ),
-    [activities]
-  );
-
-  const totalItems = sorted.length;
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
-  const validPage = Math.min(Math.max(1, currentPage), totalPages);
-  const startIdx = (validPage - 1) * pageSize;
-  const paginatedItems = sorted.slice(startIdx, startIdx + pageSize);
 
   return (
     <>
@@ -492,14 +450,14 @@ export function ManageActivitiesTable({
               </tr>
             </thead>
             <tbody>
-              {sorted.length === 0 && (
+              {activities.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-10 text-center font-mono text-xs text-muted-foreground">
                     No activities found.
                   </td>
                 </tr>
               )}
-              {paginatedItems.map((a) => (
+              {activities.map((a) => (
                 <tr key={a.id} className="border-b border-border/60 last:border-b-0 hover:bg-secondary/20 transition-colors">
                   <td className="px-4 py-3 font-medium">
                     <div className="font-bold text-foreground flex items-center gap-2">
@@ -541,65 +499,6 @@ export function ManageActivitiesTable({
           </table>
         </div>
 
-        {/* Pagination Bar */}
-        {totalItems > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border bg-secondary/20 px-4 py-2.5 font-mono text-xs">
-            <div className="text-muted-foreground">
-              Showing <strong className="text-foreground font-semibold">{startIdx + 1}</strong> to{" "}
-              <strong className="text-foreground font-semibold">{Math.min(startIdx + pageSize, totalItems)}</strong> of{" "}
-              <strong className="text-foreground font-semibold">{totalItems}</strong> entries
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Rows per page:</span>
-                <Select
-                  value={String(pageSize)}
-                  onValueChange={(val) => {
-                    setPageSize(Number(val));
-                    setCurrentPage(1);
-                  }}
-                >
-                  <SelectTrigger className="h-7 w-16 rounded-[4px] border border-border bg-card font-mono text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-[4px]">
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-foreground">
-                  Page {validPage} of {totalPages}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 w-7 p-0 rounded-[4px] border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
-                    disabled={validPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 w-7 p-0 rounded-[4px] border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
-                    disabled={validPage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  >
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <ConfirmDeleteDialog

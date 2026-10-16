@@ -1,9 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,21 +22,29 @@ import {
 import { toast } from "sonner";
 import { Plus, ChevronLeft, ChevronRight, KeyRound, Copy, Check, Pencil } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
-import { PageLoader } from "@/components/common/PageLoader";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Role, User } from "@/types";
+import {
+  getApiError,
+  useAdminUsersQuery,
+  useOrganizationQuery,
+  useCreateUserMutation,
+  useDeleteUserMutation,
+  useResetUserPasswordMutation,
+  useUpdateUserMutation,
+} from "@/lib/store/api-slice";
 
 export function AdminUsersView() {
-  const users = useQuery({
-    queryKey: ["users"],
-    queryFn: () => api.listUsers(),
-  });
+  const [role, setRole] = useState<Role>("cr");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const users = useAdminUsersQuery({ role, page, pageSize });
 
   if (users.isError) {
     return (
       <div className="mx-auto max-w-md py-24 text-center">
         <p className="text-sm font-medium text-destructive">Failed to load users.</p>
-        <p className="mt-1 text-xs text-muted-foreground">{(users.error as Error)?.message}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{getApiError(users.error)}</p>
         <button
           onClick={() => users.refetch()}
           className="mt-4 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
@@ -64,7 +69,7 @@ export function AdminUsersView() {
         </p>
       </div>
 
-      <Tabs defaultValue="cr" className="mt-4">
+      <Tabs value={role} onValueChange={(value) => { setRole(value as Role); setPage(1); }} className="mt-4">
         <TabsList className="w-full grid grid-cols-3 rounded-[4px] border border-border bg-secondary/40 p-1 h-auto sm:inline-flex sm:w-auto sm:h-10">
           <TabsTrigger
             value="cr"
@@ -88,65 +93,55 @@ export function AdminUsersView() {
             <span className="hidden sm:inline">Administrators</span>
           </TabsTrigger>
         </TabsList>
-        {(["cr", "teacher", "admin"] as Role[]).map((r) => (
-          <TabsContent key={r} value={r} className="mt-6">
+          <TabsContent value={role} className="mt-6">
             {users.isLoading ? (
               <div className="space-y-2">
                 {[1,2,3,4].map((i) => <Skeleton key={i} className="h-12 w-full rounded-[4px]" />)}
               </div>
             ) : (
               <UserTable
-                users={(users.data ?? []).filter((u) => u.role === r)}
-                role={r}
+                users={users.data?.users ?? []}
+                role={role}
+                pagination={users.data?.pagination}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
               />
             )}
           </TabsContent>
-        ))}
       </Tabs>
     </div>
   );
 }
 
-function UserTable({ users, role }: { users: User[]; role: Role }) {
+function UserTable({ users, role, pagination, onPageChange, onPageSizeChange }: {
+  users: User[];
+  role: Role;
+  pagination?: { page: number; pageSize: number; totalItems: number; totalPages: number };
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}) {
   const [creating, setCreating] = useState(false);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [resettingUser, setResettingUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const router = useRouter();
-  const qc = useQueryClient();
+  const currentPage = pagination?.page ?? 1;
+  const pageSize = pagination?.pageSize ?? 10;
+  const totalItems = pagination?.totalItems ?? 0;
+  const totalPages = pagination?.totalPages ?? 1;
+  const startIdx = (currentPage - 1) * pageSize;
 
-  const totalItems = users.length;
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
-  const validPage = Math.min(Math.max(1, currentPage), totalPages);
-  const startIdx = (validPage - 1) * pageSize;
-  const paginatedUsers = users.slice(startIdx, startIdx + pageSize);
-
-  const departments = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => api.listDepartments(),
-  });
-  const batches = useQuery({
-    queryKey: ["batches", "all"],
-    queryFn: () => api.listBatches(),
-  });
-  const sections = useQuery({
-    queryKey: ["sections", "all"],
-    queryFn: () => api.listSections(),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.deleteUser(id),
-    onSuccess: (_, id) => {
+  const [deleteUser, deleteState] = useDeleteUserMutation();
+  const deleteMutation = {
+    isPending: deleteState.isLoading,
+    mutate: async (id: string) => {
+      try {
+        await deleteUser(id).unwrap();
       toast.success("User deleted");
-      qc.setQueriesData({ queryKey: ["users"] }, (old: unknown) =>
-        Array.isArray(old) ? old.filter((u: User) => u.id !== id) : old
-      );
-      qc.invalidateQueries({ queryKey: ["users"] });
+      } catch (error) {
+        toast.error(getApiError(error));
+      }
     },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
   return (
     <div className="space-y-6">
@@ -190,12 +185,7 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                   </td>
                 </tr>
               )}
-              {paginatedUsers.map((u) => {
-                const dep = departments.data?.find((d) => d.id === u.departmentId)?.name;
-                const bat = u.batchId === "all" ? "All Batches" : batches.data?.find((b) => b.id === u.batchId)?.name;
-                const sec = u.sectionId === "all" ? "All Sections" : sections.data?.find((s) => s.id === u.sectionId)?.name;
-                const orgText = [dep, bat, sec].filter(Boolean).join(" · ") || (u.departmentId ? (departments.isLoading ? "Loading..." : u.departmentId) : "—");
-
+              {users.map((u) => {
                 return (
                   <tr
                     key={u.id}
@@ -204,7 +194,7 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                     <td className="px-4 py-3 font-medium text-foreground">{u.name}</td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-3 font-mono text-xs font-semibold text-foreground/80">
-                      {orgText}
+                      {u.organizationLabel || "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
@@ -259,8 +249,7 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                 <Select
                   value={String(pageSize)}
                   onValueChange={(val) => {
-                    setPageSize(Number(val));
-                    setCurrentPage(1);
+                    onPageSizeChange(Number(val));
                   }}
                 >
                   <SelectTrigger className="h-7 w-16 rounded-[4px] border border-border bg-card font-mono text-xs">
@@ -277,15 +266,15 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
 
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-foreground">
-                  Page {validPage} of {totalPages}
+                  Page {currentPage} of {totalPages}
                 </span>
                 <div className="flex items-center gap-1">
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 p-0 rounded-[4px] border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
-                    disabled={validPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1}
+                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
                   </Button>
@@ -293,8 +282,8 @@ function UserTable({ users, role }: { users: User[]; role: Role }) {
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 p-0 rounded-[4px] border border-border hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
-                    disabled={validPage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
                   </Button>
@@ -364,26 +353,16 @@ function CreateUserDialog({
   const [batchId, setBatchId] = useState("");
   const [sectionId, setSectionId] = useState("");
 
-  const departments = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => api.listDepartments(),
-  });
-  const batches = useQuery({
-    queryKey: ["batches", departmentId],
-    queryFn: () => (departmentId ? api.listBatches(departmentId) : []),
-    enabled: !!departmentId,
-  });
-  const sections = useQuery({
-    queryKey: ["sections", batchId],
-    queryFn: () => (batchId ? api.listSections(batchId) : []),
-    enabled: !!batchId,
-  });
-
-  const router = useRouter();
-  const qc = useQueryClient();
-  const createMutation = useMutation({
-    mutationFn: () =>
-      api.createUser({
+  const options = useOrganizationQuery();
+  const departments = options.data?.departments ?? [];
+  const batches = options.data?.batchesByDepartment?.[departmentId] ?? [];
+  const sections = options.data?.sectionsByBatch?.[batchId] ?? [];
+  const [createUser, createState] = useCreateUserMutation();
+  const createMutation = {
+    isPending: createState.isLoading,
+    mutate: async () => {
+      try {
+        await createUser({
         email,
         name,
         password,
@@ -391,25 +370,20 @@ function CreateUserDialog({
         departmentId: departmentId || undefined,
         batchId: role === "cr" ? batchId || undefined : undefined,
         sectionId: role === "cr" ? sectionId || undefined : undefined,
-      }),
-    onSuccess: (newUser) => {
-      toast.success("User account created successfully");
-      if (newUser) {
-        qc.setQueriesData({ queryKey: ["users"] }, (old: unknown) =>
-          Array.isArray(old) ? [newUser, ...old] : [newUser]
-        );
+        }).unwrap();
+        toast.success("User account created successfully");
+        onOpenChange(false);
+        setEmail("");
+        setName("");
+        setPassword("");
+        setDepartmentId("");
+        setBatchId("");
+        setSectionId("");
+      } catch (error) {
+        toast.error(getApiError(error));
       }
-      qc.invalidateQueries({ queryKey: ["users"] });
-      onOpenChange(false);
-      setEmail("");
-      setName("");
-      setPassword("");
-      setDepartmentId("");
-      setBatchId("");
-      setSectionId("");
     },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
   const isFormValid =
     email &&
@@ -488,7 +462,7 @@ function CreateUserDialog({
                   <SelectValue placeholder="Select Department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.data?.map((d) => (
+                  {departments.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       {d.name}
                     </SelectItem>
@@ -514,7 +488,7 @@ function CreateUserDialog({
                     <SelectValue placeholder="Select Batch" />
                   </SelectTrigger>
                   <SelectContent>
-                    {batches.data?.map((b) => (
+                    {batches.map((b) => (
                       <SelectItem key={b.id} value={b.id}>
                         {b.name}
                       </SelectItem>
@@ -534,7 +508,7 @@ function CreateUserDialog({
                     <SelectValue placeholder="Select Section" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sections.data?.map((s) => (
+                    {sections.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name}
                       </SelectItem>
@@ -580,7 +554,7 @@ function ResetPasswordDialog({
   const [useCustom, setUseCustom] = useState(false);
   const [result, setResult] = useState<{ temporaryPassword: string } | null>(null);
   const [copied, setCopied] = useState(false);
-  const qc = useQueryClient();
+  const [resetPassword, resetState] = useResetUserPasswordMutation();
 
   const handleClose = () => {
     onOpenChange(false);
@@ -592,21 +566,22 @@ function ResetPasswordDialog({
     }, 200);
   };
 
-  const resetMutation = useMutation({
-    mutationFn: () => {
-      if (!user) throw new Error("No user selected");
-      return api.resetUserPassword(
-        user.id,
-        useCustom && customPassword ? customPassword : undefined
-      );
+  const resetMutation = {
+    isPending: resetState.isLoading,
+    mutate: async () => {
+      if (!user) return;
+      try {
+        const data = await resetPassword({
+          id: user.id,
+          temporaryPassword: useCustom && customPassword ? customPassword : undefined,
+        }).unwrap();
+        setResult({ temporaryPassword: data.temporaryPassword });
+        toast.success("Temporary password enforced successfully");
+      } catch (error) {
+        toast.error(getApiError(error));
+      }
     },
-    onSuccess: (data) => {
-      setResult({ temporaryPassword: data.temporaryPassword });
-      qc.invalidateQueries({ queryKey: ["users"] });
-      toast.success("Temporary password enforced successfully");
-    },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
   const handleCopy = () => {
     if (!result?.temporaryPassword) return;
@@ -763,8 +738,6 @@ function EditUserDialog({
   const [departmentId, setDepartmentId] = useState("");
   const [batchId, setBatchId] = useState("");
   const [sectionId, setSectionId] = useState("");
-  const qc = useQueryClient();
-  const router = useRouter();
 
   useEffect(() => {
     if (user) {
@@ -775,45 +748,29 @@ function EditUserDialog({
     }
   }, [user]);
 
-  const departments = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => api.listDepartments(),
-  });
-  const batches = useQuery({
-    queryKey: ["batches", departmentId],
-    queryFn: () => (departmentId ? api.listBatches(departmentId) : []),
-    enabled: !!departmentId,
-  });
-  const sections = useQuery({
-    queryKey: ["sections", batchId],
-    queryFn: () => (batchId ? api.listSections(batchId) : []),
-    enabled: !!batchId,
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: () => {
-      if (!user) throw new Error("No user selected");
-      return api.updateUser(user.id, {
+  const options = useOrganizationQuery();
+  const departments = options.data?.departments ?? [];
+  const batches = options.data?.batchesByDepartment?.[departmentId] ?? [];
+  const sections = options.data?.sectionsByBatch?.[batchId] ?? [];
+  const [updateUser, updateState] = useUpdateUserMutation();
+  const updateMutation = {
+    isPending: updateState.isLoading,
+    mutate: async () => {
+      if (!user) return;
+      try {
+        await updateUser({ id: user.id, data: {
         name: name.trim(),
         departmentId: user.role === "admin" ? null : departmentId || null,
         batchId: user.role === "cr" ? batchId || null : null,
         sectionId: user.role === "cr" ? sectionId || null : null,
-      });
-    },
-    onSuccess: (updatedUser) => {
-      toast.success("User assignment updated successfully");
-      if (updatedUser) {
-        qc.setQueriesData({ queryKey: ["users"] }, (old: unknown) =>
-          Array.isArray(old)
-            ? old.map((u: User) => (u.id === updatedUser.id ? updatedUser : u))
-            : old
-        );
+        } }).unwrap();
+        toast.success("User assignment updated successfully");
+        onOpenChange(false);
+      } catch (error) {
+        toast.error(getApiError(error));
       }
-      qc.invalidateQueries({ queryKey: ["users"] });
-      onOpenChange(false);
     },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
   if (!user) return null;
 
@@ -878,7 +835,7 @@ function EditUserDialog({
                   <SelectValue placeholder="Select Department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.data?.map((d) => (
+                  {departments.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       {d.name}
                     </SelectItem>
@@ -904,7 +861,7 @@ function EditUserDialog({
                     <SelectValue placeholder="Select Batch" />
                   </SelectTrigger>
                   <SelectContent>
-                    {batches.data?.map((b) => (
+                    {batches.map((b) => (
                       <SelectItem key={b.id} value={b.id}>
                         {b.name}
                       </SelectItem>
@@ -924,7 +881,7 @@ function EditUserDialog({
                     <SelectValue placeholder="Select Section" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sections.data?.map((s) => (
+                    {sections.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name}
                       </SelectItem>
@@ -957,4 +914,3 @@ function EditUserDialog({
     </Dialog>
   );
 }
-

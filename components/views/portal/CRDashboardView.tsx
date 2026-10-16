@@ -2,18 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import {
   ActivityForm,
   ManageActivitiesTable,
-  useActivityList,
 } from "@/components/activities/ActivityForm";
-import { ActivityCard } from "@/components/activities/ActivityCard";
 import { CsvImportDialog } from "@/components/activities/CsvImportDialog";
 import { Stat as StatCard } from "@/components/layout/cr-shared";
-import { PageLoader } from "@/components/common/PageLoader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -29,55 +23,38 @@ import {
   User as UserIcon,
   Mail,
 } from "lucide-react";
-import type { Activity, User } from "@/types";
+import type { Activity } from "@/types";
 import { toast } from "sonner";
-import { useOrgDetails } from "@/hooks/use-org-details";
 import { useAuth } from "@/lib/auth";
+import { getApiError, useDeleteActivityMutation, usePortalDashboardQuery } from "@/lib/store/api-slice";
 
 export function CRDashboardView() {
-  const router = useRouter();
-  const { user } = useAuth();
+  const { user: sessionUser } = useAuth();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);
-  const qc = useQueryClient();
-
-  const { depName, batchName, sectionName, formatted, isLoading: orgLoading } =
-    useOrgDetails({
-      departmentId: user?.departmentId,
-      batchId: user?.batchId,
-      sectionId: user?.sectionId,
-    });
-
-  const filter =
-    user?.departmentId && user?.batchId
-      ? {
-          departmentId: user.departmentId,
-          batchId: user.batchId,
-          sectionId: user.sectionId,
-        }
-      : undefined;
-
-  const activities = useActivityList(filter, Boolean(user?.departmentId && user?.batchId));
-
-  const del = useMutation({
-    mutationFn: (a: Activity) => api.deleteActivity(a.id),
-    onSuccess: (_, a) => {
-      toast.success("Activity deleted");
-      qc.setQueriesData({ queryKey: ["activities"] }, (old: unknown) =>
-        Array.isArray(old) ? old.filter((item: Activity) => item.id !== a.id) : old
-      );
-      qc.invalidateQueries({ queryKey: ["activities"] });
-    },
-  });
+  const dashboard = usePortalDashboardQuery(undefined, { skip: !sessionUser });
+  const [deleteActivity] = useDeleteActivityMutation();
+  const user = dashboard.data?.user ?? sessionUser;
 
   if (!user) return null;
 
-  const list = activities.data ?? [];
-  const now = new Date();
-  const upcomingCount = list.filter(
-    (a) => new Date(a.endDate ?? a.startDate ?? a.date!) >= now
-  ).length;
+  const list = dashboard.data?.activities ?? [];
+  const stats = dashboard.data?.stats ?? { total: 0, today: 0, upcoming: 0 };
+  const depName = user.departmentName ?? "";
+  const batchName = user.batchName ?? "";
+  const sectionName = user.sectionName ?? "";
+  const formatted = dashboard.data?.organizationLabel ?? user.organizationLabel ?? "";
+  const orgLoading = dashboard.isLoading;
+
+  const removeActivity = async (activity: Activity) => {
+    try {
+      await deleteActivity(activity.id).unwrap();
+      toast.success("Activity deleted");
+    } catch (error) {
+      toast.error(getApiError(error));
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
@@ -139,17 +116,17 @@ export function CRDashboardView() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={<CalendarDays className="h-4 w-4" />}
-          value={upcomingCount}
+          value={stats.upcoming}
           label="Upcoming Activities"
         />
         <StatCard
           icon={<CheckCircle className="h-4 w-4 text-emerald-500" />}
-          value={list.length - upcomingCount}
+          value={stats.total - stats.upcoming}
           label="Completed"
         />
         <StatCard
           icon={<FileSpreadsheet className="h-4 w-4 text-primary" />}
-          value={list.length}
+          value={stats.total}
           label={formatted ? `${formatted} Total` : "Total Managed"}
         />
       </div>
@@ -173,7 +150,7 @@ export function CRDashboardView() {
           </div>
         </div>
         <div>
-          {activities.isLoading ? (
+          {dashboard.isLoading ? (
             <div className="space-y-2">
               {[1,2,3].map((i) => <Skeleton key={i} className="h-12 w-full rounded-[4px]" />)}
             </div>
@@ -184,7 +161,7 @@ export function CRDashboardView() {
                 setEditing(a);
                 setOpen(true);
               }}
-              onDelete={(a) => del.mutate(a)}
+              onDelete={(a) => void removeActivity(a)}
             />
           )}
         </div>

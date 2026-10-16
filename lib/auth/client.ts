@@ -1,4 +1,4 @@
-import type { AuthSession, LoginCredentials, Role, User } from "@/types";
+import type { AuthErrorKind, AuthEvent, AuthEventListener, AuthSession, LoginCredentials, Role, User } from "@/types";
 
 export const AUTH_EVENT = "unify:auth-changed";
 
@@ -8,10 +8,6 @@ const REFRESH_LOCK = "unify:refresh-session";
 const REFRESH_LEASE_KEY = "unify_refresh_lease";
 const REFRESH_LEASE_MS = 15_000;
 const TAB_ID = globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
-
-type AuthEvent = { type: "session-changed" } | { type: "signed-out" };
-type AuthEventListener = (event: AuthEvent) => void;
-type AuthErrorKind = "network" | "server" | "validation";
 
 const listeners = new Set<AuthEventListener>();
 let channel: BroadcastChannel | null = null;
@@ -242,6 +238,15 @@ export const authClient = {
 
     if (!response.ok) throw await readError(response, "Logout failed");
     broadcast({ type: "signed-out" });
+  },
+
+  async changePassword(current: string, next: string): Promise<void> {
+    const response = await this.fetch(getApiUrl("/api/auth/change-password"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ current, next }),
+    });
+    if (!response.ok) throw await readError(response, "Password change failed");
   },
 
   async getSession(): Promise<AuthSession> {

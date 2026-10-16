@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,78 +18,84 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
-import { PageLoader } from "@/components/common/PageLoader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Building2, Layers, GraduationCap, Pencil, Trash2 } from "lucide-react";
+import {
+  getApiError,
+  useCreateBatchMutation,
+  useCreateDepartmentMutation,
+  useCreateSectionMutation,
+  useDeleteBatchMutation,
+  useDeleteDepartmentMutation,
+  useDeleteSectionMutation,
+  useOrganizationQuery,
+  useUpdateBatchMutation,
+  useUpdateDepartmentMutation,
+  useUpdateSectionMutation,
+} from "@/lib/store/api-slice";
 
 export function AdminOrgView() {
-  const qc = useQueryClient();
-  const deps = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => api.listDepartments(),
-  });
-  const batches = useQuery({
-    queryKey: ["batches", "all"],
-    queryFn: () => api.listBatches(),
-  });
-  const sections = useQuery({
-    queryKey: ["sections", "all"],
-    queryFn: () => api.listSections(),
-  });
+  const organization = useOrganizationQuery();
+  const deps = { data: organization.data?.departments, isLoading: organization.isLoading };
+  const batches = { data: organization.data?.batches, isLoading: organization.isLoading };
+  const sections = { data: organization.data?.sections, isLoading: organization.isLoading };
+  const [createDepartment, createDepState] = useCreateDepartmentMutation();
+  const [createBatchRequest, createBatchState] = useCreateBatchMutation();
+  const [createSectionRequest, createSectionState] = useCreateSectionMutation();
+  const [updateDepartment] = useUpdateDepartmentMutation();
+  const [updateBatch] = useUpdateBatchMutation();
+  const [updateSection] = useUpdateSectionMutation();
+  const [deleteDepartment] = useDeleteDepartmentMutation();
+  const [deleteBatch] = useDeleteBatchMutation();
+  const [deleteSection] = useDeleteSectionMutation();
 
   // Note: isLoading check moved below all hooks to avoid React rules-of-hooks violation
 
   const [depName, setDepName] = useState("");
-  const createDep = useMutation({
-    mutationFn: (n: string) => api.createDepartment(n),
-    onSuccess: (newDep) => {
+  const createDep = {
+    isPending: createDepState.isLoading,
+    mutate: async (name: string) => {
+      try {
+        await createDepartment(name).unwrap();
       toast.success("Department created");
       setDepName("");
-      if (newDep) {
-        qc.setQueriesData({ queryKey: ["departments"] }, (old: unknown) =>
-          Array.isArray(old) ? [...old, newDep] : [newDep]
-        );
+      } catch (error) {
+        toast.error(getApiError(error));
       }
-      qc.invalidateQueries({ queryKey: ["departments"] });
     },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
   const [batchName, setBatchName] = useState("");
   const [batchDep, setBatchDep] = useState("");
-  const createBatch = useMutation({
-    mutationFn: () => api.createBatch(batchDep, batchName),
-    onSuccess: (newBatch) => {
+  const createBatch = {
+    isPending: createBatchState.isLoading,
+    mutate: async () => {
+      try {
+        await createBatchRequest({ departmentId: batchDep, name: batchName }).unwrap();
       toast.success("Batch created");
       setBatchName("");
-      if (newBatch) {
-        qc.setQueriesData({ queryKey: ["batches"] }, (old: unknown) =>
-          Array.isArray(old) ? [...old, newBatch] : [newBatch]
-        );
+      } catch (error) {
+        toast.error(getApiError(error));
       }
-      qc.invalidateQueries({ queryKey: ["batches"] });
     },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
   const [secName, setSecName] = useState("");
   const [secDep, setSecDep] = useState("");
   const [secBatch, setSecBatch] = useState("");
-  const createSection = useMutation({
-    mutationFn: () => api.createSection(secBatch, secName),
-    onSuccess: (newSec) => {
+  const createSection = {
+    isPending: createSectionState.isLoading,
+    mutate: async () => {
+      try {
+        await createSectionRequest({ batchId: secBatch, name: secName }).unwrap();
       toast.success("Section created");
       setSecName("");
-      if (newSec) {
-        qc.setQueriesData({ queryKey: ["sections"] }, (old: unknown) =>
-          Array.isArray(old) ? [...old, newSec] : [newSec]
-        );
+      } catch (error) {
+        toast.error(getApiError(error));
       }
-      qc.invalidateQueries({ queryKey: ["sections"] });
     },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
   const [editingItem, setEditingItem] = useState<{
     type: "dep" | "batch" | "sec";
@@ -104,86 +108,47 @@ export function AdminOrgView() {
     name: string;
   } | null>(null);
 
-  const updateMutation = useMutation({
-    mutationFn: async () => {
+  const [updating, setUpdating] = useState(false);
+  const updateMutation = {
+    isPending: updating,
+    mutate: async () => {
       if (!editingItem || !editingItem.name.trim()) return;
-      if (editingItem.type === "dep") {
-        const data = await api.updateDepartment(editingItem.id, editingItem.name.trim());
-        return { type: "dep" as const, data };
+      setUpdating(true);
+      try {
+        const input = { id: editingItem.id, name: editingItem.name.trim() };
+        if (editingItem.type === "dep") await updateDepartment(input).unwrap();
+        else if (editingItem.type === "batch") await updateBatch(input).unwrap();
+        else await updateSection(input).unwrap();
+        toast.success("Updated successfully");
+        setEditingItem(null);
+      } catch (error) {
+        toast.error(getApiError(error));
+      } finally {
+        setUpdating(false);
       }
-      if (editingItem.type === "batch") {
-        const data = await api.updateBatch(editingItem.id, editingItem.name.trim());
-        return { type: "batch" as const, data };
-      }
-      const data = await api.updateSection(editingItem.id, editingItem.name.trim());
-      return { type: "sec" as const, data };
     },
-    onSuccess: (res) => {
-      toast.success("Updated successfully");
-      setEditingItem(null);
-      if (res?.data) {
-        if (res.type === "dep") {
-          qc.setQueriesData({ queryKey: ["departments"] }, (old: unknown) =>
-            Array.isArray(old) ? old.map((d: any) => (d.id === res.data.id ? res.data : d)) : old
-          );
-        } else if (res.type === "batch") {
-          qc.setQueriesData({ queryKey: ["batches"] }, (old: unknown) =>
-            Array.isArray(old) ? old.map((b: any) => (b.id === res.data.id ? res.data : b)) : old
-          );
-        } else if (res.type === "sec") {
-          qc.setQueriesData({ queryKey: ["sections"] }, (old: unknown) =>
-            Array.isArray(old) ? old.map((s: any) => (s.id === res.data.id ? res.data : s)) : old
-          );
-        }
-      }
-      qc.invalidateQueries({ queryKey: ["departments"] });
-      qc.invalidateQueries({ queryKey: ["batches"] });
-      qc.invalidateQueries({ queryKey: ["sections"] });
-    },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
-  const deleteMutation = useMutation({
-    mutationFn: async (item: { type: "dep" | "batch" | "sec"; id: string }) => {
-      if (item.type === "dep") {
-        await api.deleteDepartment(item.id);
-        return item;
+  const [deleting, setDeleting] = useState(false);
+  const deleteMutation = {
+    isPending: deleting,
+    mutate: async (item: { type: "dep" | "batch" | "sec"; id: string }) => {
+      setDeleting(true);
+      try {
+        if (item.type === "dep") await deleteDepartment(item.id).unwrap();
+        else if (item.type === "batch") await deleteBatch(item.id).unwrap();
+        else await deleteSection(item.id).unwrap();
+        toast.success("Deleted successfully");
+        setDeletingItem(null);
+      } catch (error) {
+        toast.error(getApiError(error));
+      } finally {
+        setDeleting(false);
       }
-      if (item.type === "batch") {
-        await api.deleteBatch(item.id);
-        return item;
-      }
-      await api.deleteSection(item.id);
-      return item;
     },
-    onSuccess: (deleted) => {
-      toast.success("Deleted successfully");
-      setDeletingItem(null);
-      if (deleted) {
-        if (deleted.type === "dep") {
-          qc.setQueriesData({ queryKey: ["departments"] }, (old: unknown) =>
-            Array.isArray(old) ? old.filter((d: any) => d.id !== deleted.id) : old
-          );
-        } else if (deleted.type === "batch") {
-          qc.setQueriesData({ queryKey: ["batches"] }, (old: unknown) =>
-            Array.isArray(old) ? old.filter((b: any) => b.id !== deleted.id) : old
-          );
-        } else if (deleted.type === "sec") {
-          qc.setQueriesData({ queryKey: ["sections"] }, (old: unknown) =>
-            Array.isArray(old) ? old.filter((s: any) => s.id !== deleted.id) : old
-          );
-        }
-      }
-      qc.invalidateQueries({ queryKey: ["departments"] });
-      qc.invalidateQueries({ queryKey: ["batches"] });
-      qc.invalidateQueries({ queryKey: ["sections"] });
-    },
-    onError: (e) => toast.error((e as Error).message),
-  });
+  };
 
-  const secFilteredBatches = secDep
-    ? (batches.data ?? []).filter((b) => b.departmentId === secDep)
-    : [];
+  const secFilteredBatches = organization.data?.batchesByDepartment?.[secDep] ?? [];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -330,9 +295,7 @@ export function AdminOrgView() {
             </div>
           ) : null}
           {!(deps.isLoading || batches.isLoading || sections.isLoading) && (deps.data ?? []).map((d) => {
-            const depBatches = (batches.data ?? []).filter(
-              (b) => b.departmentId === d.id
-            );
+            const depBatches = organization.data?.batchesByDepartment?.[d.id] ?? [];
             return (
               <section
                 key={d.id}
@@ -390,9 +353,7 @@ export function AdminOrgView() {
                     </div>
                   )}
                   {depBatches.map((b) => {
-                    const batchSections = (sections.data ?? []).filter(
-                      (s) => s.batchId === b.id
-                    );
+                    const batchSections = organization.data?.sectionsByBatch?.[b.id] ?? [];
                     return (
                       <div
                         key={b.id}
