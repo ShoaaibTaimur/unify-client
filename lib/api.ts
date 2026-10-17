@@ -1,14 +1,17 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { authClient } from "@/lib/auth-client";
+import { API_URL, authClient } from "@/lib/auth-client";
 import type {
   Activity,
   ActivityFilter,
+} from "@/types/activity";
+import type {
   Batch,
   ClassSelection,
-  CreateUserInput,
   Department,
   Section,
-  User,
+} from "@/types/academic";
+import type { CreateUserInput, User } from "@/types/auth";
+import type {
   ActivityInput,
   AdminOverviewPayload,
   AdminUsersPayload,
@@ -20,9 +23,8 @@ import type {
   UserUpdate,
   CsvPreview,
   CsvRequest,
-} from "@/types";
+} from "@/types/api";
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 export const LIVE_UPDATE_CLIENT_ID =
   globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
 
@@ -42,8 +44,8 @@ export const serverApi = createApi({
     credentials: "include",
     timeout: 12_000,
     fetchFn: authClient.fetch,
-    prepareHeaders(headers) {
-      headers.set("X-Unify-Client", LIVE_UPDATE_CLIENT_ID);
+    prepareHeaders(headers, { type }) {
+      if (type === "mutation") headers.set("X-Unify-Client", LIVE_UPDATE_CLIENT_ID);
       return headers;
     },
   }),

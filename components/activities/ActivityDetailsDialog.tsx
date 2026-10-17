@@ -1,6 +1,6 @@
 "use client";
 
-import { ACTIVITY_COLOR, ACTIVITY_LABEL, type Activity } from "@/types";
+import { ACTIVITY_TYPES, type Activity } from "@/types/activity";
 import { formatAppDate, formatAppTime } from "@/lib/date-utils";
 import { MapPin, Clock, Calendar, BookOpen, FileText, Layers, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +15,7 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
   if (!activity) return null;
 
   const isRange = !!activity.startDate;
-  const color = ACTIVITY_COLOR[activity.activityType];
+  const activityType = ACTIVITY_TYPES[activity.activityType];
   const isExam = activity.activityType === "mid-exam" || activity.activityType === "final-exam";
   const displayTime = formatAppTime(activity.time, isRange ? null : activity.date);
 
@@ -26,8 +26,8 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
         <DialogHeader className="space-y-2 text-left border-b border-border pb-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-none border border-border/80 bg-secondary/80 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-foreground shrink-0">
-              <span className="h-1.5 w-1.5 rounded-none shrink-0" style={{ background: color }} />
-              {ACTIVITY_LABEL[activity.activityType]}
+              <span className="h-1.5 w-1.5 rounded-none shrink-0" style={{ background: activityType.color }} />
+              {activityType.label}
             </span>
 
             {(!activity.sectionId || activity.sectionId === "all") && (

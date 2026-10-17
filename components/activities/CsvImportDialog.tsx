@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { CsvRequest } from "@/types";
+import type { CsvRequest } from "@/types/api";
 import { getServerErrorMessage, useImportActivitiesCsvMutation, usePreviewActivitiesCsvMutation } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 const DEMO_CSV = `department,batch,section,activityType,title,subject,startDate,endDate,time,room,description
 "CSE","17, 18","all","mid-exam","CSE 2101","Algorithms","2026-09-01","2026-09-05","10:00 AM","Room 402","Combined exam"`;
 
-export function downloadDemoCSV() {
+function downloadDemoCSV() {
   const link = document.createElement("a");
   link.href = `data:text/csv;charset=utf-8,${encodeURIComponent(DEMO_CSV)}`;
   link.download = "exam_routine_sample.csv";

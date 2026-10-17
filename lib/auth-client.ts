@@ -1,4 +1,4 @@
-import type { AuthErrorKind, AuthEvent, AuthEventListener, AuthSession, LoginCredentials, Role, User } from "@/types";
+import type { AuthErrorKind, AuthEvent, AuthEventListener, AuthSession, LoginCredentials, Role, User } from "@/types/auth";
 
 export function getSafeRedirectUrl(target: string | null): string | null {
   if (!target) return null;
@@ -22,7 +22,7 @@ export function getDashboardPath(role: Role): string {
   return "/";
 }
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 const REQUEST_TIMEOUT_MS = 12_000;
 const REFRESH_LOCK = "unify:refresh-session";
 const REFRESH_LEASE_KEY = "unify_refresh_lease";

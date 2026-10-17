@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import { Plus, ChevronLeft, ChevronRight, KeyRound, Copy, Check, Pencil } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Role, User } from "@/types";
+import type { Role, User } from "@/types/auth";
 import {
   getServerErrorMessage,
   useAdminUsersQuery,

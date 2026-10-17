@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ACTIVITY_COLOR, ACTIVITY_LABEL, type Activity } from "@/types";
+import { ACTIVITY_TYPES, type Activity } from "@/types/activity";
 import { formatAppDate, formatAppTime } from "@/lib/date-utils";
 import { MapPin, Clock } from "lucide-react";
 import { ActivityDetailsDialog } from "./ActivityDetailsDialog";
@@ -17,7 +17,7 @@ export function ActivityCard({
 }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const isRange = !!activity.startDate;
-  const color = ACTIVITY_COLOR[activity.activityType];
+  const activityType = ACTIVITY_TYPES[activity.activityType];
   const displayTime = formatAppTime(activity.time, isRange ? null : activity.date);
 
   const handleClick = () => {
@@ -34,13 +34,13 @@ export function ActivityCard({
         onClick={handleClick}
         className="group relative cursor-pointer overflow-hidden rounded-none border border-border bg-card transition-all duration-150 hover:border-primary/70 hover:shadow-xs active:bg-secondary/40 min-w-0 max-w-full pl-1"
       >
-        <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: color }} />
+        <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: activityType.color }} />
         {/* Top Activity Header Bar */}
         <div className="flex items-center justify-between gap-2 border-b border-border/80 bg-secondary/35 px-3.5 py-1.5">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-primary flex items-center gap-1.5 shrink-0">
-              <span className="h-1.5 w-1.5 rounded-none shrink-0" style={{ background: color }} />
-              {ACTIVITY_LABEL[activity.activityType]}
+              <span className="h-1.5 w-1.5 rounded-none shrink-0" style={{ background: activityType.color }} />
+              {activityType.label}
             </span>
             <span className="text-muted-foreground/40 font-mono text-xs">/</span>
             <span className="font-mono text-[11px] font-semibold text-foreground/90 tracking-wide truncate">

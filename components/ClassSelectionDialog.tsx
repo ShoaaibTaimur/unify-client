@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { setClassSelection } from "@/lib/session";
-import type { ClassSelection } from "@/types";
+import type { ClassSelection } from "@/types/academic";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";

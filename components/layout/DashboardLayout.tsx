@@ -25,7 +25,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { DashboardRole } from "@/types";
+import type { DashboardRole } from "@/types/auth";
 import { getDashboardPath } from "@/lib/auth-client";
 
 

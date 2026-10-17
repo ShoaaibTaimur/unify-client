@@ -18,7 +18,6 @@ export interface User {
   sectionName?: string;
   organizationLabel?: string;
   mustChangePassword: boolean;
-  createdAt?: string;
 }
 
 export interface LoginCredentials {

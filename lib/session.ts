@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ClassSelection } from "@/types";
+import type { ClassSelection } from "@/types/academic";
 
 const CLASS_KEY = "unify_class";
 const CLASS_CHANGED = "unify:class-changed";
@@ -10,7 +10,7 @@ export function hasSelectedClass(selection: ClassSelection | null): boolean {
   return Boolean(selection?.departmentId && selection.batchId);
 }
 
-export function getClassSelection(): ClassSelection | null {
+function getClassSelection(): ClassSelection | null {
   try {
     const saved = localStorage.getItem(CLASS_KEY);
     return saved ? (JSON.parse(saved) as ClassSelection) : null;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ACTIVITY_TYPES, type ActivityStatusFilter, type ActivityType } from "@/types";
+import { ACTIVITY_TYPES, type ActivityStatusFilter, type ActivityType } from "@/types/activity";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
@@ -124,18 +124,18 @@ export function ActivitiesContent() {
                 >
                   All Types
                 </button>
-                {ACTIVITY_TYPES.map((t) => (
+                {Object.entries(ACTIVITY_TYPES).map(([value, activityType]) => (
                   <button
-                    key={t.value}
+                    key={value}
                     type="button"
-                    onClick={() => setType(t.value)}
+                    onClick={() => setType(value as ActivityType)}
                     className={`h-8 rounded-[4px] border px-3 font-mono text-[11px] uppercase tracking-wider font-semibold transition-colors ${
-                      type === t.value
+                      type === value
                         ? "bg-primary text-primary-foreground border-primary font-bold shadow-2xs"
                         : "border-border bg-secondary/30 text-muted-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50"
                     }`}
                   >
-                    {t.label}
+                    {activityType.label}
                   </button>
                 ))}
               </div>
@@ -229,7 +229,7 @@ export function ActivitiesContent() {
             )}
             {type !== "all" && (
               <span className="inline-flex items-center gap-1 rounded-[3px] border border-border bg-secondary/50 px-2 py-0.5 text-foreground">
-                Type: <strong>{ACTIVITY_TYPES.find((t) => t.value === type)?.label ?? type}</strong>
+                Type: <strong>{ACTIVITY_TYPES[type].label}</strong>
                 <button
                   onClick={() => setType("all")}
                   className="hover:text-destructive transition-colors ml-0.5"

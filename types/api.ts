@@ -1,6 +1,5 @@
 import type {
   Batch,
-  ClassSelection,
   Department,
   Section,
 } from "./academic";
@@ -15,19 +14,15 @@ export interface OrganizationPayload {
   sectionsByBatch?: Record<string, Section[]>;
 }
 
-export interface PublicDashboardPayload extends OrganizationPayload {
-  selection: ClassSelection | null;
+export interface PublicDashboardPayload {
   classLabel: string;
   hasActiveExams: boolean;
-  activities: Activity[];
   todayActivities: Activity[];
   nextActivity: Activity | null;
   upNextActivities: Activity[];
 }
 
 export interface PortalDashboardPayload {
-  user: User;
-  organizationLabel: string;
   activities: Activity[];
   stats: { total: number; today: number; upcoming: number };
 }
@@ -46,7 +41,7 @@ export interface AdminOverviewPayload {
   recentActivities: Activity[];
 }
 
-export interface AdminUsersPayload extends OrganizationPayload {
+export interface AdminUsersPayload {
   users: User[];
   pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
 }
@@ -64,7 +59,7 @@ export interface CalendarPayload {
   }>;
 }
 
-export type ActivityInput = Omit<Activity, "id" | "createdAt" | "updatedAt">;
+export type ActivityInput = Omit<Activity, "id">;
 
 export interface UserUpdate {
   id: string;
@@ -82,7 +77,7 @@ export interface CsvRequest {
   defaultBatchId?: string;
 }
 
-export interface CsvPreviewRow {
+interface CsvPreviewRow {
   rowNumber: number;
   isValid: boolean;
   errors: string[];

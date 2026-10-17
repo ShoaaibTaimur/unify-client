@@ -10,13 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
-import type { Activity } from "@/types";
+import type { Activity } from "@/types/activity";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/state";
 import { getServerErrorMessage, useActivitiesQuery, useClearActivitiesMutation, useDeleteActivityMutation } from "@/lib/api";
 
 export function AdminActivitiesContent() {
-  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
@@ -113,7 +111,6 @@ export function AdminActivitiesContent() {
         onOpenChange={setOpen}
         editing={editing}
         chooseDepartment
-        createdBy={user?.name ?? "Admin"}
       />
 
       <CsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} />

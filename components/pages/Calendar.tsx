@@ -8,7 +8,7 @@ import {
   format,
   subMonths,
 } from "date-fns";
-import { ACTIVITY_COLOR, ACTIVITY_LABEL, type Activity, type ActivityType } from "@/types";
+import { ACTIVITY_TYPES, type Activity } from "@/types/activity";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
@@ -143,11 +143,11 @@ export function CalendarContent() {
                           setSelectedActivity(a);
                         }}
                         className="flex items-center gap-1.5 truncate rounded-none px-1.5 py-0.5 font-mono text-[10px] transition-colors bg-secondary/80 hover:bg-primary/15 hover:text-primary hover:border-primary/50 border border-border/70 text-foreground cursor-pointer"
-                        title={`${ACTIVITY_LABEL[a.activityType]} — ${a.subject} (${a.title})`}
+                        title={`${ACTIVITY_TYPES[a.activityType].label} — ${a.subject} (${a.title})`}
                       >
                         <span
                           className="h-1.5 w-1.5 rounded-none shrink-0"
-                          style={{ background: ACTIVITY_COLOR[a.activityType] }}
+                          style={{ background: ACTIVITY_TYPES[a.activityType].color }}
                         />
                         <span className="truncate">{a.subject}</span>
                       </div>
@@ -166,16 +166,16 @@ export function CalendarContent() {
 
         {/* Legend */}
         <div className="mt-6 flex flex-wrap gap-3 text-xs text-muted-foreground">
-          {Object.entries(ACTIVITY_COLOR).map(([k, v]) => (
+          {Object.entries(ACTIVITY_TYPES).map(([value, activityType]) => (
             <span
-              key={k}
+              key={value}
               className="inline-flex items-center gap-1.5 rounded-full bg-muted/40 px-2.5 py-1"
             >
               <span
                 className="h-2.5 w-2.5 rounded-full"
-                style={{ background: v }}
+                style={{ background: activityType.color }}
               />
-              {ACTIVITY_LABEL[k as ActivityType]}
+              {activityType.label}
             </span>
           ))}
         </div>
@@ -222,7 +222,7 @@ export function CalendarContent() {
                   <span
                     aria-hidden
                     className="absolute inset-y-0 left-0 w-1"
-                    style={{ background: ACTIVITY_COLOR[act.activityType] }}
+                    style={{ background: ACTIVITY_TYPES[act.activityType].color }}
                   />
                   <div className="flex items-center justify-between gap-2">
                     <span
@@ -230,9 +230,9 @@ export function CalendarContent() {
                     >
                       <span
                         className="h-1.5 w-1.5 rounded-full shrink-0"
-                        style={{ background: ACTIVITY_COLOR[act.activityType] }}
+                        style={{ background: ACTIVITY_TYPES[act.activityType].color }}
                       />
-                      {ACTIVITY_LABEL[act.activityType]}
+                      {ACTIVITY_TYPES[act.activityType].label}
                     </span>
                     <div className="flex items-center gap-2">
                       {formatAppTime(act.time, act.startDate ? null : act.date) && (

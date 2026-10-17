@@ -1,55 +1,16 @@
-export type ActivityType =
-  | "class-test"
-  | "lab-test"
-  | "viva"
-  | "assignment"
-  | "presentation"
-  | "quiz"
-  | "mid-exam"
-  | "final-exam"
-  | "extra-class";
+export const ACTIVITY_TYPES = {
+  "class-test": { label: "Class Test", isExam: false, color: "var(--activity-class-test)" },
+  "lab-test": { label: "Lab Test", isExam: false, color: "var(--activity-lab-test)" },
+  viva: { label: "Viva", isExam: false, color: "var(--activity-viva)" },
+  assignment: { label: "Assignment", isExam: false, color: "var(--activity-assignment)" },
+  presentation: { label: "Presentation", isExam: false, color: "var(--activity-presentation)" },
+  quiz: { label: "Quiz", isExam: false, color: "var(--activity-quiz)" },
+  "mid-exam": { label: "Mid Exam", isExam: true, color: "var(--activity-mid-exam)" },
+  "final-exam": { label: "Final Exam", isExam: true, color: "var(--activity-final-exam)" },
+  "extra-class": { label: "Extra Class", isExam: false, color: "var(--activity-extra-class)" },
+} as const;
 
-export interface ActivityTypeOption {
-  value: ActivityType;
-  label: string;
-  isExam: boolean;
-}
-
-export const ACTIVITY_TYPES: ActivityTypeOption[] = [
-  { value: "class-test", label: "Class Test", isExam: false },
-  { value: "lab-test", label: "Lab Test", isExam: false },
-  { value: "viva", label: "Viva", isExam: false },
-  { value: "assignment", label: "Assignment", isExam: false },
-  { value: "presentation", label: "Presentation", isExam: false },
-  { value: "quiz", label: "Quiz", isExam: false },
-  { value: "mid-exam", label: "Mid Exam", isExam: true },
-  { value: "final-exam", label: "Final Exam", isExam: true },
-  { value: "extra-class", label: "Extra Class", isExam: false },
-];
-
-export const ACTIVITY_COLOR: Record<ActivityType, string> = {
-  "class-test": "var(--activity-class-test)",
-  "lab-test": "var(--activity-lab-test)",
-  "viva": "var(--activity-viva)",
-  "assignment": "var(--activity-assignment)",
-  "presentation": "var(--activity-presentation)",
-  "quiz": "var(--activity-quiz)",
-  "mid-exam": "var(--activity-mid-exam)",
-  "final-exam": "var(--activity-final-exam)",
-  "extra-class": "var(--activity-extra-class)",
-};
-
-export const ACTIVITY_LABEL: Record<ActivityType, string> = {
-  "class-test": "Class Test",
-  "lab-test": "Lab Test",
-  viva: "Viva",
-  assignment: "Assignment",
-  presentation: "Presentation",
-  quiz: "Quiz",
-  "mid-exam": "Mid Exam",
-  "final-exam": "Final Exam",
-  "extra-class": "Extra Class",
-};
+export type ActivityType = keyof typeof ACTIVITY_TYPES;
 
 export interface Activity {
   id: string;
@@ -68,9 +29,6 @@ export interface Activity {
   endDate?: string;
   /** Optional time string e.g. "10:00 AM" or "09:00" */
   time?: string;
-  createdBy?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface ActivityFilter {

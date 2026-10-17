@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ACTIVITY_TYPES, type Activity, type ActivityType } from "@/types";
+import { ACTIVITY_TYPES, type Activity, type ActivityType } from "@/types/activity";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { addDays, format, differenceInDays, parseISO } from "date-fns";
+import { addDays, format, differenceInDays } from "date-fns";
 import { parseAppDate, formatAppDate, formatAppTime, to24HourTime } from "@/lib/date-utils";
 import { CalendarIcon, ClockIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,6 @@ interface Props {
   chooseBatchSection?: boolean;
   /** Admin: allow choosing department, batch and section. */
   chooseDepartment?: boolean;
-  createdBy: string;
 }
 
 const TIME_PRESETS = [
@@ -43,7 +42,7 @@ const TIME_PRESETS = [
   { label: "04:30 PM", value: "16:30" },
 ];
 
-export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseBatchSection, chooseDepartment, createdBy }: Props) {
+export function ActivityForm({ open, onOpenChange, editing, fixed, chooseBatchSection, chooseDepartment }: Props) {
   const fixedDepartmentId = fixed?.departmentId;
   const fixedBatchId = fixed?.batchId;
   const fixedSectionId = fixed?.sectionId;
@@ -74,7 +73,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
   const batches = organization.data?.batchesByDepartment?.[effectiveDepartmentId] ?? [];
   const sections = organization.data?.sectionsByBatch?.[batchId] ?? [];
 
-  const isExam = ACTIVITY_TYPES.find(t => t.value === type)?.isExam;
+  const isExam = ACTIVITY_TYPES[type].isExam;
 
   const [createActivity, createStatus] = useCreateActivityMutation();
   const [updateActivity, updateStatus] = useUpdateActivityMutation();
@@ -98,7 +97,6 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
       subject,
       room: room || undefined,
       description: description || undefined,
-      createdBy,
       time: formatAppTime(timeVal) || undefined,
       date: isExam ? undefined : combinedIso,
       startDate: isExam && startDateObj ? startDateObj.toISOString() : undefined,
@@ -132,7 +130,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
           <Field label="Activity type">
             <Select value={type} onValueChange={(v) => setType(v as ActivityType)}>
               <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>{ACTIVITY_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              <SelectContent>{Object.entries(ACTIVITY_TYPES).map(([value, option]) => <SelectItem key={value} value={value}>{option.label}</SelectItem>)}</SelectContent>
             </Select>
           </Field>
 
@@ -446,7 +444,7 @@ export function ManageActivitiesTable({
                       ) : null}
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ACTIVITY_TYPES.find((t) => t.value === a.activityType)?.label}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ACTIVITY_TYPES[a.activityType].label}</td>
                   <td className="px-4 py-3 font-mono text-xs font-bold text-primary">{a.title}</td>
                   <td className="px-4 py-3 whitespace-nowrap font-mono text-xs text-foreground/90">
                     {a.startDate
@@ -490,5 +488,3 @@ export function ManageActivitiesTable({
     </>
   );
 }
-
-export { ActivityFormDialog as ActivityForm };

@@ -22,7 +22,7 @@ import {
   Plus,
   User as UserIcon,
 } from "lucide-react";
-import type { Activity } from "@/types";
+import type { Activity } from "@/types/activity";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/state";
 import {
@@ -38,7 +38,7 @@ export function DashboardContent() {
   const [editing, setEditing] = useState<Activity | null>(null);
   const dashboard = usePortalDashboardQuery(undefined, { skip: !sessionUser });
   const [deleteActivity] = useDeleteActivityMutation();
-  const user = dashboard.data?.user ?? sessionUser;
+  const user = sessionUser;
 
   if (!user) return null;
 
@@ -46,7 +46,7 @@ export function DashboardContent() {
   const activities = dashboard.data?.activities ?? [];
   const stats = dashboard.data?.stats ?? { total: 0, today: 0, upcoming: 0 };
   const department = user.departmentName ?? "";
-  const organization = dashboard.data?.organizationLabel ?? user.organizationLabel ?? "";
+  const organization = user.organizationLabel ?? "";
   const scope = isTeacher ? department : organization;
 
   async function removeActivity(activity: Activity) {
@@ -141,7 +141,6 @@ export function DashboardContent() {
         editing={editing}
         fixed={isTeacher ? { departmentId: user.departmentId } : { departmentId: user.departmentId, batchId: user.batchId, sectionId: user.sectionId }}
         chooseBatchSection={isTeacher}
-        createdBy={user.name}
       />
       <CsvImportDialog
         open={csvOpen}

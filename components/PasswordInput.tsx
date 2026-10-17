@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type PasswordInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & {
+type PasswordInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & {
   className?: string;
 };
 

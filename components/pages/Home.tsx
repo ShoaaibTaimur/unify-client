@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { hasSelectedClass, setClassSelection, useClassSelection } from "@/lib/session";
-import { useAuth } from "@/lib/state";
-import type { Activity, User } from "@/types";
+import type { Activity } from "@/types/activity";
 import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/activities/ActivityDetailsDialog";
@@ -64,7 +63,6 @@ function ActivityCountdown({ targetDate }: { targetDate: Date }) {
 
 export function HomeContent() {
   const { cls, loaded, needsSelection } = useClassSelection();
-  const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedNextActivity, setSelectedNextActivity] = useState<Activity | null>(null);
 

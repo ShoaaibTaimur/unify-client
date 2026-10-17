@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { configureStore, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { Provider, useDispatch, useSelector } from "react-redux";
-import { authClient, AuthClientError } from "@/lib/auth-client";
-import type { AuthFailure, AuthState, UseAuthReturn, User } from "@/types";
+import { API_URL, authClient, AuthClientError } from "@/lib/auth-client";
+import type { AuthFailure, AuthState, UseAuthReturn, User } from "@/types/auth";
 import { LIVE_UPDATE_CLIENT_ID, serverApi } from "./api";
 
 const initialAuthState: AuthState = {
@@ -70,8 +70,6 @@ setupListeners(applicationState.dispatch);
 type ApplicationDispatch = typeof applicationState.dispatch;
 
 const useApplicationDispatch = useDispatch.withTypes<ApplicationDispatch>();
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-
 async function verifySession(dispatch: ApplicationDispatch) {
   dispatch(checkingSession());
   try {
