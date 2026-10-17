@@ -1,9 +1,9 @@
-import { PanelClientLayout } from "@/components/layout/PanelClientLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 export default function CRLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PanelClientLayout role="cr" roleLabel="CR" panelHref="/cr">
+    <DashboardLayout role="cr">
       {children}
-    </PanelClientLayout>
+    </DashboardLayout>
   );
 }

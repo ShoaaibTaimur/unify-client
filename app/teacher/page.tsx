@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TeacherDashboardView } from "@/components/views/portal/TeacherDashboardView";
+import { DashboardContent } from "@/components/pages/Dashboard";
 
 export const metadata: Metadata = {
   title: "Teacher Dashboard — UNIFY",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function TeacherDashboardPage() {
-  return <TeacherDashboardView />;
+  return <DashboardContent />;
 }

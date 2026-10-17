@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
-import { useCalendarQuery } from "@/lib/state/server-api";
+import { useCalendarQuery } from "@/lib/api";
 import {
   addMonths,
   format,
   subMonths,
 } from "date-fns";
-import { ACTIVITY_COLOR, ACTIVITY_LABEL, type Activity, type ActivityType, type ClassSelection } from "@/types";
-import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog";
-import { PageLoader } from "@/components/common/PageLoader";
+import { ACTIVITY_COLOR, ACTIVITY_LABEL, type Activity, type ActivityType } from "@/types";
+import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
+import { PageLoader } from "@/components/PageLoader";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -29,18 +29,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-export function CalendarView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
-  const { cls, loaded } = useClassSelection(initialClass);
+export function CalendarContent() {
+  const { cls, loaded, needsSelection } = useClassSelection();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cursor, setCursor] = useState(new Date());
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
     null
   );
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-
-  useEffect(() => {
-    if (loaded && !hasSelectedClass(cls)) setDialogOpen(true);
-  }, [cls, loaded]);
 
   const calendar = useCalendarQuery(
     { selection: cls!, month: format(cursor, "yyyy-MM") },
@@ -51,14 +47,15 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
   const activeDayActivities =
     days.find((day) => day.date === selectedDateKey)?.activities ?? [];
 
-  if ((!loaded && !initialClass) || (calendar.isLoading && !calendar.data)) {
+  if (!loaded || (calendar.isLoading && !calendar.data)) {
     return <PageLoader text="Loading calendar..." />;
   }
 
   return (
     <>
       <ClassSelectionDialog
-        open={dialogOpen}
+        key={`${dialogOpen || needsSelection}-${cls?.departmentId}-${cls?.batchId}-${cls?.sectionId}`}
+        open={dialogOpen || needsSelection}
         onOpenChange={setDialogOpen}
         initial={cls}
       />

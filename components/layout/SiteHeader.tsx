@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "./Logo";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { useAuth } from "@/lib/state";
-import { useNavigationQuery } from "@/lib/state/server-api";
+import { useNavigationQuery } from "@/lib/api";
 import {
   Menu,
   LayoutDashboard,
@@ -25,6 +25,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { getDashboardPath } from "@/lib/auth-client";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -43,19 +44,7 @@ export function SiteHeader() {
   });
   const showSeatPlan = navigation.data?.hasActiveExams ?? false;
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  const dashLink = user
-    ? user.role === "admin"
-      ? "/admin"
-      : user.role === "teacher"
-        ? "/teacher"
-        : user.role === "cr"
-          ? "/cr"
-          : "/"
-    : "/login";
+  const dashLink = user ? getDashboardPath(user.role) : "/login";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -86,6 +75,7 @@ export function SiteHeader() {
                     <Link
                       key={n.to}
                       href={n.to}
+                      onClick={() => setOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold transition-colors border-b border-border/40 ${active
                           ? "bg-primary text-primary-foreground"
                           : "text-foreground/80 hover:bg-primary/10 hover:text-primary"
@@ -109,6 +99,7 @@ export function SiteHeader() {
                 {user ? (
                   <Link
                     href={dashLink}
+                    onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-foreground/80 hover:bg-primary/10 hover:text-primary transition-colors"
                   >
                     <UserCircle2 className="h-4 w-4" />
@@ -117,6 +108,7 @@ export function SiteHeader() {
                 ) : (
                   <Link
                     href="/login"
+                    onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-foreground/80 hover:bg-primary/10 hover:text-primary transition-colors"
                   >
                     <LogIn className="h-4 w-4" /> Sign In

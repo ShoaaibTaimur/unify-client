@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminOverviewView } from "@/components/views/admin/AdminOverviewView";
+import { AdminOverviewContent } from "@/components/pages/AdminOverview";
 
 export const metadata: Metadata = {
   title: "Admin Console — UNIFY",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminOverviewPage() {
-  return <AdminOverviewView />;
+  return <AdminOverviewContent />;
 }

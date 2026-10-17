@@ -1,4 +1,4 @@
-import { createApi, type BaseQueryFn } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { authClient } from "@/lib/auth-client";
 import type {
   Activity,
@@ -13,7 +13,6 @@ import type {
   AdminOverviewPayload,
   AdminUsersPayload,
   AdminUsersRequest,
-  ApiError,
   CalendarPayload,
   OrganizationPayload,
   PortalDashboardPayload,
@@ -36,67 +35,18 @@ function buildQueryString(values?: object) {
   return query ? `?${query}` : "";
 }
 
-const sendServerRequest: BaseQueryFn<
-  { url: string; method?: string; body?: unknown },
-  unknown,
-  ApiError
-> = async ({ url, method = "GET", body }) => {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12_000);
-
-  try {
-    const response = await authClient.fetch(`${API_URL}${url}`, {
-      method,
-      cache: "no-store",
-      signal: controller.signal,
-      headers: {
-        "X-Unify-Client": LIVE_UPDATE_CLIENT_ID,
-        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const payload = await response.json().catch(() => null);
-      return {
-        error: {
-          status: response.status,
-          data: {
-            error:
-              typeof payload?.error === "string"
-                ? payload.error
-                : `Request failed (${response.status})`,
-            code: typeof payload?.code === "string" ? payload.code : undefined,
-          },
-        },
-      };
-    }
-
-    return {
-      data: response.status === 204 ? undefined : await response.json(),
-    };
-  } catch (error) {
-    const timedOut = controller.signal.aborted;
-    return {
-      error: {
-        status: timedOut ? "TIMEOUT_ERROR" : "FETCH_ERROR",
-        data: {
-          error: timedOut
-            ? "Request timed out. Check your network or server."
-            : error instanceof Error
-              ? error.message
-              : "Unable to reach server",
-        },
-      },
-    };
-  } finally {
-    clearTimeout(timeout);
-  }
-};
-
 export const serverApi = createApi({
   reducerPath: "serverApi",
-  baseQuery: sendServerRequest,
+  baseQuery: fetchBaseQuery({
+    baseUrl: API_URL,
+    credentials: "include",
+    timeout: 12_000,
+    fetchFn: authClient.fetch,
+    prepareHeaders(headers) {
+      headers.set("X-Unify-Client", LIVE_UPDATE_CLIENT_ID);
+      return headers;
+    },
+  }),
   tagTypes: ["Dashboard", "Activity", "Organization", "User"],
   keepUnusedDataFor: 300,
   refetchOnFocus: true,
@@ -124,22 +74,6 @@ export const serverApi = createApi({
       query: () => ({ url: "/api/views/organization" }),
       providesTags: ["Organization"],
     }),
-    departments: builder.query<Department[], void>({
-      query: () => ({ url: "/api/departments" }),
-      providesTags: ["Organization"],
-    }),
-    batches: builder.query<Batch[], string | void>({
-      query: (departmentId) => ({
-        url: `/api/batches${buildQueryString({ departmentId: departmentId || undefined })}`,
-      }),
-      providesTags: ["Organization"],
-    }),
-    sections: builder.query<Section[], string | void>({
-      query: (batchId) => ({
-        url: `/api/sections${buildQueryString({ batchId: batchId || undefined })}`,
-      }),
-      providesTags: ["Organization"],
-    }),
     activities: builder.query<Activity[], ActivityFilter | void>({
       query: (filter) => ({
         url: `/api/activities${filter ? buildQueryString(filter) : ""}`,
@@ -163,17 +97,6 @@ export const serverApi = createApi({
     }),
     createActivity: builder.mutation<Activity, ActivityInput>({
       query: (body) => ({ url: "/api/activities", method: "POST", body }),
-      invalidatesTags: ["Activity", "Dashboard"],
-    }),
-    createActivitiesBulk: builder.mutation<
-      { count: number; activities: Activity[] },
-      ActivityInput[]
-    >({
-      query: (activities) => ({
-        url: "/api/activities/bulk",
-        method: "POST",
-        body: { activities },
-      }),
       invalidatesTags: ["Activity", "Dashboard"],
     }),
     previewActivitiesCsv: builder.mutation<CsvPreview, CsvRequest>({
@@ -263,14 +186,10 @@ export const {
   useAdminOverviewQuery,
   useAdminUsersQuery,
   useOrganizationQuery,
-  useDepartmentsQuery,
-  useBatchesQuery,
-  useSectionsQuery,
   useActivitiesQuery,
   useCalendarQuery,
   useNavigationQuery,
   useCreateActivityMutation,
-  useCreateActivitiesBulkMutation,
   usePreviewActivitiesCsvMutation,
   useImportActivitiesCsvMutation,
   useUpdateActivityMutation,
@@ -292,6 +211,13 @@ export const {
 } = serverApi;
 
 export function getServerErrorMessage(error: unknown): string {
-  const apiError = error as ApiError | undefined;
-  return apiError?.data?.error ?? (error instanceof Error ? error.message : "Request failed");
+  if (error instanceof Error) return error.message;
+  if (!error || typeof error !== "object") return "Request failed";
+
+  const apiError = error as { data?: unknown; error?: string };
+  if (apiError.data && typeof apiError.data === "object") {
+    const message = (apiError.data as { error?: unknown }).error;
+    if (typeof message === "string") return message;
+  }
+  return apiError.error ?? "Request failed";
 }

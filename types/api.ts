@@ -7,11 +7,6 @@ import type {
 import type { Activity } from "./activity";
 import type { Role, User } from "./auth";
 
-export interface ApiError {
-  status: number | "FETCH_ERROR" | "TIMEOUT_ERROR";
-  data: { error: string; code?: string };
-}
-
 export interface OrganizationPayload {
   departments: Department[];
   batches: Batch[];

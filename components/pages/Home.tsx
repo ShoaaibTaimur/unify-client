@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { hasSelectedClass, setClassSelection, useClassSelection } from "@/lib/session";
 import { useAuth } from "@/lib/state";
-import type { Activity, ClassSelection, User } from "@/types";
-import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog";
+import type { Activity, User } from "@/types";
+import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/activities/ActivityDetailsDialog";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { differenceInSeconds } from "date-fns";
 import { formatAppDate, formatAppTime, combineDateAndTime } from "@/lib/date-utils";
 import { ArrowRight, PartyPopper, Settings2, ExternalLink, Clock, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getServerErrorMessage, usePublicDashboardQuery } from "@/lib/state/server-api";
+import { getServerErrorMessage, usePublicDashboardQuery } from "@/lib/api";
 
 function nextActivityDate(a: Activity): Date {
   return combineDateAndTime(a.startDate ?? a.date, a.time);
@@ -62,21 +62,11 @@ function ActivityCountdown({ targetDate }: { targetDate: Date }) {
   );
 }
 
-export function HomeView({
-  initialClass,
-}: {
-  initialClass?: ClassSelection | null;
-} = {}) {
-  const { cls, loaded } = useClassSelection(initialClass);
+export function HomeContent() {
+  const { cls, loaded, needsSelection } = useClassSelection();
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedNextActivity, setSelectedNextActivity] = useState<Activity | null>(null);
-
-  useEffect(() => {
-    if (loaded && !hasSelectedClass(cls)) {
-      setDialogOpen(true);
-    }
-  }, [cls, loaded]);
 
   const dashboard = usePublicDashboardQuery(hasSelectedClass(cls) ? cls : null);
   const todayList = dashboard.data?.todayActivities ?? [];
@@ -87,7 +77,7 @@ export function HomeView({
   const meta = dashboard.data?.classLabel || null;
 
   const isDataLoading =
-    (!loaded && !initialClass) ||
+    !loaded ||
     (hasSelectedClass(cls) && dashboard.isLoading && !dashboard.data);
 
   if (dashboard.isError) {
@@ -108,7 +98,8 @@ export function HomeView({
   return (
     <>
       <ClassSelectionDialog
-        open={dialogOpen}
+        key={`${dialogOpen || needsSelection}-${cls?.departmentId}-${cls?.batchId}-${cls?.sectionId}`}
+        open={dialogOpen || needsSelection}
         onOpenChange={setDialogOpen}
         initial={cls}
       />
@@ -274,7 +265,7 @@ export function HomeView({
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="h-1.5 w-1.5 rounded-none bg-primary shrink-0" />
                   <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-primary truncate">
-                    // NEXT ACTIVITY
+                    {"// NEXT ACTIVITY"}
                   </p>
                 </div>
                 {next && (

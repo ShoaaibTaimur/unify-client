@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Building2, Layers, GraduationCap, Pencil, Trash2 } from "lucide-react";
@@ -33,69 +33,56 @@ import {
   useUpdateBatchMutation,
   useUpdateDepartmentMutation,
   useUpdateSectionMutation,
-} from "@/lib/state/server-api";
+} from "@/lib/api";
 
-export function AdminOrgView() {
+export function AdminOrganizationContent() {
   const organization = useOrganizationQuery();
-  const deps = { data: organization.data?.departments, isLoading: organization.isLoading };
-  const batches = { data: organization.data?.batches, isLoading: organization.isLoading };
-  const sections = { data: organization.data?.sections, isLoading: organization.isLoading };
-  const [createDepartment, createDepState] = useCreateDepartmentMutation();
-  const [createBatchRequest, createBatchState] = useCreateBatchMutation();
-  const [createSectionRequest, createSectionState] = useCreateSectionMutation();
-  const [updateDepartment] = useUpdateDepartmentMutation();
-  const [updateBatch] = useUpdateBatchMutation();
-  const [updateSection] = useUpdateSectionMutation();
-  const [deleteDepartment] = useDeleteDepartmentMutation();
-  const [deleteBatch] = useDeleteBatchMutation();
-  const [deleteSection] = useDeleteSectionMutation();
+  const departments = organization.data?.departments ?? [];
+  const [createDepartment, createDepartmentState] = useCreateDepartmentMutation();
+  const [createBatch, createBatchState] = useCreateBatchMutation();
+  const [createSection, createSectionState] = useCreateSectionMutation();
+  const [updateDepartment, updateDepartmentState] = useUpdateDepartmentMutation();
+  const [updateBatch, updateBatchState] = useUpdateBatchMutation();
+  const [updateSection, updateSectionState] = useUpdateSectionMutation();
+  const [deleteDepartment, deleteDepartmentState] = useDeleteDepartmentMutation();
+  const [deleteBatch, deleteBatchState] = useDeleteBatchMutation();
+  const [deleteSection, deleteSectionState] = useDeleteSectionMutation();
 
-  // Note: isLoading check moved below all hooks to avoid React rules-of-hooks violation
-
-  const [depName, setDepName] = useState("");
-  const createDep = {
-    isPending: createDepState.isLoading,
-    mutate: async (name: string) => {
-      try {
-        await createDepartment(name).unwrap();
+  const [departmentName, setDepartmentName] = useState("");
+  async function addDepartment() {
+    try {
+      await createDepartment(departmentName).unwrap();
       toast.success("Department created");
-      setDepName("");
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      }
-    },
-  };
+      setDepartmentName("");
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
   const [batchName, setBatchName] = useState("");
-  const [batchDep, setBatchDep] = useState("");
-  const createBatch = {
-    isPending: createBatchState.isLoading,
-    mutate: async () => {
-      try {
-        await createBatchRequest({ departmentId: batchDep, name: batchName }).unwrap();
+  const [batchDepartmentId, setBatchDepartmentId] = useState("");
+  async function addBatch() {
+    try {
+      await createBatch({ departmentId: batchDepartmentId, name: batchName }).unwrap();
       toast.success("Batch created");
       setBatchName("");
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      }
-    },
-  };
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
-  const [secName, setSecName] = useState("");
-  const [secDep, setSecDep] = useState("");
-  const [secBatch, setSecBatch] = useState("");
-  const createSection = {
-    isPending: createSectionState.isLoading,
-    mutate: async () => {
-      try {
-        await createSectionRequest({ batchId: secBatch, name: secName }).unwrap();
+  const [sectionName, setSectionName] = useState("");
+  const [sectionDepartmentId, setSectionDepartmentId] = useState("");
+  const [sectionBatchId, setSectionBatchId] = useState("");
+  async function addSection() {
+    try {
+      await createSection({ batchId: sectionBatchId, name: sectionName }).unwrap();
       toast.success("Section created");
-      setSecName("");
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      }
-    },
-  };
+      setSectionName("");
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
   const [editingItem, setEditingItem] = useState<{
     type: "dep" | "batch" | "sec";
@@ -108,47 +95,37 @@ export function AdminOrgView() {
     name: string;
   } | null>(null);
 
-  const [updating, setUpdating] = useState(false);
-  const updateMutation = {
-    isPending: updating,
-    mutate: async () => {
-      if (!editingItem || !editingItem.name.trim()) return;
-      setUpdating(true);
-      try {
-        const input = { id: editingItem.id, name: editingItem.name.trim() };
-        if (editingItem.type === "dep") await updateDepartment(input).unwrap();
-        else if (editingItem.type === "batch") await updateBatch(input).unwrap();
-        else await updateSection(input).unwrap();
-        toast.success("Updated successfully");
-        setEditingItem(null);
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      } finally {
-        setUpdating(false);
-      }
-    },
-  };
+  const isUpdating = updateDepartmentState.isLoading || updateBatchState.isLoading || updateSectionState.isLoading;
+  const isDeleting = deleteDepartmentState.isLoading || deleteBatchState.isLoading || deleteSectionState.isLoading;
 
-  const [deleting, setDeleting] = useState(false);
-  const deleteMutation = {
-    isPending: deleting,
-    mutate: async (item: { type: "dep" | "batch" | "sec"; id: string }) => {
-      setDeleting(true);
-      try {
-        if (item.type === "dep") await deleteDepartment(item.id).unwrap();
-        else if (item.type === "batch") await deleteBatch(item.id).unwrap();
-        else await deleteSection(item.id).unwrap();
-        toast.success("Deleted successfully");
-        setDeletingItem(null);
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      } finally {
-        setDeleting(false);
-      }
-    },
-  };
+  async function saveName() {
+    if (!editingItem || !editingItem.name.trim()) return;
+    try {
+      const input = { id: editingItem.id, name: editingItem.name.trim() };
+      if (editingItem.type === "dep") await updateDepartment(input).unwrap();
+      else if (editingItem.type === "batch") await updateBatch(input).unwrap();
+      else await updateSection(input).unwrap();
+      toast.success("Updated successfully");
+      setEditingItem(null);
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
-  const secFilteredBatches = organization.data?.batchesByDepartment?.[secDep] ?? [];
+  async function removeItem() {
+    if (!deletingItem) return;
+    try {
+      if (deletingItem.type === "dep") await deleteDepartment(deletingItem.id).unwrap();
+      else if (deletingItem.type === "batch") await deleteBatch(deletingItem.id).unwrap();
+      else await deleteSection(deletingItem.id).unwrap();
+      toast.success("Deleted successfully");
+      setDeletingItem(null);
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
+
+  const availableSectionBatches = organization.data?.batchesByDepartment?.[sectionDepartmentId] ?? [];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -169,17 +146,17 @@ export function AdminOrgView() {
         <FormCard
           icon={Building2}
           title="Add department"
-          onSubmit={() => depName && createDep.mutate(depName)}
+          onSubmit={() => departmentName && void addDepartment()}
         >
           <Input
-            value={depName}
-            onChange={(e) => setDepName(e.target.value)}
+            value={departmentName}
+            onChange={(e) => setDepartmentName(e.target.value)}
             placeholder="e.g. CSE"
             className="rounded-[4px] font-mono text-xs"
           />
           <Button
             type="submit"
-            disabled={!depName || createDep.isPending}
+            disabled={!departmentName || createDepartmentState.isLoading}
             className="w-full rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9"
           >
             Add department
@@ -189,14 +166,14 @@ export function AdminOrgView() {
         <FormCard
           icon={Layers}
           title="Add batch"
-          onSubmit={() => batchName && batchDep && createBatch.mutate()}
+          onSubmit={() => batchName && batchDepartmentId && void addBatch()}
         >
-          <Select value={batchDep} onValueChange={setBatchDep}>
+          <Select value={batchDepartmentId} onValueChange={setBatchDepartmentId}>
             <SelectTrigger className="rounded-[4px] font-mono text-xs">
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent className="rounded-[4px]">
-              {deps.data?.map((d) => (
+              {departments.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
                   {d.name}
                 </SelectItem>
@@ -211,7 +188,7 @@ export function AdminOrgView() {
           />
           <Button
             type="submit"
-            disabled={!batchName || !batchDep || createBatch.isPending}
+            disabled={!batchName || !batchDepartmentId || createBatchState.isLoading}
             className="w-full rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9"
           >
             Add batch
@@ -221,20 +198,20 @@ export function AdminOrgView() {
         <FormCard
           icon={GraduationCap}
           title="Add section"
-          onSubmit={() => secName && secBatch && createSection.mutate()}
+          onSubmit={() => sectionName && sectionBatchId && void addSection()}
         >
           <Select
-            value={secDep}
+            value={sectionDepartmentId}
             onValueChange={(v) => {
-              setSecDep(v);
-              setSecBatch("");
+              setSectionDepartmentId(v);
+              setSectionBatchId("");
             }}
           >
             <SelectTrigger className="rounded-[4px] font-mono text-xs">
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent className="rounded-[4px]">
-              {deps.data?.map((d) => (
+              {departments.map((d) => (
                 <SelectItem key={d.id} value={d.id}>
                   {d.name}
                 </SelectItem>
@@ -242,17 +219,17 @@ export function AdminOrgView() {
             </SelectContent>
           </Select>
           <Select
-            value={secBatch}
-            onValueChange={setSecBatch}
-            disabled={!secDep}
+            value={sectionBatchId}
+            onValueChange={setSectionBatchId}
+            disabled={!sectionDepartmentId}
           >
             <SelectTrigger className="rounded-[4px] font-mono text-xs">
               <SelectValue
-                placeholder={secDep ? "Select batch" : "Select department first"}
+                placeholder={sectionDepartmentId ? "Select batch" : "Select department first"}
               />
             </SelectTrigger>
             <SelectContent className="rounded-[4px]">
-              {secFilteredBatches.map((b) => (
+              {availableSectionBatches.map((b) => (
                 <SelectItem key={b.id} value={b.id}>
                   {b.name}
                 </SelectItem>
@@ -260,14 +237,14 @@ export function AdminOrgView() {
             </SelectContent>
           </Select>
           <Input
-            value={secName}
-            onChange={(e) => setSecName(e.target.value)}
+            value={sectionName}
+            onChange={(e) => setSectionName(e.target.value)}
             placeholder="e.g. Section A"
             className="rounded-[4px] font-mono text-xs"
           />
           <Button
             type="submit"
-            disabled={!secName || !secBatch || createSection.isPending}
+            disabled={!sectionName || !sectionBatchId || createSectionState.isLoading}
             className="w-full rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold h-9"
           >
             Add section
@@ -287,14 +264,14 @@ export function AdminOrgView() {
         </div>
 
         <div className="space-y-4">
-          {(deps.isLoading || batches.isLoading || sections.isLoading) ? (
+          {organization.isLoading ? (
             [1,2,3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-[4px]" />)
-          ) : (deps.data ?? []).length === 0 ? (
+          ) : departments.length === 0 ? (
             <div className="rounded-[4px] border border-dashed border-border bg-card p-8 text-center font-mono text-xs text-muted-foreground">
               No departments yet. Add one above to get started.
             </div>
           ) : null}
-          {!(deps.isLoading || batches.isLoading || sections.isLoading) && (deps.data ?? []).map((d) => {
+          {!organization.isLoading && departments.map((d) => {
             const depBatches = organization.data?.batchesByDepartment?.[d.id] ?? [];
             return (
               <section
@@ -491,11 +468,11 @@ export function AdminOrgView() {
             </Button>
             <Button
               disabled={
-                !editingItem?.name.trim() || updateMutation.isPending
+                !editingItem?.name.trim() || isUpdating
               }
-              onClick={() => updateMutation.mutate()}
+              onClick={() => void saveName()}
             >
-              {updateMutation.isPending ? "Saving..." : "Save changes"}
+              {isUpdating ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -512,14 +489,8 @@ export function AdminOrgView() {
             ? `${deletingItem.type === "dep" ? "department" : deletingItem.type === "batch" ? "batch" : "section"} "${deletingItem.name}"`
             : "this item"
         }
-        isPending={deleteMutation.isPending}
-        onConfirm={() => {
-          if (deletingItem)
-            deleteMutation.mutate({
-              type: deletingItem.type,
-              id: deletingItem.id,
-            });
-        }}
+        isPending={isDeleting}
+        onConfirm={() => void removeItem()}
       />
     </div>
   );

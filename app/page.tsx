@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { HomeView } from "@/components/views/academic/HomeView";
+import { HomeContent } from "@/components/pages/Home";
 
 export const metadata: Metadata = {
   title: "Dashboard — UNIFY Academic Portal",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <HomeView />;
+  return <HomeContent />;
 }

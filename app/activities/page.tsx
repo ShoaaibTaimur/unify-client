@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ActivitiesView } from "@/components/views/academic/ActivitiesView";
+import { ActivitiesContent } from "@/components/pages/Activities";
 
 export const metadata: Metadata = {
   title: "All Activities — UNIFY",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ActivitiesPage() {
-  return <ActivitiesView />;
+  return <ActivitiesContent />;
 }

@@ -4,13 +4,11 @@ import { usePathname } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
-import { useTheme } from "@/hooks/use-theme";
 
 const BARE_ROOTS = ["/login", "/change-password", "/admin", "/cr", "/teacher"];
 
 export function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { theme } = useTheme();
   const bare = BARE_ROOTS.some(
     (root) => pathname === root || pathname.startsWith(`${root}/`)
   );
@@ -24,7 +22,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       {!bare && <SiteFooter />}
-      <Toaster position="top-right" theme={theme} closeButton />
+      <Toaster position="top-right" closeButton />
     </div>
   );
 }

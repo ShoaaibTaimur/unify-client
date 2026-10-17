@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ChangePasswordView } from "@/components/views/portal/ChangePasswordView";
+import { ChangePasswordContent } from "@/components/pages/ChangePassword";
 
 export const metadata: Metadata = {
   title: "Change Password — UNIFY",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ChangePasswordPage() {
-  return <ChangePasswordView />;
+  return <ChangePasswordContent />;
 }

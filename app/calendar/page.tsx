@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CalendarView } from "@/components/views/academic/CalendarView";
+import { CalendarContent } from "@/components/pages/Calendar";
 
 export const metadata: Metadata = {
   title: "Activity Calendar — UNIFY",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function CalendarPage() {
-  return <CalendarView />;
+  return <CalendarContent />;
 }

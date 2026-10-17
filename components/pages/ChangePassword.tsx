@@ -9,7 +9,8 @@ import { useAuth } from "@/lib/state";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { KeyRound, Lock, ArrowRight, ArrowLeft } from "lucide-react";
-import { PasswordInput } from "@/components/common/PasswordInput";
+import { PasswordInput } from "@/components/PasswordInput";
+import { getDashboardPath } from "@/lib/auth-client";
 
 const changePasswordSchema = z
   .object({
@@ -24,18 +25,11 @@ const changePasswordSchema = z
 
 type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
-export function ChangePasswordView() {
+export function ChangePasswordContent() {
   const router = useRouter();
   const { user, isPending, changePassword } = useAuth();
 
-  const dashLink =
-    user?.role === "admin"
-      ? "/admin"
-      : user?.role === "teacher"
-      ? "/teacher"
-      : user?.role === "cr"
-      ? "/cr"
-      : "/";
+  const dashLink = user ? getDashboardPath(user.role) : "/";
 
   const {
     register,

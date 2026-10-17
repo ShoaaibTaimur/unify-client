@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminUsersView } from "@/components/views/admin/AdminUsersView";
+import { AdminUsersContent } from "@/components/pages/AdminUsers";
 
 export const metadata: Metadata = {
   title: "Manage Users — Admin Console",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminUsersPage() {
-  return <AdminUsersView />;
+  return <AdminUsersContent />;
 }

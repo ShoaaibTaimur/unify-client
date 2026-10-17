@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PanelClientLayout } from "@/components/layout/PanelClientLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 export const metadata: Metadata = {
   title: "Admin Console — UNIFY",
@@ -11,5 +11,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <PanelClientLayout role="admin" roleLabel="Admin" panelHref="/admin">{children}</PanelClientLayout>;
+  return <DashboardLayout role="admin">{children}</DashboardLayout>;
 }

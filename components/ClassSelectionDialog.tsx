@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getClassSelection, setClassSelection } from "@/lib/session";
+import { useState } from "react";
+import { setClassSelection } from "@/lib/session";
 import type { ClassSelection } from "@/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
-import { useBatchesQuery, useDepartmentsQuery, useSectionsQuery } from "@/lib/state/server-api";
+import { useOrganizationQuery } from "@/lib/api";
 
 export function ClassSelectionDialog({
   open, onOpenChange, initial,
@@ -16,18 +16,9 @@ export function ClassSelectionDialog({
   const [batchId, setBatchId] = useState(initial?.batchId ?? "");
   const [sectionId, setSectionId] = useState(initial?.sectionId || "all");
 
-  useEffect(() => {
-    if (open) {
-      const s = initial ?? getClassSelection();
-      setDepartmentId(s?.departmentId ?? "");
-      setBatchId(s?.batchId ?? "");
-      setSectionId(s?.sectionId || "all");
-    }
-  }, [open, initial]);
-
-  const departments = useDepartmentsQuery();
-  const batches = useBatchesQuery(departmentId, { skip: !departmentId });
-  const sections = useSectionsQuery(batchId, { skip: !batchId });
+  const { data } = useOrganizationQuery();
+  const batches = data?.batchesByDepartment?.[departmentId] ?? [];
+  const sections = data?.sectionsByBatch?.[batchId] ?? [];
 
   const canContinue = Boolean(departmentId && batchId);
 
@@ -48,7 +39,7 @@ export function ClassSelectionDialog({
             <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setBatchId(""); setSectionId("all"); }}>
               <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
               <SelectContent>
-                {departments.data?.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                {data?.departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -57,7 +48,7 @@ export function ClassSelectionDialog({
             <Select value={batchId} onValueChange={(v) => { setBatchId(v); setSectionId("all"); }} disabled={!departmentId}>
               <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
               <SelectContent>
-                {batches.data?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                {batches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -67,7 +58,7 @@ export function ClassSelectionDialog({
               <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sections (Default)</SelectItem>
-                {sections.data?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                {sections.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

@@ -1,21 +1,24 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/hooks/use-theme";
 import { Moon, Sun } from "lucide-react";
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { theme, toggle } = useTheme();
-  const dark = theme === "dark";
+  function toggleTheme() {
+    const dark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem("unify_theme", dark ? "dark" : "light");
+  }
+
   return (
     <Button
       variant="ghost"
       size="icon"
       className={`rounded-full ${className ?? ""}`}
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={toggle}
+      aria-label="Toggle color theme"
+      onClick={toggleTheme}
     >
-      {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+      <Moon className="h-5 w-5 dark:hidden" />
+      <Sun className="hidden h-5 w-5 dark:block" />
     </Button>
   );
 }

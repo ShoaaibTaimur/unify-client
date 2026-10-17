@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { CsvRequest } from "@/types";
-import { getServerErrorMessage, useImportActivitiesCsvMutation, usePreviewActivitiesCsvMutation } from "@/lib/state/server-api";
+import { getServerErrorMessage, useImportActivitiesCsvMutation, usePreviewActivitiesCsvMutation } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload } from "lucide-react";

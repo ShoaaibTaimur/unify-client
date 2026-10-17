@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
-import { PasswordInput } from "@/components/common/PasswordInput";
-import { getSafeRedirectUrl, isRoleAuthorized } from "@/lib/auth-client";
+import { PasswordInput } from "@/components/PasswordInput";
+import { getDashboardPath, getSafeRedirectUrl, isRoleAuthorized } from "@/lib/auth-client";
 
 const loginSchema = z.object({
   email: z
@@ -24,7 +24,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export function LoginView() {
+export function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user: currentSessionUser, isPending: sessionPending, login } = useAuth();
@@ -46,14 +46,8 @@ export function LoginView() {
       const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
       if (fromParam && isRoleAuthorized(currentSessionUser.role, fromParam)) {
         router.replace(fromParam);
-      } else if (currentSessionUser.role === "admin") {
-        router.replace("/admin");
-      } else if (currentSessionUser.role === "cr") {
-        router.replace("/cr");
-      } else if (currentSessionUser.role === "teacher") {
-        router.replace("/teacher");
       } else {
-        router.replace("/");
+        router.replace(getDashboardPath(currentSessionUser.role));
       }
     }
   }, [currentSessionUser, sessionPending, searchParams, router]);
@@ -62,19 +56,6 @@ export function LoginView() {
     try {
       const user = await login(data.email, data.password);
       toast.success(`Welcome back, ${user.name}!`);
-
-      const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
-      if (fromParam && isRoleAuthorized(user.role, fromParam)) {
-        router.replace(fromParam);
-      } else if (user.role === "admin") {
-        router.replace("/admin");
-      } else if (user.role === "cr") {
-        router.replace("/cr");
-      } else if (user.role === "teacher") {
-        router.replace("/teacher");
-      } else {
-        router.replace("/");
-      }
     } catch (err) {
       toast.error((err as Error).message || "Failed to sign in");
     }

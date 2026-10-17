@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CRDashboardView } from "@/components/views/portal/CRDashboardView";
+import { DashboardContent } from "@/components/pages/Dashboard";
 
 export const metadata: Metadata = {
   title: "CR Dashboard — UNIFY",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function CRDashboardPage() {
-  return <CRDashboardView />;
+  return <DashboardContent />;
 }

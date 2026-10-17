@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminOrgView } from "@/components/views/admin/AdminOrgView";
+import { AdminOrganizationContent } from "@/components/pages/AdminOrganization";
 
 export const metadata: Metadata = {
   title: "Organization Structure — Admin Console",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function OrganizationPage() {
-  return <AdminOrgView />;
+  return <AdminOrganizationContent />;
 }

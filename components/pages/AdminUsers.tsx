@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/common/PasswordInput";
+import { PasswordInput } from "@/components/PasswordInput";
 import {
   Select,
   SelectContent,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, ChevronLeft, ChevronRight, KeyRound, Copy, Check, Pencil } from "lucide-react";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Role, User } from "@/types";
 import {
@@ -32,9 +32,9 @@ import {
   useDeleteUserMutation,
   useResetUserPasswordMutation,
   useUpdateUserMutation,
-} from "@/lib/state/server-api";
+} from "@/lib/api";
 
-export function AdminUsersView() {
+export function AdminUsersContent() {
   const [role, setRole] = useState<Role>("cr");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -130,18 +130,17 @@ function UserTable({ users, role, pagination, onPageChange, onPageSizeChange }: 
   const totalPages = pagination?.totalPages ?? 1;
   const startIdx = (currentPage - 1) * pageSize;
 
-  const [deleteUser, deleteState] = useDeleteUserMutation();
-  const deleteMutation = {
-    isPending: deleteState.isLoading,
-    mutate: async (id: string) => {
-      try {
-        await deleteUser(id).unwrap();
+  const [deleteUser, deleteStatus] = useDeleteUserMutation();
+  async function removeUser() {
+    if (!deletingUser) return;
+    try {
+      await deleteUser(deletingUser.id).unwrap();
       toast.success("User deleted");
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      }
-    },
-  };
+      setDeletingUser(null);
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -220,7 +219,7 @@ function UserTable({ users, role, pagination, onPageChange, onPageSizeChange }: 
                           size="sm"
                           variant="ghost"
                           className="h-7 rounded-[4px] font-mono text-[11px] uppercase tracking-wider text-destructive hover:bg-destructive/10 transition-colors"
-                          disabled={deleteMutation.isPending}
+                          disabled={deleteStatus.isLoading}
                           onClick={() => setDeletingUser(u)}
                         >
                           Delete
@@ -310,13 +309,8 @@ function UserTable({ users, role, pagination, onPageChange, onPageSizeChange }: 
             ? `user account "${deletingUser.email}"`
             : "this user account"
         }
-        isPending={deleteMutation.isPending}
-        onConfirm={() => {
-          if (deletingUser) {
-            deleteMutation.mutate(deletingUser.id);
-            setDeletingUser(null);
-          }
-        }}
+        isPending={deleteStatus.isLoading}
+        onConfirm={() => void removeUser()}
       />
       <ResetPasswordDialog
         user={resettingUser}
@@ -326,6 +320,7 @@ function UserTable({ users, role, pagination, onPageChange, onPageSizeChange }: 
         }}
       />
       <EditUserDialog
+        key={editingUser?.id ?? "closed"}
         user={editingUser}
         open={!!editingUser}
         onOpenChange={(open) => {
@@ -353,16 +348,10 @@ function CreateUserDialog({
   const [batchId, setBatchId] = useState("");
   const [sectionId, setSectionId] = useState("");
 
-  const options = useOrganizationQuery();
-  const departments = options.data?.departments ?? [];
-  const batches = options.data?.batchesByDepartment?.[departmentId] ?? [];
-  const sections = options.data?.sectionsByBatch?.[batchId] ?? [];
-  const [createUser, createState] = useCreateUserMutation();
-  const createMutation = {
-    isPending: createState.isLoading,
-    mutate: async () => {
-      try {
-        await createUser({
+  const [createUser, createStatus] = useCreateUserMutation();
+  async function addUser() {
+    try {
+      await createUser({
         email,
         name,
         password,
@@ -370,20 +359,19 @@ function CreateUserDialog({
         departmentId: departmentId || undefined,
         batchId: role === "cr" ? batchId || undefined : undefined,
         sectionId: role === "cr" ? sectionId || undefined : undefined,
-        }).unwrap();
-        toast.success("User account created successfully");
-        onOpenChange(false);
-        setEmail("");
-        setName("");
-        setPassword("");
-        setDepartmentId("");
-        setBatchId("");
-        setSectionId("");
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      }
-    },
-  };
+      }).unwrap();
+      toast.success("User account created successfully");
+      onOpenChange(false);
+      setEmail("");
+      setName("");
+      setPassword("");
+      setDepartmentId("");
+      setBatchId("");
+      setSectionId("");
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
   const isFormValid =
     email &&
@@ -447,77 +435,15 @@ function CreateUserDialog({
             />
           </div>
 
-          {role !== "admin" && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">Department</label>
-              <Select
-                value={departmentId}
-                onValueChange={(v) => {
-                  setDepartmentId(v);
-                  setBatchId("");
-                  setSectionId("");
-                }}
-              >
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="Select Department" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {role === "cr" && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Batch</label>
-                <Select
-                  value={batchId}
-                  onValueChange={(v) => {
-                    setBatchId(v);
-                    setSectionId("");
-                  }}
-                  disabled={!departmentId}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Select Batch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {batches.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Section</label>
-                <Select
-                  value={sectionId}
-                  onValueChange={setSectionId}
-                  disabled={!batchId}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Select Section" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sections.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
+          <OrganizationFields
+            role={role}
+            departmentId={departmentId}
+            batchId={batchId}
+            sectionId={sectionId}
+            setDepartmentId={setDepartmentId}
+            setBatchId={setBatchId}
+            setSectionId={setSectionId}
+          />
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
@@ -529,11 +455,11 @@ function CreateUserDialog({
             Cancel
           </Button>
           <Button
-            disabled={!isFormValid || createMutation.isPending}
+            disabled={!isFormValid || createStatus.isLoading}
             className="rounded-xl"
-            onClick={() => createMutation.mutate()}
+            onClick={() => void addUser()}
           >
-            {createMutation.isPending ? "Creating..." : "Create Account"}
+            {createStatus.isLoading ? "Creating..." : "Create Account"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -554,7 +480,7 @@ function ResetPasswordDialog({
   const [useCustom, setUseCustom] = useState(false);
   const [result, setResult] = useState<{ temporaryPassword: string } | null>(null);
   const [copied, setCopied] = useState(false);
-  const [resetPassword, resetState] = useResetUserPasswordMutation();
+  const [resetPassword, resetStatus] = useResetUserPasswordMutation();
 
   const handleClose = () => {
     onOpenChange(false);
@@ -566,22 +492,19 @@ function ResetPasswordDialog({
     }, 200);
   };
 
-  const resetMutation = {
-    isPending: resetState.isLoading,
-    mutate: async () => {
-      if (!user) return;
-      try {
-        const data = await resetPassword({
-          id: user.id,
-          temporaryPassword: useCustom && customPassword ? customPassword : undefined,
-        }).unwrap();
-        setResult({ temporaryPassword: data.temporaryPassword });
-        toast.success("Temporary password enforced successfully");
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      }
-    },
-  };
+  async function enforceTemporaryPassword() {
+    if (!user) return;
+    try {
+      const data = await resetPassword({
+        id: user.id,
+        temporaryPassword: useCustom && customPassword ? customPassword : undefined,
+      }).unwrap();
+      setResult({ temporaryPassword: data.temporaryPassword });
+      toast.success("Temporary password enforced successfully");
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
   const handleCopy = () => {
     if (!result?.temporaryPassword) return;
@@ -703,19 +626,19 @@ function ResetPasswordDialog({
                 variant="outline"
                 className="rounded-xl"
                 onClick={handleClose}
-                disabled={resetMutation.isPending}
+                disabled={resetStatus.isLoading}
               >
                 Cancel
               </Button>
               <Button
                 disabled={
-                  resetMutation.isPending ||
+                  resetStatus.isLoading ||
                   (useCustom && (!customPassword || customPassword.length < 6))
                 }
                 className="rounded-xl"
-                onClick={() => resetMutation.mutate()}
+                onClick={() => void enforceTemporaryPassword()}
               >
-                {resetMutation.isPending ? "Generating..." : "Enforce Temp Password"}
+                {resetStatus.isLoading ? "Generating..." : "Enforce Temp Password"}
               </Button>
             </DialogFooter>
           </div>
@@ -734,43 +657,27 @@ function EditUserDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [name, setName] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
-  const [batchId, setBatchId] = useState("");
-  const [sectionId, setSectionId] = useState("");
+  const [name, setName] = useState(user?.name ?? "");
+  const [departmentId, setDepartmentId] = useState(user?.departmentId ?? "");
+  const [batchId, setBatchId] = useState(user?.batchId ?? "");
+  const [sectionId, setSectionId] = useState(user?.sectionId ?? "");
 
-  useEffect(() => {
-    if (user) {
-      setName(user.name || "");
-      setDepartmentId(user.departmentId || "");
-      setBatchId(user.batchId || "");
-      setSectionId(user.sectionId || "");
-    }
-  }, [user]);
-
-  const options = useOrganizationQuery();
-  const departments = options.data?.departments ?? [];
-  const batches = options.data?.batchesByDepartment?.[departmentId] ?? [];
-  const sections = options.data?.sectionsByBatch?.[batchId] ?? [];
-  const [updateUser, updateState] = useUpdateUserMutation();
-  const updateMutation = {
-    isPending: updateState.isLoading,
-    mutate: async () => {
-      if (!user) return;
-      try {
-        await updateUser({ id: user.id, data: {
+  const [updateUser, updateStatus] = useUpdateUserMutation();
+  async function saveUser() {
+    if (!user) return;
+    try {
+      await updateUser({ id: user.id, data: {
         name: name.trim(),
         departmentId: user.role === "admin" ? null : departmentId || null,
         batchId: user.role === "cr" ? batchId || null : null,
         sectionId: user.role === "cr" ? sectionId || null : null,
-        } }).unwrap();
-        toast.success("User assignment updated successfully");
-        onOpenChange(false);
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      }
-    },
-  };
+      } }).unwrap();
+      toast.success("User assignment updated successfully");
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
   if (!user) return null;
 
@@ -818,79 +725,15 @@ function EditUserDialog({
             />
           </div>
 
-          {user.role !== "admin" && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">
-                {user.role === "teacher" ? "Faculty Department" : "Department"}
-              </label>
-              <Select
-                value={departmentId}
-                onValueChange={(v) => {
-                  setDepartmentId(v);
-                  setBatchId("");
-                  setSectionId("");
-                }}
-              >
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="Select Department" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {user.role === "cr" && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Batch</label>
-                <Select
-                  value={batchId}
-                  onValueChange={(v) => {
-                    setBatchId(v);
-                    setSectionId("");
-                  }}
-                  disabled={!departmentId}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Select Batch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {batches.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Section</label>
-                <Select
-                  value={sectionId}
-                  onValueChange={setSectionId}
-                  disabled={!batchId}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Select Section" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sections.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
+          <OrganizationFields
+            role={user.role}
+            departmentId={departmentId}
+            batchId={batchId}
+            sectionId={sectionId}
+            setDepartmentId={setDepartmentId}
+            setBatchId={setBatchId}
+            setSectionId={setSectionId}
+          />
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0 pt-2">
@@ -898,19 +741,116 @@ function EditUserDialog({
             variant="outline"
             className="rounded-xl"
             onClick={() => onOpenChange(false)}
-            disabled={updateMutation.isPending}
+            disabled={updateStatus.isLoading}
           >
             Cancel
           </Button>
           <Button
-            disabled={!isFormValid || updateMutation.isPending}
+            disabled={!isFormValid || updateStatus.isLoading}
             className="rounded-xl"
-            onClick={() => updateMutation.mutate()}
+            onClick={() => void saveUser()}
           >
-            {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            {updateStatus.isLoading ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function OrganizationFields({
+  role,
+  departmentId,
+  batchId,
+  sectionId,
+  setDepartmentId,
+  setBatchId,
+  setSectionId,
+}: {
+  role: Role;
+  departmentId: string;
+  batchId: string;
+  sectionId: string;
+  setDepartmentId: (value: string) => void;
+  setBatchId: (value: string) => void;
+  setSectionId: (value: string) => void;
+}) {
+  const { data } = useOrganizationQuery();
+  if (role === "admin") return null;
+
+  const departments = data?.departments ?? [];
+  const batches = data?.batchesByDepartment?.[departmentId] ?? [];
+  const sections = data?.sectionsByBatch?.[batchId] ?? [];
+
+  return (
+    <>
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-foreground">
+          {role === "teacher" ? "Faculty Department" : "Department"}
+        </label>
+        <Select
+          value={departmentId}
+          onValueChange={(value) => {
+            setDepartmentId(value);
+            setBatchId("");
+            setSectionId("");
+          }}
+        >
+          <SelectTrigger className="rounded-xl">
+            <SelectValue placeholder="Select Department" />
+          </SelectTrigger>
+          <SelectContent>
+            {departments.map((department) => (
+              <SelectItem key={department.id} value={department.id}>
+                {department.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {role === "cr" && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Batch</label>
+            <Select
+              value={batchId}
+              onValueChange={(value) => {
+                setBatchId(value);
+                setSectionId("");
+              }}
+              disabled={!departmentId}
+            >
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="Select Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id}>
+                    {batch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Section</label>
+            <Select value={sectionId} onValueChange={setSectionId} disabled={!batchId}>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="Select Section" />
+              </SelectTrigger>
+              <SelectContent>
+                {sections.map((section) => (
+                  <SelectItem key={section.id} value={section.id}>
+                    {section.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

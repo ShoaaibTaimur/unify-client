@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ACTIVITY_TYPES, type Activity, type ActivityType } from "@/types";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,13 @@ import { addDays, format, differenceInDays, parseISO } from "date-fns";
 import { parseAppDate, formatAppDate, formatAppTime, to24HourTime } from "@/lib/date-utils";
 import { CalendarIcon, ClockIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import {
   getServerErrorMessage,
-  useBatchesQuery,
   useCreateActivityMutation,
-  useDepartmentsQuery,
-  useSectionsQuery,
+  useOrganizationQuery,
   useUpdateActivityMutation,
-} from "@/lib/state/server-api";
+} from "@/lib/api";
 
 interface Props {
   open: boolean;
@@ -49,98 +47,73 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
   const fixedDepartmentId = fixed?.departmentId;
   const fixedBatchId = fixed?.batchId;
   const fixedSectionId = fixed?.sectionId;
-  const [type, setType] = useState<ActivityType>("class-test");
-  const [title, setTitle] = useState("");
-  const [subject, setSubject] = useState("");
-  const [room, setRoom] = useState("");
-  const [description, setDescription] = useState("");
-  
-  // Date state using Date object
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [timeVal, setTimeVal] = useState("09:00");
-  
-  const [startDateObj, setStartDateObj] = useState<Date | undefined>(new Date());
-  const [endDateObj, setEndDateObj] = useState<Date | undefined>(addDays(new Date(), 3));
-
-  const [departmentId, setDepartmentId] = useState(fixedDepartmentId ?? "");
-  const [batchId, setBatchId] = useState(fixedBatchId ?? "");
-  const [sectionId, setSectionId] = useState(fixedSectionId ?? "");
+  const activityDate = editing?.date ? parseAppDate(editing.date) || new Date() : new Date();
+  const [type, setType] = useState<ActivityType>(editing?.activityType ?? "class-test");
+  const [title, setTitle] = useState(editing?.title ?? "");
+  const [subject, setSubject] = useState(editing?.subject ?? "");
+  const [room, setRoom] = useState(editing?.room ?? "");
+  const [description, setDescription] = useState(editing?.description ?? "");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(activityDate);
+  const [timeVal, setTimeVal] = useState(
+    editing?.time ? to24HourTime(editing.time) : editing?.date ? format(activityDate, "HH:mm") : "09:00"
+  );
+  const [startDateObj, setStartDateObj] = useState<Date | undefined>(
+    editing?.startDate ? parseAppDate(editing.startDate) || new Date() : new Date()
+  );
+  const [endDateObj, setEndDateObj] = useState<Date | undefined>(
+    editing?.endDate ? parseAppDate(editing.endDate) || addDays(new Date(), 3) : addDays(new Date(), 3)
+  );
+  const [departmentId, setDepartmentId] = useState(editing?.departmentId ?? fixedDepartmentId ?? "");
+  const [batchId, setBatchId] = useState(editing?.batchId ?? fixedBatchId ?? "");
+  const [sectionId, setSectionId] = useState(editing?.sectionId ?? fixedSectionId ?? "all");
 
   const effectiveDepartmentId = fixedDepartmentId ?? departmentId;
   const allowChooseBatchSection = chooseBatchSection || chooseDepartment;
 
-  useEffect(() => {
-    if (!open) return;
-    if (editing) {
-      setType(editing.activityType); setTitle(editing.title); setSubject(editing.subject);
-      setRoom(editing.room ?? ""); setDescription(editing.description ?? "");
-
-      if (editing.date) {
-        const d = parseAppDate(editing.date) || new Date();
-        setSelectedDate(d);
-        setTimeVal(to24HourTime(editing.time) || format(d, "HH:mm"));
-      } else if (editing.time) {
-        setSelectedDate(new Date());
-        setTimeVal(to24HourTime(editing.time));
-      } else {
-        setSelectedDate(new Date()); setTimeVal("09:00");
-      }
-
-      setStartDateObj(editing.startDate ? parseAppDate(editing.startDate) || new Date() : new Date());
-      setEndDateObj(editing.endDate ? parseAppDate(editing.endDate) || addDays(new Date(), 3) : addDays(new Date(), 3));
-      setDepartmentId(editing.departmentId);
-      setBatchId(editing.batchId); setSectionId(editing.sectionId || "all");
-    } else {
-      setType("class-test"); setTitle(""); setSubject(""); setRoom(""); setDescription("");
-      setSelectedDate(new Date()); setTimeVal("09:00");
-      setStartDateObj(new Date());
-      setEndDateObj(addDays(new Date(), 3));
-      setDepartmentId(fixedDepartmentId ?? "");
-      setBatchId(fixedBatchId ?? ""); setSectionId(fixedSectionId ?? "all");
-    }
-  }, [open, editing, fixedDepartmentId, fixedBatchId, fixedSectionId]);
-
-  const departments = useDepartmentsQuery(undefined, { skip: !chooseDepartment });
-  const batches = useBatchesQuery(effectiveDepartmentId, {
-    skip: !effectiveDepartmentId || !allowChooseBatchSection,
-  });
-  const sections = useSectionsQuery(batchId, { skip: !batchId });
+  const organization = useOrganizationQuery(undefined, { skip: !allowChooseBatchSection });
+  const batches = organization.data?.batchesByDepartment?.[effectiveDepartmentId] ?? [];
+  const sections = organization.data?.sectionsByBatch?.[batchId] ?? [];
 
   const isExam = ACTIVITY_TYPES.find(t => t.value === type)?.isExam;
 
-  const [createActivity, createState] = useCreateActivityMutation();
-  const [updateActivity, updateState] = useUpdateActivityMutation();
-  const mutation = {
-    isPending: createState.isLoading || updateState.isLoading,
-    mutate: async () => {
-      let combinedIso: string | undefined = undefined;
-      if (!isExam && selectedDate) {
-        const [hours, minutes] = (timeVal || "09:00").split(":");
-        const d = new Date(selectedDate);
-        d.setHours(parseInt(hours || "9", 10), parseInt(minutes || "0", 10), 0, 0);
-        combinedIso = d.toISOString();
-      }
+  const [createActivity, createStatus] = useCreateActivityMutation();
+  const [updateActivity, updateStatus] = useUpdateActivityMutation();
+  const isSaving = createStatus.isLoading || updateStatus.isLoading;
 
-      const targetBatchId = (!batchId || batchId === "") ? "all" : batchId;
-      const targetSectionId = (!sectionId || sectionId === "") ? "all" : sectionId;
-      const base = {
-        departmentId: effectiveDepartmentId, batchId: targetBatchId, sectionId: targetSectionId, activityType: type, title, subject,
-        room: room || undefined, description: description || undefined, createdBy,
-        time: formatAppTime(timeVal) || undefined,
-        date: isExam ? undefined : combinedIso,
-        startDate: isExam && startDateObj ? startDateObj.toISOString() : undefined,
-        endDate: isExam && endDateObj ? endDateObj.toISOString() : undefined,
-      };
-      try {
-        if (editing) await updateActivity({ id: editing.id, patch: base }).unwrap();
-        else await createActivity(base).unwrap();
-        toast.success(editing ? "Activity updated" : "Activity created");
-        onOpenChange(false);
-      } catch (error) {
-        toast.error(getServerErrorMessage(error));
-      }
-    },
-  };
+  async function saveActivity() {
+    let combinedIso: string | undefined;
+    if (!isExam && selectedDate) {
+      const [hours, minutes] = (timeVal || "09:00").split(":");
+      const date = new Date(selectedDate);
+      date.setHours(parseInt(hours || "9", 10), parseInt(minutes || "0", 10), 0, 0);
+      combinedIso = date.toISOString();
+    }
+
+    const activity = {
+      departmentId: effectiveDepartmentId,
+      batchId: batchId || "all",
+      sectionId: sectionId || "all",
+      activityType: type,
+      title,
+      subject,
+      room: room || undefined,
+      description: description || undefined,
+      createdBy,
+      time: formatAppTime(timeVal) || undefined,
+      date: isExam ? undefined : combinedIso,
+      startDate: isExam && startDateObj ? startDateObj.toISOString() : undefined,
+      endDate: isExam && endDateObj ? endDateObj.toISOString() : undefined,
+    };
+
+    try {
+      if (editing) await updateActivity({ id: editing.id, patch: activity }).unwrap();
+      else await createActivity(activity).unwrap();
+      toast.success(editing ? "Activity updated" : "Activity created");
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(getServerErrorMessage(error));
+    }
+  }
 
   const canSubmit = title && subject && effectiveDepartmentId && (batchId || allowChooseBatchSection) && (isExam ? (startDateObj && endDateObj) : selectedDate);
 
@@ -167,7 +140,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
             <Field label="Department">
               <Select value={departmentId} onValueChange={(v) => { setDepartmentId(v); setBatchId("all"); setSectionId("all"); }}>
                 <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select department" /></SelectTrigger>
-                <SelectContent>{departments.data?.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{organization.data?.departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
           )}
@@ -179,7 +152,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder={effectiveDepartmentId ? "Select Batch" : "Select department first"} /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Batches (Dept-wide)</SelectItem>
-                    {batches.data?.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                    {batches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </Field>
@@ -188,7 +161,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select Section" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sections (Batch-wide)</SelectItem>
-                    {sections.data?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    {sections.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </Field>
@@ -406,8 +379,8 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
 
         <DialogFooter>
           <Button variant="ghost" className="rounded-[4px] font-mono text-xs uppercase" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={!canSubmit || mutation.isPending} className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold shadow-2xs" onClick={() => mutation.mutate()}>
-            {mutation.isPending ? "Saving…" : editing ? "Save changes" : "Create activity"}
+          <Button disabled={!canSubmit || isSaving} className="rounded-[4px] bg-primary text-primary-foreground hover:bg-primary-deep font-mono text-[11px] uppercase tracking-[0.12em] font-bold shadow-2xs" onClick={() => void saveActivity()}>
+            {isSaving ? "Saving…" : editing ? "Save changes" : "Create activity"}
           </Button>
         </DialogFooter>
       </DialogContent>

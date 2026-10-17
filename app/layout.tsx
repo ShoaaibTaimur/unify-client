@@ -34,16 +34,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             __html: `(function(){try{var t=localStorage.getItem("unify_theme");var p=window.matchMedia("(prefers-color-scheme: dark)").matches;if(t==="dark"||(!t&&p)){document.documentElement.classList.add("dark");}}catch(e){}})()`,
           }}
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-        />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body>

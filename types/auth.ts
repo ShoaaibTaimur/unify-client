@@ -28,7 +28,6 @@ export interface LoginCredentials {
 
 export interface AuthSession {
   user: User | null;
-  isAuthenticated: boolean;
 }
 
 export interface AuthState {
@@ -41,8 +40,6 @@ export interface AuthState {
 export interface AuthFailure {
   message: string;
   kind: AuthErrorKind;
-  status?: number;
-  code?: string;
 }
 
 
@@ -58,9 +55,6 @@ export interface CreateUserInput {
 
 export interface UseAuthReturn {
   user: User | null;
-  status: AuthStatus;
-  isAuthenticated: boolean;
-  loaded: boolean;
   isPending: boolean;
   isOffline: boolean;
   error: string | null;

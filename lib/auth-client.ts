@@ -15,6 +15,13 @@ export function isRoleAuthorized(role: Role, target: string): boolean {
   return true;
 }
 
+export function getDashboardPath(role: Role): string {
+  if (role === "admin") return "/admin";
+  if (role === "teacher") return "/teacher";
+  if (role === "cr") return "/cr";
+  return "/";
+}
+
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 const REQUEST_TIMEOUT_MS = 12_000;
 const REFRESH_LOCK = "unify:refresh-session";
@@ -28,26 +35,17 @@ let ongoingRefreshPromise: Promise<User | null> | null = null;
 
 export class AuthClientError extends Error {
   readonly kind: AuthErrorKind;
-  readonly status?: number;
-  readonly code?: string;
 
-  constructor(
-    message: string,
-    options: { kind: AuthErrorKind; status?: number; code?: string }
-  ) {
+  constructor(message: string, kind: AuthErrorKind) {
     super(message);
     this.name = "AuthClientError";
-    this.kind = options.kind;
-    this.status = options.status;
-    this.code = options.code;
+    this.kind = kind;
   }
 }
 
 function getApiUrl(path: string): string {
   if (!API_URL) {
-    throw new AuthClientError("NEXT_PUBLIC_API_URL is not configured", {
-      kind: "server",
-    });
+    throw new AuthClientError("NEXT_PUBLIC_API_URL is not configured", "server");
   }
   return `${API_URL}${path}`;
 }
@@ -58,7 +56,7 @@ function isRole(value: unknown): value is Role {
 
 function parseUser(value: unknown): User {
   if (!value || typeof value !== "object") {
-    throw new AuthClientError("Invalid authentication response", { kind: "server" });
+    throw new AuthClientError("Invalid authentication response", "server");
   }
 
   const user = value as Record<string, unknown>;
@@ -69,7 +67,7 @@ function parseUser(value: unknown): User {
     !isRole(user.role) ||
     typeof user.mustChangePassword !== "boolean"
   ) {
-    throw new AuthClientError("Invalid authentication response", { kind: "server" });
+    throw new AuthClientError("Invalid authentication response", "server");
   }
 
   return value as User;
@@ -78,12 +76,7 @@ function parseUser(value: unknown): User {
 async function readError(response: Response, fallback: string): Promise<AuthClientError> {
   const body = await response.json().catch(() => null);
   const message = typeof body?.error === "string" ? body.error : fallback;
-  const code = typeof body?.code === "string" ? body.code : undefined;
-  return new AuthClientError(message, {
-    kind: response.status < 500 ? "validation" : "server",
-    status: response.status,
-    code,
-  });
+  return new AuthClientError(message, response.status < 500 ? "validation" : "server");
 }
 
 async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -104,7 +97,7 @@ async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): P
       controller.signal.aborted && !externalSignal?.aborted
         ? "Authentication request timed out"
         : "Unable to reach authentication server";
-    throw new AuthClientError(message, { kind: "network" });
+    throw new AuthClientError(message, "network");
   } finally {
     clearTimeout(timeout);
     externalSignal?.removeEventListener("abort", abort);
@@ -142,8 +135,10 @@ async function wait(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function withStorageRefreshLease<T>(task: () => Promise<T>): Promise<T> {
-  if (typeof window === "undefined") return task();
+async function withStorageRefreshLease(
+  refresh: () => Promise<User | null>
+): Promise<User | null> {
+  if (typeof window === "undefined") return refresh();
 
   const deadline = Date.now() + REFRESH_LEASE_MS;
   while (Date.now() < deadline) {
@@ -161,7 +156,7 @@ async function withStorageRefreshLease<T>(task: () => Promise<T>): Promise<T> {
 
       if (localStorage.getItem(REFRESH_LEASE_KEY) === candidate) {
         try {
-          return await task();
+          return await refresh();
         } finally {
           if (localStorage.getItem(REFRESH_LEASE_KEY) === candidate) {
             localStorage.removeItem(REFRESH_LEASE_KEY);
@@ -173,14 +168,14 @@ async function withStorageRefreshLease<T>(task: () => Promise<T>): Promise<T> {
     await wait(75 + Math.floor(Math.random() * 75));
   }
 
-  throw new AuthClientError("Timed out waiting to refresh session", { kind: "network" });
+  throw new AuthClientError("Timed out waiting to refresh session", "network");
 }
 
-async function withRefreshLock<T>(task: () => Promise<T>): Promise<T> {
+async function withRefreshLock(refresh: () => Promise<User | null>): Promise<User | null> {
   if (typeof navigator !== "undefined" && navigator.locks) {
-    return navigator.locks.request(REFRESH_LOCK, task);
+    return navigator.locks.request(REFRESH_LOCK, refresh);
   }
-  return withStorageRefreshLease(task);
+  return withStorageRefreshLease(refresh);
 }
 
 async function refreshInsideLock(): Promise<User | null> {
@@ -213,6 +208,46 @@ async function refreshInsideLock(): Promise<User | null> {
   }
 
   throw await readError(response, "Unable to refresh session");
+}
+
+async function refreshSession(): Promise<User | null> {
+  if (ongoingRefreshPromise) return ongoingRefreshPromise;
+
+  ongoingRefreshPromise = withRefreshLock(refreshInsideLock).finally(() => {
+    ongoingRefreshPromise = null;
+  });
+  return ongoingRefreshPromise;
+}
+
+async function authenticatedFetch(
+  input: string | URL | Request,
+  init?: RequestInit
+): Promise<Response> {
+  const request = new Request(input, { ...init, credentials: "include" });
+  const retryRequest = request.clone();
+  const response = await fetchWithTimeout(request, { signal: request.signal });
+  const requestUrl = new URL(request.url);
+  const apiOrigin = API_URL ? new URL(API_URL).origin : "";
+  const excludedAuthPaths = [
+    "/api/auth/login",
+    "/api/auth/signup",
+    "/api/auth/refresh",
+    "/api/auth/logout",
+  ];
+  const canRefresh =
+    requestUrl.origin === apiOrigin && !excludedAuthPaths.includes(requestUrl.pathname);
+
+  if (response.status !== 401 || !canRefresh) return response;
+
+  const user = await refreshSession();
+  if (!user) return response;
+
+  const retryResponse = await fetchWithTimeout(retryRequest, { signal: retryRequest.signal });
+  if (retryResponse.status === 401) {
+    emitLocal({ type: "signed-out" });
+    broadcast({ type: "signed-out" });
+  }
+  return retryResponse;
 }
 
 export const authClient = {
@@ -251,12 +286,13 @@ export const authClient = {
   },
 
   async changePassword(current: string, next: string): Promise<void> {
-    const response = await this.fetch(getApiUrl("/api/auth/change-password"), {
+    const response = await authenticatedFetch(getApiUrl("/api/auth/change-password"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ current, next }),
     });
     if (!response.ok) throw await readError(response, "Password change failed");
+    broadcast({ type: "signed-out" });
   },
 
   async getSession(): Promise<AuthSession> {
@@ -264,65 +300,16 @@ export const authClient = {
     if (response.ok) {
       const data = await response.json();
       const user = parseUser(data?.user);
-      return { user, isAuthenticated: true };
+      return { user };
     }
 
     if (response.status !== 401) {
       throw await readError(response, "Unable to verify session");
     }
 
-    const user = await this.refreshSession();
-    return { user, isAuthenticated: Boolean(user) };
+    const user = await refreshSession();
+    return { user };
   },
-
-  async refreshSession(): Promise<User | null> {
-    if (ongoingRefreshPromise) return ongoingRefreshPromise;
-
-    ongoingRefreshPromise = withRefreshLock(refreshInsideLock).finally(() => {
-      ongoingRefreshPromise = null;
-    });
-    return ongoingRefreshPromise;
-  },
-
-  async fetch(
-    input: string | URL | Request,
-    init?: RequestInit & { _isRetry?: boolean }
-  ): Promise<Response> {
-    const { _isRetry = false, ...requestInit } = init ?? {};
-    const request = new Request(input, {
-      ...requestInit,
-      credentials: "include",
-    });
-    const retryRequest = request.clone();
-    const response = await fetch(request);
-
-    let requestUrl: URL;
-    try {
-      requestUrl = new URL(request.url);
-    } catch {
-      return response;
-    }
-
-    const apiOrigin = API_URL ? new URL(API_URL).origin : "";
-    const excludedAuthPaths = new Set([
-      "/api/auth/login",
-      "/api/auth/signup",
-      "/api/auth/refresh",
-      "/api/auth/logout",
-    ]);
-    const canRefresh =
-      requestUrl.origin === apiOrigin && !excludedAuthPaths.has(requestUrl.pathname);
-
-    if (response.status !== 401 || _isRetry || !canRefresh) return response;
-
-    const user = await this.refreshSession();
-    if (!user) return response;
-
-    const retryResponse = await fetch(retryRequest);
-    if (retryResponse.status === 401) {
-      emitLocal({ type: "signed-out" });
-      broadcast({ type: "signed-out" });
-    }
-    return retryResponse;
-  },
+  refreshSession,
+  fetch: authenticatedFetch,
 };

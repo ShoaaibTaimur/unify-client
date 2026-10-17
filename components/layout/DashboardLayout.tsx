@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { DashboardRole } from "@/types";
+import { getDashboardPath } from "@/lib/auth-client";
 
 
 
@@ -58,29 +59,27 @@ const ADMIN_NAV_ITEMS = [
   { to: "/admin/users", label: "Users", icon: Users },
 ];
 
-export function PanelClientLayout({
+export function DashboardLayout({
   children,
   role,
-  roleLabel,
-  panelHref,
 }: {
   children: React.ReactNode;
   role: DashboardRole;
-  roleLabel: string;
-  panelHref: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isPending: authPending, logout } = useAuth();
+  const { user, isPending: authPending, isOffline, error, refetch, logout } = useAuth();
   const isPending = authPending && !user;
   const [open, setOpen] = useState(false);
+  const roleLabel = role === "cr" ? "CR" : role === "admin" ? "Admin" : "Teacher";
+  const dashboardPath = getDashboardPath(role);
 
   const orgLabel =
     role === "teacher" ? user?.departmentName : user?.organizationLabel;
   const navItems = role === "admin" ? ADMIN_NAV_ITEMS : NAV_ITEMS;
 
   useEffect(() => {
-    if (isPending) return;
+    if (isPending || isOffline) return;
 
     if (!user) {
       router.replace(`/login?from=${encodeURIComponent(pathname)}`);
@@ -91,19 +90,24 @@ export function PanelClientLayout({
       return;
     }
     if (user.role !== role) {
-      if (user.role === "admin") router.replace("/admin");
-      else if (user.role === "cr") router.replace("/cr");
-      else if (user.role === "teacher") router.replace("/teacher");
-      else router.replace("/");
+      router.replace(getDashboardPath(user.role));
       return;
     }
-  }, [user, isPending, role, router, pathname]);
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  }, [user, isPending, isOffline, role, router, pathname]);
 
   const isAllowed = user && user.role === role;
+
+  if (isOffline && !user) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
+        <p className="text-sm font-semibold">Unable to verify your session.</p>
+        <p className="text-xs text-muted-foreground">{error}</p>
+        <Button size="sm" variant="outline" onClick={() => void refetch()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   if (isPending || !user || !isAllowed) {
     return (
@@ -125,10 +129,11 @@ export function PanelClientLayout({
   const NavList = (
     <nav className="flex flex-col p-2 font-mono text-xs uppercase tracking-wider">
       <Link
-        href={panelHref}
+        href={dashboardPath}
+        onClick={() => setOpen(false)}
         prefetch={false}
         className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold transition-colors border-b border-border/40 ${
-          pathname === panelHref
+          pathname === dashboardPath
             ? "bg-primary text-primary-foreground font-bold shadow-2xs"
             : "text-foreground/80 hover:bg-primary/10 hover:text-primary"
         }`}
@@ -142,6 +147,7 @@ export function PanelClientLayout({
           <Link
             key={n.to}
             href={n.to}
+            onClick={() => setOpen(false)}
             prefetch={false}
             className={`flex items-center gap-3 px-3 py-2.5 text-xs font-semibold transition-colors border-b border-border/40 ${
               active
@@ -201,10 +207,10 @@ export function PanelClientLayout({
 
             <nav className="hidden md:flex items-stretch">
               <Link
-                href={panelHref}
+                href={dashboardPath}
                 prefetch={false}
                 className={`flex items-center gap-2 px-4 border-r border-border font-mono text-[11px] uppercase tracking-[0.12em] font-semibold transition-colors ${
-                  pathname === panelHref
+                  pathname === dashboardPath
                     ? "bg-primary text-primary-foreground shadow-2xs font-bold"
                     : "text-foreground hover:bg-primary/10 hover:text-primary"
                 }`}

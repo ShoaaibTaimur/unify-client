@@ -9,13 +9,13 @@ import { CsvImportDialog } from "@/components/activities/CsvImportDialog";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
 import type { Activity } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/state";
-import { getServerErrorMessage, useActivitiesQuery, useClearActivitiesMutation, useDeleteActivityMutation } from "@/lib/state/server-api";
+import { getServerErrorMessage, useActivitiesQuery, useClearActivitiesMutation, useDeleteActivityMutation } from "@/lib/api";
 
-export function AdminActivitiesView() {
+export function AdminActivitiesContent() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
@@ -108,6 +108,7 @@ export function AdminActivitiesView() {
       )}
 
       <ActivityForm
+        key={`${open}-${editing?.id ?? "new"}`}
         open={open}
         onOpenChange={setOpen}
         editing={editing}

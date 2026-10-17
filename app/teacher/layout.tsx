@@ -1,9 +1,9 @@
-import { PanelClientLayout } from "@/components/layout/PanelClientLayout";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PanelClientLayout role="teacher" roleLabel="Teacher" panelHref="/teacher">
+    <DashboardLayout role="teacher">
       {children}
-    </PanelClientLayout>
+    </DashboardLayout>
   );
 }

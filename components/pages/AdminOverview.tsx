@@ -11,9 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAdminOverviewQuery } from "@/lib/state/server-api";
+import { useAdminOverviewQuery } from "@/lib/api";
 
-export function AdminOverviewView() {
+export function AdminOverviewContent() {
   const overview = useAdminOverviewQuery();
   const counts = overview.data?.counts;
   const recentActivities = overview.data?.recentActivities ?? [];

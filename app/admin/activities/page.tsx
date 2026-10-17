@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminActivitiesView } from "@/components/views/admin/AdminActivitiesView";
+import { AdminActivitiesContent } from "@/components/pages/AdminActivities";
 
 export const metadata: Metadata = {
   title: "Manage Activities — Admin Console",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminActivitiesPage() {
-  return <AdminActivitiesView />;
+  return <AdminActivitiesContent />;
 }

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ACTIVITY_TYPES, type ActivityStatusFilter, type ActivityType, type ClassSelection } from "@/types";
+import { ACTIVITY_TYPES, type ActivityStatusFilter, type ActivityType } from "@/types";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
 import { ActivityCard } from "@/components/activities/ActivityCard";
-import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog";
+import { ClassSelectionDialog } from "@/components/ClassSelectionDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,20 +16,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { getServerErrorMessage, useActivitiesQuery } from "@/lib/state/server-api";
+import { getServerErrorMessage, useActivitiesQuery } from "@/lib/api";
 
-export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
-  const { cls, loaded } = useClassSelection(initialClass);
+export function ActivitiesContent() {
+  const { cls, loaded, needsSelection } = useClassSelection();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [q, setQ] = useState("");
   const [type, setType] = useState<ActivityType | "all">("all");
   const [status, setStatus] = useState<ActivityStatusFilter>("upcoming");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
-  useEffect(() => {
-    if (loaded && !hasSelectedClass(cls)) setDialogOpen(true);
-  }, [cls, loaded]);
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(q.trim()), 250);
@@ -69,7 +65,8 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
   return (
     <>
       <ClassSelectionDialog
-        open={dialogOpen}
+        key={`${dialogOpen || needsSelection}-${cls?.departmentId}-${cls?.batchId}-${cls?.sectionId}`}
+        open={dialogOpen || needsSelection}
         onOpenChange={setDialogOpen}
         initial={cls}
       />
@@ -244,7 +241,7 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
             )}
             {q && (
               <span className="inline-flex items-center gap-1 rounded-[3px] border border-border bg-secondary/50 px-2 py-0.5 text-foreground">
-                Query: <strong>"{q}"</strong>
+                Query: <strong>{`"${q}"`}</strong>
                 <button
                   onClick={() => setQ("")}
                   className="hover:text-destructive transition-colors ml-0.5"
@@ -269,7 +266,7 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
 
         {/* Activities List */}
         <div className="mt-6 space-y-3">
-          {((!loaded && !initialClass) || (hasSelectedClass(cls) && activities.isLoading && !activities.data)) ? (
+          {((!loaded) || (hasSelectedClass(cls) && activities.isLoading && !activities.data)) ? (
             [1, 2, 3, 4, 5].map((i) => <div key={i} className="h-24 w-full bg-muted/50 border border-border animate-pulse rounded-[4px]" />)
           ) : filtered.length === 0 ? (
             <div className="rounded-[4px] border border-dashed border-border bg-card p-12 text-center font-mono text-xs text-muted-foreground">
