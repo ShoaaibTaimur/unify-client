@@ -25,14 +25,14 @@ import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Role, User } from "@/types";
 import {
-  getApiError,
+  getServerErrorMessage,
   useAdminUsersQuery,
   useOrganizationQuery,
   useCreateUserMutation,
   useDeleteUserMutation,
   useResetUserPasswordMutation,
   useUpdateUserMutation,
-} from "@/lib/store/api-slice";
+} from "@/lib/state/server-api";
 
 export function AdminUsersView() {
   const [role, setRole] = useState<Role>("cr");
@@ -44,7 +44,7 @@ export function AdminUsersView() {
     return (
       <div className="mx-auto max-w-md py-24 text-center">
         <p className="text-sm font-medium text-destructive">Failed to load users.</p>
-        <p className="mt-1 text-xs text-muted-foreground">{getApiError(users.error)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{getServerErrorMessage(users.error)}</p>
         <button
           onClick={() => users.refetch()}
           className="mt-4 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
@@ -138,7 +138,7 @@ function UserTable({ users, role, pagination, onPageChange, onPageSizeChange }: 
         await deleteUser(id).unwrap();
       toast.success("User deleted");
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       }
     },
   };
@@ -380,7 +380,7 @@ function CreateUserDialog({
         setBatchId("");
         setSectionId("");
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       }
     },
   };
@@ -578,7 +578,7 @@ function ResetPasswordDialog({
         setResult({ temporaryPassword: data.temporaryPassword });
         toast.success("Temporary password enforced successfully");
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       }
     },
   };
@@ -767,7 +767,7 @@ function EditUserDialog({
         toast.success("User assignment updated successfully");
         onOpenChange(false);
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       }
     },
   };

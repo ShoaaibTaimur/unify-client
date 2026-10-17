@@ -39,6 +39,18 @@ export const ACTIVITY_COLOR: Record<ActivityType, string> = {
   "extra-class": "var(--activity-extra-class)",
 };
 
+export const ACTIVITY_LABEL: Record<ActivityType, string> = {
+  "class-test": "Class Test",
+  "lab-test": "Lab Test",
+  viva: "Viva",
+  assignment: "Assignment",
+  presentation: "Presentation",
+  quiz: "Quiz",
+  "mid-exam": "Mid Exam",
+  "final-exam": "Final Exam",
+  "extra-class": "Extra Class",
+};
+
 export interface Activity {
   id: string;
   departmentId: string;

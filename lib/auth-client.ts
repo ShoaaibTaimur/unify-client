@@ -1,6 +1,19 @@
 import type { AuthErrorKind, AuthEvent, AuthEventListener, AuthSession, LoginCredentials, Role, User } from "@/types";
 
-export const AUTH_EVENT = "unify:auth-changed";
+export function getSafeRedirectUrl(target: string | null): string | null {
+  if (!target) return null;
+  if (target === "/login" || target.startsWith("/login?") || target === "/change-password") return null;
+  return target.startsWith("/") && !target.startsWith("//") && !target.includes("\\")
+    ? target
+    : null;
+}
+
+export function isRoleAuthorized(role: Role, target: string): boolean {
+  if (target.startsWith("/admin")) return role === "admin";
+  if (target.startsWith("/teacher")) return role === "teacher";
+  if (target.startsWith("/cr")) return role === "cr";
+  return true;
+}
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 const REQUEST_TIMEOUT_MS = 12_000;
@@ -100,9 +113,6 @@ async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): P
 
 function emitLocal(event: AuthEvent) {
   for (const listener of listeners) listener(event);
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: event }));
-  }
 }
 
 function getChannel(): BroadcastChannel | null {

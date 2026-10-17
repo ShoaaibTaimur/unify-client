@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
-import { useBatchesQuery, useDepartmentsQuery, useSectionsQuery } from "@/lib/store/api-slice";
+import { useBatchesQuery, useDepartmentsQuery, useSectionsQuery } from "@/lib/state/server-api";
 
 export function ClassSelectionDialog({
   open, onOpenChange, initial,

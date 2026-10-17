@@ -1,5 +1,5 @@
 import { createApi, type BaseQueryFn } from "@reduxjs/toolkit/query/react";
-import { authClient } from "@/lib/auth/client";
+import { authClient } from "@/lib/auth-client";
 import type {
   Activity,
   ActivityFilter,
@@ -24,10 +24,10 @@ import type {
 } from "@/types";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-export const REALTIME_CLIENT_ID =
+export const LIVE_UPDATE_CLIENT_ID =
   globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
 
-function queryString(values?: object) {
+function buildQueryString(values?: object) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(values ?? {})) {
     if (value && value !== "all") params.set(key, value);
@@ -36,7 +36,7 @@ function queryString(values?: object) {
   return query ? `?${query}` : "";
 }
 
-const baseQuery: BaseQueryFn<
+const sendServerRequest: BaseQueryFn<
   { url: string; method?: string; body?: unknown },
   unknown,
   ApiError
@@ -50,7 +50,7 @@ const baseQuery: BaseQueryFn<
       cache: "no-store",
       signal: controller.signal,
       headers: {
-        "X-Unify-Client": REALTIME_CLIENT_ID,
+        "X-Unify-Client": LIVE_UPDATE_CLIENT_ID,
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -94,9 +94,9 @@ const baseQuery: BaseQueryFn<
   }
 };
 
-export const dataApi = createApi({
-  reducerPath: "dataApi",
-  baseQuery,
+export const serverApi = createApi({
+  reducerPath: "serverApi",
+  baseQuery: sendServerRequest,
   tagTypes: ["Dashboard", "Activity", "Organization", "User"],
   keepUnusedDataFor: 300,
   refetchOnFocus: true,
@@ -104,7 +104,7 @@ export const dataApi = createApi({
   endpoints: (builder) => ({
     publicDashboard: builder.query<PublicDashboardPayload, ClassSelection | null>({
       query: (selection) => ({
-        url: `/api/views/public-dashboard${queryString(selection ?? undefined)}`,
+        url: `/api/views/public-dashboard${buildQueryString(selection ?? undefined)}`,
       }),
       providesTags: ["Dashboard", "Activity", "Organization"],
     }),
@@ -117,7 +117,7 @@ export const dataApi = createApi({
       providesTags: ["Dashboard", "Activity", "Organization", "User"],
     }),
     adminUsers: builder.query<AdminUsersPayload, AdminUsersRequest>({
-      query: (request) => ({ url: `/api/views/admin-users${queryString(request)}` }),
+      query: (request) => ({ url: `/api/views/admin-users${buildQueryString(request)}` }),
       providesTags: ["User", "Organization"],
     }),
     organization: builder.query<OrganizationPayload, void>({
@@ -130,19 +130,19 @@ export const dataApi = createApi({
     }),
     batches: builder.query<Batch[], string | void>({
       query: (departmentId) => ({
-        url: `/api/batches${queryString({ departmentId: departmentId || undefined })}`,
+        url: `/api/batches${buildQueryString({ departmentId: departmentId || undefined })}`,
       }),
       providesTags: ["Organization"],
     }),
     sections: builder.query<Section[], string | void>({
       query: (batchId) => ({
-        url: `/api/sections${queryString({ batchId: batchId || undefined })}`,
+        url: `/api/sections${buildQueryString({ batchId: batchId || undefined })}`,
       }),
       providesTags: ["Organization"],
     }),
     activities: builder.query<Activity[], ActivityFilter | void>({
       query: (filter) => ({
-        url: `/api/activities${filter ? queryString(filter) : ""}`,
+        url: `/api/activities${filter ? buildQueryString(filter) : ""}`,
       }),
       providesTags: ["Activity"],
     }),
@@ -151,13 +151,13 @@ export const dataApi = createApi({
       { selection: ClassSelection; month: string }
     >({
       query: ({ selection, month }) => ({
-        url: `/api/views/calendar${queryString({ ...selection, month })}`,
+        url: `/api/views/calendar${buildQueryString({ ...selection, month })}`,
       }),
       providesTags: ["Activity"],
     }),
     navigation: builder.query<{ hasActiveExams: boolean }, ClassSelection>({
       query: (selection) => ({
-        url: `/api/views/navigation${queryString(selection)}`,
+        url: `/api/views/navigation${buildQueryString(selection)}`,
       }),
       providesTags: ["Activity"],
     }),
@@ -289,9 +289,9 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useResetUserPasswordMutation,
-} = dataApi;
+} = serverApi;
 
-export function getApiError(error: unknown): string {
+export function getServerErrorMessage(error: unknown): string {
   const apiError = error as ApiError | undefined;
   return apiError?.data?.error ?? (error instanceof Error ? error.message : "Request failed");
 }

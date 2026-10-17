@@ -1,10 +1,9 @@
 "use client";
 
-import { ACTIVITY_COLOR, type Activity } from "@/types";
+import { ACTIVITY_COLOR, ACTIVITY_LABEL, type Activity } from "@/types";
 import { formatAppDate, formatAppTime } from "@/lib/date-utils";
 import { MapPin, Clock, Calendar, BookOpen, FileText, Layers, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { activityLabel } from "./ActivityCard";
 
 interface Props {
   activity: Activity | null;
@@ -28,7 +27,7 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-none border border-border/80 bg-secondary/80 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-foreground shrink-0">
               <span className="h-1.5 w-1.5 rounded-none shrink-0" style={{ background: color }} />
-              {activityLabel(activity.activityType)}
+              {ACTIVITY_LABEL[activity.activityType]}
             </span>
 
             {(!activity.sectionId || activity.sectionId === "all") && (

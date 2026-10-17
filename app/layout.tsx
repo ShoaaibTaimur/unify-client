@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "@/components/providers";
+import { ApplicationProviders } from "@/lib/state";
 import { RootLayout } from "@/components/layout/RootLayout";
 import { Analytics } from "@vercel/analytics/react";
 import { Geist } from "next/font/google";
@@ -47,9 +47,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body>
-        <Providers>
+        <ApplicationProviders>
           <RootLayout>{children}</RootLayout>
-        </Providers>
+        </ApplicationProviders>
         <Analytics />
       </body>
     </html>

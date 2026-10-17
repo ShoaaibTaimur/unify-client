@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Building2, Layers, GraduationCap, Pencil, Trash2 } from "lucide-react";
 import {
-  getApiError,
+  getServerErrorMessage,
   useCreateBatchMutation,
   useCreateDepartmentMutation,
   useCreateSectionMutation,
@@ -33,7 +33,7 @@ import {
   useUpdateBatchMutation,
   useUpdateDepartmentMutation,
   useUpdateSectionMutation,
-} from "@/lib/store/api-slice";
+} from "@/lib/state/server-api";
 
 export function AdminOrgView() {
   const organization = useOrganizationQuery();
@@ -61,7 +61,7 @@ export function AdminOrgView() {
       toast.success("Department created");
       setDepName("");
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       }
     },
   };
@@ -76,7 +76,7 @@ export function AdminOrgView() {
       toast.success("Batch created");
       setBatchName("");
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       }
     },
   };
@@ -92,7 +92,7 @@ export function AdminOrgView() {
       toast.success("Section created");
       setSecName("");
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       }
     },
   };
@@ -122,7 +122,7 @@ export function AdminOrgView() {
         toast.success("Updated successfully");
         setEditingItem(null);
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       } finally {
         setUpdating(false);
       }
@@ -141,7 +141,7 @@ export function AdminOrgView() {
         toast.success("Deleted successfully");
         setDeletingItem(null);
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       } finally {
         setDeleting(false);
       }

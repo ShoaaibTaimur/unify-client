@@ -1,14 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ACTIVITY_COLOR, ACTIVITY_TYPES, type Activity, type ActivityType } from "@/types";
+import { ACTIVITY_COLOR, ACTIVITY_LABEL, type Activity } from "@/types";
 import { formatAppDate, formatAppTime } from "@/lib/date-utils";
 import { MapPin, Clock } from "lucide-react";
 import { ActivityDetailsDialog } from "./ActivityDetailsDialog";
-
-export function activityLabel(t: ActivityType) {
-  return ACTIVITY_TYPES.find((x) => x.value === t)?.label ?? t;
-}
 
 export function ActivityCard({
   activity,
@@ -44,7 +40,7 @@ export function ActivityCard({
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-primary flex items-center gap-1.5 shrink-0">
               <span className="h-1.5 w-1.5 rounded-none shrink-0" style={{ background: color }} />
-              {activityLabel(activity.activityType)}
+              {ACTIVITY_LABEL[activity.activityType]}
             </span>
             <span className="text-muted-foreground/40 font-mono text-xs">/</span>
             <span className="font-mono text-[11px] font-semibold text-foreground/90 tracking-wide truncate">

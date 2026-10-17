@@ -5,7 +5,9 @@ import type { ClassSelection } from "@/types";
 
 const CLASS_KEY = "unify_class";
 
-export { hasSelectedClass } from "./utils";
+export function hasSelectedClass(selection: ClassSelection | null): boolean {
+  return Boolean(selection?.departmentId && selection.batchId);
+}
 
 let cachedRaw: string | null = null;
 let cachedParsed: ClassSelection | null = null;
@@ -32,16 +34,6 @@ export function setClassSelection(sel: ClassSelection) {
     document.cookie = `${CLASS_KEY}=${encodeURIComponent(
       cachedRaw
     )}; path=/; max-age=31536000; SameSite=Lax`;
-  }
-  window.dispatchEvent(new Event("unify:class-changed"));
-}
-
-export function clearClassSelection() {
-  cachedRaw = null;
-  cachedParsed = null;
-  localStorage.removeItem(CLASS_KEY);
-  if (typeof document !== "undefined") {
-    document.cookie = `${CLASS_KEY}=; path=/; max-age=0; SameSite=Lax`;
   }
   window.dispatchEvent(new Event("unify:class-changed"));
 }
@@ -81,5 +73,3 @@ export function useClassSelection(initial?: ClassSelection | null) {
 
   return { cls, loaded };
 }
-
-

@@ -1,5 +1,4 @@
 import { format, parseISO, isValid } from "date-fns";
-import type { Activity, User } from "@/types";
 
 /**
  * Safely parses any date representation without unintended timezone day-shifts.
@@ -35,7 +34,7 @@ export function parseAppDate(dateInput?: string | Date | null): Date | null {
 /**
  * Extracts hour and minute numbers from strings like "14:30", "09:00", "2:30 PM", "9:00 AM".
  */
-export function parseTimeComponents(timeStr?: string | null): { hours: number; minutes: number } | null {
+function parseTimeComponents(timeStr?: string | null): { hours: number; minutes: number } | null {
   if (!timeStr) return null;
   let raw = String(timeStr).trim();
   if (!raw) return null;
@@ -78,7 +77,7 @@ export function parseTimeComponents(timeStr?: string | null): { hours: number; m
 /**
  * Formats hours (0-23) and minutes (0-59) into strict 12-hour AM/PM string, e.g. "9:00 AM", "2:30 PM".
  */
-export function format12Hour(hours: number, minutes: number): string {
+function format12Hour(hours: number, minutes: number): string {
   const period = hours >= 12 ? "PM" : "AM";
   const h12 = hours % 12 === 0 ? 12 : hours % 12;
   const mStr = String(minutes).padStart(2, "0");
@@ -182,40 +181,5 @@ export function formatAppDate(
   const parsed = parseAppDate(dateInput);
   if (!parsed) return "";
   return format(parsed, pattern);
-}
-
-/**
- * Computes the expiry Date of an activity.
- * Scheduled activities with a time expire exactly 1 hour after their start time.
- * Activities without a time or exams expire at the end of the day (23:59:59.999).
- */
-export function getActivityExpiryTime(activity: Activity): Date {
-  const baseDate = parseAppDate(activity.endDate ?? activity.startDate ?? activity.date) || new Date();
-  if (activity.time) {
-    const comp = parseTimeComponents(activity.time);
-    if (comp) {
-      const start = new Date(baseDate);
-      start.setHours(comp.hours, comp.minutes, 0, 0);
-      // Expires 1 hour after scheduled start time
-      return new Date(start.getTime() + 60 * 60 * 1000);
-    }
-  }
-
-  // Date-only without time expires at end of day
-  return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 23, 59, 59, 999);
-}
-
-/**
- * Checks if an activity has expired (more than 1 hour past its scheduled time).
- */
-export function isActivityExpired(activity: Activity, now = new Date()): boolean {
-  return now.getTime() > getActivityExpiryTime(activity).getTime();
-}
-
-/**
- * Determines whether a user has staff privileges (admin, teacher, cr).
- */
-export function isStaffUser(user?: User | null): boolean {
-  return Boolean(user && (user.role === "admin" || user.role === "teacher" || user.role === "cr"));
 }
 

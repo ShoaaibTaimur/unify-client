@@ -12,8 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import type { Activity } from "@/types";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
-import { getApiError, useActivitiesQuery, useClearActivitiesMutation, useDeleteActivityMutation } from "@/lib/store/api-slice";
+import { useAuth } from "@/lib/state";
+import { getServerErrorMessage, useActivitiesQuery, useClearActivitiesMutation, useDeleteActivityMutation } from "@/lib/state/server-api";
 
 export function AdminActivitiesView() {
   const { user } = useAuth();
@@ -30,7 +30,7 @@ export function AdminActivitiesView() {
       await deleteActivity(activity.id).unwrap();
       toast.success("Activity deleted");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getServerErrorMessage(error));
     }
   };
 
@@ -40,7 +40,7 @@ export function AdminActivitiesView() {
       toast.success(`Cleared all ${res.deletedCount} activities`);
       setConfirmClearAll(false);
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getServerErrorMessage(error));
     }
   };
 

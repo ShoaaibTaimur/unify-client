@@ -16,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { getApiError, useActivitiesQuery } from "@/lib/store/api-slice";
+import { getServerErrorMessage, useActivitiesQuery } from "@/lib/state/server-api";
 
 export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection | null } = {}) {
   const { cls, loaded } = useClassSelection(initialClass);
@@ -55,7 +55,7 @@ export function ActivitiesView({ initialClass }: { initialClass?: ClassSelection
     return (
       <div className="mx-auto max-w-md py-24 text-center">
         <p className="text-sm font-medium text-destructive">Failed to load activities.</p>
-        <p className="mt-1 text-xs text-muted-foreground">{getApiError(activities.error)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{getServerErrorMessage(activities.error)}</p>
         <button
           onClick={() => activities.refetch()}
           className="mt-4 rounded-[4px] bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"

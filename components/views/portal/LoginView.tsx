@@ -5,14 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import { PasswordInput } from "@/components/common/PasswordInput";
-import { getSafeRedirectUrl, isRoleAuthorized } from "@/lib/auth/redirect";
+import { getSafeRedirectUrl, isRoleAuthorized } from "@/lib/auth-client";
 
 const loginSchema = z.object({
   email: z

@@ -13,8 +13,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
-import { useAuth } from "@/lib/auth";
-import { useNavigationQuery } from "@/lib/store/api-slice";
+import { useAuth } from "@/lib/state";
+import { useNavigationQuery } from "@/lib/state/server-api";
 import {
   Menu,
   LayoutDashboard,

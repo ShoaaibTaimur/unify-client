@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/state";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { KeyRound, Lock, ArrowRight, ArrowLeft } from "lucide-react";

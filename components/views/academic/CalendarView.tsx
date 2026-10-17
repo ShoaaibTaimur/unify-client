@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
-import { useCalendarQuery } from "@/lib/store/api-slice";
+import { useCalendarQuery } from "@/lib/state/server-api";
 import {
   addMonths,
   format,
   subMonths,
 } from "date-fns";
-import { ACTIVITY_COLOR, type Activity, type ClassSelection } from "@/types";
+import { ACTIVITY_COLOR, ACTIVITY_LABEL, type Activity, type ActivityType, type ClassSelection } from "@/types";
 import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog";
 import { PageLoader } from "@/components/common/PageLoader";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,6 @@ import {
   Clock,
 } from "lucide-react";
 import { parseAppDate, formatAppTime } from "@/lib/date-utils";
-import { activityLabel } from "@/components/activities/ActivityCard";
 import { ActivityDetailsDialog } from "@/components/activities/ActivityDetailsDialog";
 import {
   Dialog,
@@ -147,7 +146,7 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                           setSelectedActivity(a);
                         }}
                         className="flex items-center gap-1.5 truncate rounded-none px-1.5 py-0.5 font-mono text-[10px] transition-colors bg-secondary/80 hover:bg-primary/15 hover:text-primary hover:border-primary/50 border border-border/70 text-foreground cursor-pointer"
-                        title={`${activityLabel(a.activityType)} — ${a.subject} (${a.title})`}
+                        title={`${ACTIVITY_LABEL[a.activityType]} — ${a.subject} (${a.title})`}
                       >
                         <span
                           className="h-1.5 w-1.5 rounded-none shrink-0"
@@ -179,7 +178,7 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                 className="h-2.5 w-2.5 rounded-full"
                 style={{ background: v }}
               />
-              {activityLabel(k as never)}
+              {ACTIVITY_LABEL[k as ActivityType]}
             </span>
           ))}
         </div>
@@ -236,7 +235,7 @@ export function CalendarView({ initialClass }: { initialClass?: ClassSelection |
                         className="h-1.5 w-1.5 rounded-full shrink-0"
                         style={{ background: ACTIVITY_COLOR[act.activityType] }}
                       />
-                      {activityLabel(act.activityType)}
+                      {ACTIVITY_LABEL[act.activityType]}
                     </span>
                     <div className="flex items-center gap-2">
                       {formatAppTime(act.time, act.startDate ? null : act.date) && (

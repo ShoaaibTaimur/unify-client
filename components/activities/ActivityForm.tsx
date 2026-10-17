@@ -16,13 +16,13 @@ import { CalendarIcon, ClockIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import {
-  getApiError,
+  getServerErrorMessage,
   useBatchesQuery,
   useCreateActivityMutation,
   useDepartmentsQuery,
   useSectionsQuery,
   useUpdateActivityMutation,
-} from "@/lib/store/api-slice";
+} from "@/lib/state/server-api";
 
 interface Props {
   open: boolean;
@@ -137,7 +137,7 @@ export function ActivityFormDialog({ open, onOpenChange, editing, fixed, chooseB
         toast.success(editing ? "Activity updated" : "Activity created");
         onOpenChange(false);
       } catch (error) {
-        toast.error(getApiError(error));
+        toast.error(getServerErrorMessage(error));
       }
     },
   };

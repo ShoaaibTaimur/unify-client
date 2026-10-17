@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/state";
 import { Logo } from "@/components/layout/Logo";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";

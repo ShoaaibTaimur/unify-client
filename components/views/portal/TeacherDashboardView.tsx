@@ -24,8 +24,8 @@ import {
 } from "lucide-react";
 import type { Activity } from "@/types";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
-import { getApiError, useDeleteActivityMutation, usePortalDashboardQuery } from "@/lib/store/api-slice";
+import { useAuth } from "@/lib/state";
+import { getServerErrorMessage, useDeleteActivityMutation, usePortalDashboardQuery } from "@/lib/state/server-api";
 
 export function TeacherDashboardView() {
   const { user: sessionUser } = useAuth();
@@ -48,7 +48,7 @@ export function TeacherDashboardView() {
       await deleteActivity(activity.id).unwrap();
       toast.success("Activity deleted");
     } catch (error) {
-      toast.error(getApiError(error));
+      toast.error(getServerErrorMessage(error));
     }
   };
 

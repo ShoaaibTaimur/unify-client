@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { CsvRequest } from "@/types";
-import { getApiError, useImportActivitiesCsvMutation, usePreviewActivitiesCsvMutation } from "@/lib/store/api-slice";
+import { getServerErrorMessage, useImportActivitiesCsvMutation, usePreviewActivitiesCsvMutation } from "@/lib/state/server-api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload } from "lucide-react";
@@ -36,7 +36,7 @@ export function CsvImportDialog({ open, onOpenChange, defaultDepartmentId, defau
     setFileName(file.name);
     setRequest(payload);
     try { await previewCsv(payload).unwrap(); }
-    catch (error) { toast.error(getApiError(error)); }
+    catch (error) { toast.error(getServerErrorMessage(error)); }
   };
 
   const submit = async () => {
@@ -48,7 +48,7 @@ export function CsvImportDialog({ open, onOpenChange, defaultDepartmentId, defau
       setRequest(null);
       setFileName("");
       preview.reset();
-    } catch (error) { toast.error(getApiError(error)); }
+    } catch (error) { toast.error(getServerErrorMessage(error)); }
   };
 
   const report = preview.data;

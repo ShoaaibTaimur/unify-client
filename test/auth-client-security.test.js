@@ -20,8 +20,8 @@ function jsonResponse(status, body) {
 
 test("production authentication client security controls", async (t) => {
   const originalFetch = globalThis.fetch;
-  const { authClient, AuthClientError } = await import("../lib/auth/client.ts");
-  const { getSafeRedirectUrl, isRoleAuthorized } = await import("../lib/auth/redirect.ts");
+  const { authClient, AuthClientError } = await import("../lib/auth-client.ts");
+  const { getSafeRedirectUrl, isRoleAuthorized } = await import("../lib/auth-client.ts");
 
   t.after(() => {
     globalThis.fetch = originalFetch;

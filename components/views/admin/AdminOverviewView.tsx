@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ActivityCard } from "@/components/activities/ActivityCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAdminOverviewQuery } from "@/lib/store/api-slice";
+import { useAdminOverviewQuery } from "@/lib/state/server-api";
 
 export function AdminOverviewView() {
   const overview = useAdminOverviewQuery();

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { hasSelectedClass, setClassSelection, useClassSelection } from "@/lib/session";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/state";
 import type { Activity, ClassSelection, User } from "@/types";
 import { ClassSelectionDialog } from "@/components/academic/ClassSelectionDialog";
 import { ActivityCard } from "@/components/activities/ActivityCard";
@@ -13,7 +13,7 @@ import { differenceInSeconds } from "date-fns";
 import { formatAppDate, formatAppTime, combineDateAndTime } from "@/lib/date-utils";
 import { ArrowRight, PartyPopper, Settings2, ExternalLink, Clock, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getApiError, usePublicDashboardQuery } from "@/lib/store/api-slice";
+import { getServerErrorMessage, usePublicDashboardQuery } from "@/lib/state/server-api";
 
 function nextActivityDate(a: Activity): Date {
   return combineDateAndTime(a.startDate ?? a.date, a.time);
@@ -94,7 +94,7 @@ export function HomeView({
     return (
       <div className="mx-auto max-w-md py-24 text-center">
         <p className="text-sm font-medium text-destructive">Failed to load activities.</p>
-        <p className="mt-1 text-xs text-muted-foreground">{getApiError(dashboard.error)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{getServerErrorMessage(dashboard.error)}</p>
         <button
           onClick={() => dashboard.refetch()}
           className="mt-4 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
