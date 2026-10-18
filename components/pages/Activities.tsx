@@ -28,7 +28,7 @@ export function ActivitiesContent() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(q.trim()), 250);
+    const timeout = setTimeout(() => setDebouncedSearch(q.trim()), 1500);//1.5sec for me to understand
     return () => clearTimeout(timeout);
   }, [q]);
 
