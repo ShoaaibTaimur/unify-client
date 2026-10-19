@@ -35,7 +35,6 @@ export function ActivityCard({
         className="group relative cursor-pointer overflow-hidden rounded-none border border-border bg-card transition-all duration-150 hover:border-primary/70 hover:shadow-xs active:bg-secondary/40 min-w-0 max-w-full pl-1"
       >
         <span aria-hidden className="absolute inset-y-0 left-0 w-1" style={{ background: activityType.color }} />
-        {/* Top Activity Header Bar */}
         <div className="flex items-center justify-between gap-2 border-b border-border/80 bg-secondary/35 px-3.5 py-1.5">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-primary flex items-center gap-1.5 shrink-0">
@@ -62,7 +61,6 @@ export function ActivityCard({
           </div>
         </div>
 
-        {/* Card Body */}
         <div className="p-3.5 sm:p-4">
           <h3 className="truncate font-display text-base font-semibold text-foreground group-hover:text-primary transition-colors tracking-tight">
             {activity.subject}
@@ -75,7 +73,6 @@ export function ActivityCard({
           )}
         </div>
 
-        {/* Bottom Metadata Cells */}
         <div className="border-t border-border/80 grid grid-cols-2 sm:grid-cols-3 divide-x divide-border/80 bg-secondary/15 text-xs">
           <div className="px-3 py-2 flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground min-w-0">
             <Clock className="h-3 w-3 shrink-0 text-muted-foreground/70" />

@@ -179,7 +179,6 @@ async function withRefreshLock(refresh: () => Promise<User | null>): Promise<Use
 }
 
 async function refreshInsideLock(): Promise<User | null> {
-  // Another tab may have refreshed while this tab waited for lock.
   const current = await getCurrentUserResponse();
   if (current.ok) {
     const data = await current.json();

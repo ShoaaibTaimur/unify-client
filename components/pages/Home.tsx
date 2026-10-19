@@ -102,7 +102,6 @@ export function HomeContent() {
         initial={cls}
       />
 
-      {/* Single Activity Details Modal */}
       <ActivityDetailsDialog
         activity={selectedNextActivity}
         open={!!selectedNextActivity}
@@ -111,7 +110,6 @@ export function HomeContent() {
         }}
       />
 
-      {/* HERO */}
       <section className="relative overflow-hidden border-b border-border bg-background blueprint-grid py-8 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
@@ -179,11 +177,8 @@ export function HomeContent() {
         </div>
       </section>
 
-      {/* CONTENT */}
       <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-16 pt-8 sm:px-6 lg:grid-cols-3 lg:px-8">
-        {/* Main feed */}
         <div className="min-w-0 max-w-full lg:col-span-2">
-          {/* Today */}
           <div className="flex items-center justify-between">
             <h2 className="font-display text-xl sm:text-2xl font-semibold">Today</h2>
             <span className="text-xs text-muted-foreground" suppressHydrationWarning>
@@ -210,7 +205,6 @@ export function HomeContent() {
             </div>
           )}
 
-          {/* Up next 2 */}
           <h2 className="mt-10 mb-3 font-display text-lg sm:text-xl font-semibold">
             Upcoming
           </h2>
@@ -240,7 +234,6 @@ export function HomeContent() {
           </div>
         </div>
 
-        {/* Countdown Sidebar */}
         <aside className="order-first min-w-0 max-w-full lg:order-last">
           {isDataLoading ? (
             <div className="sticky top-16 overflow-hidden rounded-none border border-border bg-card p-4">
@@ -258,7 +251,6 @@ export function HomeContent() {
               className={`sticky top-16 overflow-hidden rounded-none border border-border bg-card p-0 transition-colors duration-150 ${next ? "cursor-pointer hover:border-primary/80" : ""
                 }`}
             >
-              {/* Top Countdown Header Strip */}
               <div className="flex items-center justify-between gap-2 border-b border-border/80 bg-secondary/35 px-4 py-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="h-1.5 w-1.5 rounded-none bg-primary shrink-0" />
@@ -273,7 +265,6 @@ export function HomeContent() {
                 )}
               </div>
 
-              {/* Main Info */}
               <div className="p-4 sm:p-5">
                 {next ? (
                   <>
@@ -300,7 +291,6 @@ export function HomeContent() {
                 )}
               </div>
 
-              {/* Bottom Schedule Strip */}
               {next && (
                 <div className="border-t border-border/80 bg-secondary/15 px-4 py-2.5 flex items-center gap-2 font-mono text-[11px] text-muted-foreground" suppressHydrationWarning>
                   <Clock className="h-3 w-3 shrink-0 text-muted-foreground/70" />

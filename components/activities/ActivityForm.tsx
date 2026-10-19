@@ -27,9 +27,7 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   editing?: Activity | null;
   fixed?: { departmentId?: string; batchId?: string; sectionId?: string };
-  /** Teacher: allow choosing batch/section within their department. */
   chooseBatchSection?: boolean;
-  /** Admin: allow choosing department, batch and section. */
   chooseDepartment?: boolean;
 }
 
@@ -168,7 +166,6 @@ export function ActivityForm({ open, onOpenChange, editing, fixed, chooseBatchSe
 
           {!allowChooseBatchSection && (
             <Field label="Target Section">
-              {/* CR role: fixed.sectionId is always set — lock to their section only, no batch-wide option */}
               {fixedSectionId ? (
                 <div className="flex h-10 w-full items-center rounded-xl border border-border bg-muted/40 px-3 text-sm text-foreground/80">
                   My Section Only
@@ -246,7 +243,6 @@ export function ActivityForm({ open, onOpenChange, editing, fixed, chooseBatchSe
                 </Field>
               </div>
 
-              {/* Time Selection for Exams */}
               <div className="space-y-1.5 pt-1">
                 <label className="text-xs font-medium text-muted-foreground uppercase flex items-center gap-1">
                   <ClockIcon className="h-3.5 w-3.5 text-primary" /> Exam Time / Schedule
@@ -278,7 +274,6 @@ export function ActivityForm({ open, onOpenChange, editing, fixed, chooseBatchSe
                 <ClockIcon className="h-4 w-4 text-primary" /> Schedule Date & Time
               </div>
 
-              {/* Shadcn Calendar Date Picker & Presets */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-muted-foreground uppercase">Date</label>
@@ -331,7 +326,6 @@ export function ActivityForm({ open, onOpenChange, editing, fixed, chooseBatchSe
                 </Popover>
               </div>
 
-              {/* Time Selection & Presets */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase">Time</label>
                 <div className="flex items-center gap-2">

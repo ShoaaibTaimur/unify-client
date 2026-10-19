@@ -99,7 +99,6 @@ export function CalendarContent() {
           </div>
         </div>
 
-        {/* Grid */}
         <div className="mt-6 overflow-hidden rounded-none border border-border bg-card">
           <div className="grid grid-cols-7 border-b border-border bg-secondary/40 text-center font-mono text-[10px] uppercase tracking-[0.14em] font-bold text-muted-foreground">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
@@ -164,7 +163,6 @@ export function CalendarContent() {
           </div>
         </div>
 
-        {/* Legend */}
         <div className="mt-6 flex flex-wrap gap-3 text-xs text-muted-foreground">
           {Object.entries(ACTIVITY_TYPES).map(([value, activityType]) => (
             <span
@@ -180,7 +178,6 @@ export function CalendarContent() {
           ))}
         </div>
 
-        {/* Single Activity Details Modal */}
         <ActivityDetailsDialog
           activity={selectedActivity}
           open={!!selectedActivity}
@@ -189,7 +186,6 @@ export function CalendarContent() {
           }}
         />
 
-        {/* Selected Day Activities List Modal */}
         <Dialog
           open={!!selectedDay}
           onOpenChange={(v) => {

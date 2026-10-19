@@ -22,7 +22,6 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-none border border-border bg-card p-6 shadow-2xl">
-        {/* Header Block */}
         <DialogHeader className="space-y-2 text-left border-b border-border pb-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-none border border-border/80 bg-secondary/80 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-foreground shrink-0">
@@ -48,9 +47,7 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Key Information Panel */}
           <div className="rounded-none border border-border bg-card p-4 space-y-3">
-            {/* Date & Time */}
             <div className="flex items-start gap-3">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-none bg-primary/10 text-primary border border-primary/20">
                 <Calendar className="h-4 w-4" />
@@ -71,7 +68,6 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
               </div>
             </div>
 
-            {/* Room / Venue */}
             <div className="flex items-start gap-3 border-t border-border pt-3">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-none bg-primary/10 text-primary border border-primary/20">
                 <MapPin className="h-4 w-4" />
@@ -83,7 +79,6 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
             </div>
           </div>
 
-          {/* Conditional Seat Plan Link for Exams */}
           {isExam && (
             <a
               href="https://examsync.kiron.dev/"
@@ -108,7 +103,6 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
             </a>
           )}
 
-          {/* Description Section */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               <FileText className="h-3.5 w-3.5 text-primary" /> Description & Syllabus
@@ -127,7 +121,6 @@ export function ActivityDetailsDialog({ activity, open, onOpenChange }: Props) {
   );
 }
 
-/** Formats URLs into clickable links while preserving line breaks and whitespace */
 function formatDescription(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = text.split(urlRegex);

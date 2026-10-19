@@ -48,7 +48,6 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="flex h-12 items-stretch justify-between">
-        {/* Left: Logo & Navigation */}
         <div className="flex min-w-0 items-stretch">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -124,7 +123,6 @@ export function SiteHeader() {
             <Logo />
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden items-stretch md:flex">
             {NAV.map((n) => {
               const active = pathname === n.to;
@@ -157,7 +155,6 @@ export function SiteHeader() {
           </nav>
         </div>
 
-        {/* Right: Class Indicator, Theme Toggle & User CTA */}
         <div className="flex shrink-0 items-stretch">
           <div className="flex items-stretch border-l border-border">
             <ThemeToggle className="h-full w-12 rounded-none hover:bg-primary/15 hover:text-primary transition-colors" />

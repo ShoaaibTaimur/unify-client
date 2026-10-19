@@ -233,7 +233,6 @@ function UserTable({ users, role, pagination, onPageChange, onPageSizeChange }: 
           </table>
         </div>
 
-        {/* User Pagination Bar */}
         {totalItems > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border bg-secondary/20 px-4 py-2.5 font-mono text-xs">
             <div className="text-muted-foreground">

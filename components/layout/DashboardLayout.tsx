@@ -166,7 +166,6 @@ export function DashboardLayout({
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-30 h-12 border-b border-border bg-card/90 backdrop-blur-md">
         <div className="flex h-full items-stretch justify-between">
-          {/* Left: Hamburger + Logo + Desktop Nav */}
           <div className="flex items-stretch min-w-0">
             <div className="md:hidden flex items-stretch border-r border-border">
               <Sheet open={open} onOpenChange={setOpen}>
@@ -240,7 +239,6 @@ export function DashboardLayout({
             </nav>
           </div>
 
-          {/* Right: User identity, ThemeToggle, Sign out */}
           <div className="flex items-stretch shrink-0">
             <div className="hidden lg:flex items-center gap-2 px-3 border-l border-border font-mono text-[11px]">
               <span className="h-1.5 w-1.5 bg-primary shrink-0" />

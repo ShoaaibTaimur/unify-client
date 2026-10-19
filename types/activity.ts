@@ -22,12 +22,9 @@ export interface Activity {
   subject: string;
   room?: string;
   description?: string;
-  /** For normal activities: single date (ISO string or YYYY-MM-DD). */
   date?: string;
-  /** For multi-day periods (e.g. exams). */
   startDate?: string;
   endDate?: string;
-  /** Optional time string e.g. "10:00 AM" or "09:00" */
   time?: string;
 }
 
@@ -37,7 +34,6 @@ export interface ActivityFilter {
   sectionId?: string;
   activityType?: ActivityType;
   status?: "all" | "upcoming" | "completed";
-  search?: string;
 }
 
 export type ActivityStatusFilter = "all" | "upcoming" | "completed";

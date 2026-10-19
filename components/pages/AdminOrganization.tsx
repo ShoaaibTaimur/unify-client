@@ -141,7 +141,6 @@ export function AdminOrganizationContent() {
         </p>
       </div>
 
-      {/* Add forms */}
       <div className="grid gap-4 lg:grid-cols-3">
         <FormCard
           icon={Building2}
@@ -252,7 +251,6 @@ export function AdminOrganizationContent() {
         </FormCard>
       </div>
 
-      {/* Hierarchy view */}
       <div className="space-y-4 pt-4">
         <div>
           <h2 className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-foreground">
@@ -432,7 +430,6 @@ export function AdminOrganizationContent() {
         </div>
       </div>
 
-      {/* Edit Item Modal */}
       <Dialog
         open={!!editingItem}
         onOpenChange={(v) => {
@@ -478,7 +475,6 @@ export function AdminOrganizationContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Confirm Delete Dialog */}
       <ConfirmDeleteDialog
         open={!!deletingItem}
         onOpenChange={(open) => {

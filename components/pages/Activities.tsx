@@ -18,6 +18,8 @@ import {
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { getServerErrorMessage, useActivitiesQuery } from "@/lib/api";
 
+const DEBOUNCE_TIME = 1000;
+
 export function ActivitiesContent() {
   const { cls, loaded, needsSelection } = useClassSelection();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -28,7 +30,7 @@ export function ActivitiesContent() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(q.trim()), 1500);//1.5sec for me to understand
+    const timeout = setTimeout(() => setDebouncedSearch(q.trim()), DEBOUNCE_TIME);
     return () => clearTimeout(timeout);
   }, [q]);
 
@@ -38,12 +40,22 @@ export function ActivitiesContent() {
           ...cls,
           activityType: type === "all" ? undefined : type,
           status,
-          search: debouncedSearch || undefined,
         }
       : undefined,
     { skip: !hasSelectedClass(cls) }
   );
-  const filtered = activities.data ?? [];
+  const search = debouncedSearch.toLowerCase();
+  const filtered = search
+    ? (activities.data ?? []).filter((activity) =>
+        [
+          activity.title,
+          activity.subject,
+          activity.room,
+          activity.description,
+          ACTIVITY_TYPES[activity.activityType].label,
+        ].some((value) => value?.toLowerCase().includes(search))
+      )
+    : activities.data ?? [];
 
   const activeFilterCount = (type !== "all" ? 1 : 0) + (status !== "all" ? 1 : 0);
 
@@ -71,7 +83,6 @@ export function ActivitiesContent() {
         initial={cls}
       />
 
-      {/* Filter Modal Dialog */}
       <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
         <DialogContent className="sm:max-w-md rounded-[4px] border border-border bg-card p-6 shadow-2xs font-mono">
           <DialogHeader>
@@ -84,7 +95,6 @@ export function ActivitiesContent() {
           </DialogHeader>
 
           <div className="space-y-5 py-3">
-            {/* Timeline / Status */}
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-foreground">
                 Timeline Status
@@ -107,7 +117,6 @@ export function ActivitiesContent() {
               </div>
             </div>
 
-            {/* Activity Type */}
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-foreground">
                 Activity Type
@@ -180,7 +189,6 @@ export function ActivitiesContent() {
           </p>
         </div>
 
-        {/* Search bar + Filter Dialog Button */}
         <div className="mt-6 flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
@@ -211,7 +219,6 @@ export function ActivitiesContent() {
           </Button>
         </div>
 
-        {/* Active filter summary pill bar */}
         {(activeFilterCount > 0 || q) && (
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
             <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Active filters:</span>
@@ -264,7 +271,6 @@ export function ActivitiesContent() {
           </div>
         )}
 
-        {/* Activities List */}
         <div className="mt-6 space-y-3">
           {((!loaded) || (hasSelectedClass(cls) && activities.isLoading && !activities.data)) ? (
             [1, 2, 3, 4, 5].map((i) => <div key={i} className="h-24 w-full bg-muted/50 border border-border animate-pulse rounded-[4px]" />)

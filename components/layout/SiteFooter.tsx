@@ -70,7 +70,6 @@ function MadeByDialog() {
             rel="noopener noreferrer"
             className="group flex flex-col items-center gap-3 rounded-[4px] border border-border bg-secondary/30 p-6 shadow-2xs transition-colors hover:border-primary/50 hover:bg-secondary/60 w-full"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/devmotive_logo.png"
               alt="DevMotive logo"
