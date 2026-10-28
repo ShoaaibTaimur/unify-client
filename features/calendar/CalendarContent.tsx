@@ -9,7 +9,7 @@ import {
   subMonths,
 } from "date-fns";
 import { ACTIVITY_TYPES, type Activity } from "@/types/activity";
-import { ClassSelectionDialog } from "@/features/class-selection/components/ClassSelectionDialog";
+import { ClassSelectionDialog } from "@/features/class-selection/ClassSelectionDialog";
 import { PageLoader } from "@/components/common/PageLoader";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +20,7 @@ import {
   Clock,
 } from "lucide-react";
 import { parseAppDate, formatAppTime } from "@/lib/date-utils";
-import { ActivityDetailsDialog } from "@/features/activities/components/ActivityDetailsDialog";
+import { ActivityDetailsDialog } from "@/features/activities/ActivityDetailsDialog";
 import {
   Dialog,
   DialogContent,

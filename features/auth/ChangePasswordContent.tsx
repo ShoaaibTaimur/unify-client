@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/state";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { KeyRound, Lock, ArrowRight, ArrowLeft } from "lucide-react";
-import { PasswordInput } from "@/features/auth/components/PasswordInput";
+import { PasswordInput } from "@/features/auth/PasswordInput";
 import { getDashboardPath } from "@/lib/auth-client";
 
 const changePasswordSchema = z

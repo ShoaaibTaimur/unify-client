@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminOrganizationContent } from "@/features/admin/components/AdminOrganizationContent";
+import { AdminOrganizationContent } from "@/features/admin/AdminOrganizationContent";
 
 export const metadata: Metadata = {
   title: "Organization Structure — Admin Console",

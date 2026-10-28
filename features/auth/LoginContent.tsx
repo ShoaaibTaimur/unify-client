@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
-import { PasswordInput } from "@/features/auth/components/PasswordInput";
+import { PasswordInput } from "@/features/auth/PasswordInput";
 import { getDashboardPath, getSafeRedirectUrl, isRoleAuthorized } from "@/lib/auth-client";
 
 const loginSchema = z.object({

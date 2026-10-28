@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminOverviewContent } from "@/features/admin/components/AdminOverviewContent";
+import { AdminOverviewContent } from "@/features/admin/AdminOverviewContent";
 
 export const metadata: Metadata = {
   title: "Admin Console — UNIFY",

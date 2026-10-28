@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ChangePasswordContent } from "@/features/auth/components/ChangePasswordContent";
+import { ChangePasswordContent } from "@/features/auth/ChangePasswordContent";
 
 export const metadata: Metadata = {
   title: "Change Password — UNIFY",

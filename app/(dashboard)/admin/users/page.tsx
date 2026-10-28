@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminUsersContent } from "@/features/admin/components/AdminUsersContent";
+import { AdminUsersContent } from "@/features/admin/AdminUsersContent";
 
 export const metadata: Metadata = {
   title: "Manage Users — Admin Console",

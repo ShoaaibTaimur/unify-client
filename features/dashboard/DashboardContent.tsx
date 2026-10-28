@@ -5,8 +5,8 @@ import Link from "next/link";
 import {
   ActivityForm,
   ManageActivitiesTable,
-} from "@/features/activities/components/ActivityForm";
-import { CsvImportDialog } from "@/features/activities/components/CsvImportDialog";
+} from "@/features/activities/ActivityForm";
+import { CsvImportDialog } from "@/features/activities/CsvImportDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

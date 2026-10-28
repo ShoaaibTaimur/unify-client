@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import "../styles/globals.css";
 import { ApplicationProviders } from "@/lib/state";
 import { RootLayout } from "@/components/layout/RootLayout";
 import { Analytics } from "@vercel/analytics/react";

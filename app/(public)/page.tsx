@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { HomeContent } from "@/features/home/components/HomeContent";
+import { HomeContent } from "@/features/home/HomeContent";
 
 export const metadata: Metadata = {
-  title: "Dashboard — UNIFY Academic Portal",
+  title: "UNIFY Academic Portal",
   description: "Track today's, upcoming, and past academic activities for your university class.",
 };
 
