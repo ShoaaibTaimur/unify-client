@@ -67,10 +67,8 @@ const applicationState = configureStore({
 });
 setupListeners(applicationState.dispatch);
 
-type ApplicationDispatch = typeof applicationState.dispatch;
-
-const useApplicationDispatch = useDispatch.withTypes<ApplicationDispatch>();
-async function verifySession(dispatch: ApplicationDispatch) {
+const useApplicationDispatch = useDispatch.withTypes<typeof applicationState.dispatch>();
+async function verifySession(dispatch: typeof applicationState.dispatch) {
   dispatch(checkingSession());
   try {
     const { user } = await authClient.getSession();
