@@ -1,82 +1,143 @@
-# UNIFY — Academic Activity Management Portal
+# UNIFY Frontend
 
-![Next.js](https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
-![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript_5-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+Frontend for UNIFY, an academic activity portal for students, class representatives, teachers, and administrators. It provides public class schedules, role-based dashboards, activity management, organization management, and user administration.
 
-**UNIFY** is a modern, unified academic management portal designed for university students, Class Representatives (CRs), teachers, and administrators. It consolidates Class Tests (CTs), Labs, Viva, Assignments, and Term Exams into one intuitive dashboard — organized by **Department**, **Batch**, and **Section**.
+## Technology
 
----
+- Next.js 16 with App Router and Turbopack
+- React 19 and TypeScript 6
+- Tailwind CSS 4
+- Redux Toolkit and RTK Query
+- React Hook Form and Zod
+- Radix UI primitives and reusable local UI components
+- Lucide React icons
+- Sonner notifications
+- Vercel Analytics
 
-## ⚡ Tech Stack
+## Requirements
 
-- **Framework**: Next.js 15 (App Router)
-- **UI Library**: React 19, TypeScript 5
-- **Styling**: Tailwind CSS v4 (`@tailwindcss/postcss`), Shadcn UI, Radix Primitives
-- **Data & State**: TanStack React Query v5, Redux Toolkit session state, backend-owned HttpOnly auth cookies
-- **Icons & UI Utilities**: Lucide Icons, Date-fns v4, Sonner Toasts, Recharts
-- **Backend API**: Node.js, Express.js REST API, JWT Authentication, Zod
-- **Analytics & Hosting**: Vercel Analytics, Vercel Serverless
+- Node.js 20 or newer
+- npm
+- Running UNIFY backend API
 
----
+## Local setup
 
-## 🚀 Key Features
+From the `client` directory:
 
-- **Academic Activity Tracking**: See today's activities, interactive countdown card for next deadline (click for exam details), and upcoming deadlines across courses.
-- **Role-Based Access Control**:
-  - **Student**: View schedules, upcoming tests, assignment deadlines, and calendar events for their section.
-  - **Class Representative (CR)**: Create and update activities (Class Tests, Assignments, Labs, Viva) for their batch and section.
-  - **Teacher**: Manage academic schedules across their department.
-  - **Admin**: Full administrative management of departments, batches, sections, users, and system settings.
-- **Multiple Views**:
-  - **Class Dashboard**: Real-time overview of current and upcoming activities.
-  - **Activities Directory**: Comprehensive list with category filtering (CT, Assignment, Lab, Viva, Exam) and status tracking.
-  - **Calendar View**: Visual month timeline of all academic deadlines.
-  - **Admin & CR Consoles**: Dedicated management dashboards.
-- **Theme & Branding**: Custom Berry Maroon (`#8B003D`) & Dusty Rose (`#B8748A`) brand palette with full dark mode support. Zero FOUC/flash on reload.
-
----
-
-## ⚙️ Environment Variables
-
-### Client (`client/.env.local`)
-```env
-NEXT_PUBLIC_API_URL=https://unify-backend.vercel.app
-```
-
-### Server (`server/.env`)
-```env
-JWT_SECRET=your_secure_jwt_secret_key
-PORT=3001
-```
-
----
-
-## 📦 Getting Started
-
-### 1. Install dependencies & run client
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-The Next.js app will start locally at `http://localhost:3000`.
+The frontend runs at [http://localhost:3000](http://localhost:3000).
 
-### 2. Run server (Backend API)
-```bash
-cd ../server
-npm install
-npm run dev
+Set the backend origin in `.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-The API server will listen at `http://localhost:3001`.
+Do not include a trailing slash. Authentication uses backend-owned HttpOnly cookies, so the backend must allow credentialed requests from the frontend origin.
 
----
+## Scripts
 
-## 🔑 Demo Credentials
+```bash
+npm run dev       # Start development server with Turbopack
+npm run build     # Create production build with Turbopack
+npm run start     # Start production server
+npm run lint      # Lint application source
+npm test          # Run Node test suite
+```
 
-- **Admin**: `admin@unify.edu` / `password`
-- **CR**: `cr@unify.edu` / `password`
-- **Teacher**: `teacher@unify.edu` / `password`
+Run a full local check with:
+
+```bash
+npm run lint
+npm test
+npx tsc --noEmit --incremental false
+npm run build
+```
+
+## Routes
+
+Route groups organize files without changing URLs.
+
+### Public routes
+
+- `/` - class activity overview
+- `/activities` - filtered activity directory
+- `/calendar` - monthly activity calendar
+
+### Authentication routes
+
+- `/login` - portal sign-in
+- `/change-password` - required or voluntary password update
+
+### Dashboard routes
+
+- `/cr` - class representative dashboard
+- `/teacher` - teacher dashboard
+- `/admin` - administrator overview
+- `/admin/activities` - university-wide activity management
+- `/admin/organization` - department, batch, and section management
+- `/admin/users` - account and role management
+
+## Project structure
+
+```text
+client/
+|-- app/
+|   |-- (public)/            Public route group
+|   |-- (auth)/              Authentication route group
+|   `-- (dashboard)/         Role-protected dashboard route group
+|-- components/
+|   |-- common/              Shared application components
+|   |-- layout/              Site and dashboard layouts
+|   `-- ui/                  Reusable UI primitives
+|-- features/                Domain-specific screens and components
+|   |-- activities/
+|   |-- admin/
+|   |-- auth/
+|   |-- calendar/
+|   |-- class-selection/
+|   |-- dashboard/
+|   `-- home/
+|-- lib/                     API, authentication, state, and utilities
+|-- public/                  Static assets
+|-- styles/                  Global CSS and Tailwind theme styles
+|-- test/                    Node tests
+`-- types/                   Shared TypeScript declarations
+```
+
+Keep route files small. Route files should define metadata and render a feature component. Feature-specific code belongs in `features/<feature>`. Components used across features belong in `components`. Shared declarations belong in `types`.
+
+## Application architecture
+
+### Data and state
+
+`lib/api.ts` defines the RTK Query API layer. Queries cache dashboard, activity, organization, and user data. Mutations invalidate relevant cache tags.
+
+`lib/state.tsx` creates the Redux store, verifies the current session, provides application state, and listens for server-sent update events. Live updates invalidate affected RTK Query data.
+
+### Authentication
+
+`lib/auth-client.ts` communicates with backend authentication endpoints using credentialed requests. Access and refresh tokens remain in HttpOnly cookies rather than browser-managed tokens. Session refresh is coordinated across tabs, and authentication changes are synchronized through `BroadcastChannel`.
+
+Dashboard layouts enforce role access for `admin`, `cr`, and `teacher`. Users marked for a password change are redirected to `/change-password`.
+
+### Styling
+
+Global styles live in `styles/globals.css`. Tailwind CSS is configured through `postcss.config.mjs`. Theme preference is stored under `unify_theme`, with system preference used when no saved theme exists.
+
+### Imports
+
+Use the `@/` alias for paths relative to the `client` directory:
+
+```ts
+import { ActivitiesContent } from "@/features/activities/ActivitiesContent";
+```
+
+## Deployment
+
+The project is configured for Vercel through `vercel.json`. Configure `NEXT_PUBLIC_API_URL` in the deployment environment before building. The production backend must permit credentialed requests from the deployed frontend origin and use cookie settings appropriate for HTTPS and the selected domains.

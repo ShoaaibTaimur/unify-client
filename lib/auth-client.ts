@@ -1,11 +1,21 @@
 import type { AuthErrorKind, AuthEvent, AuthEventListener, AuthSession, LoginCredentials, Role, User } from "@/types/auth";
 
+const REDIRECT_BASE = "https://unify.invalid";
+
 export function getSafeRedirectUrl(target: string | null): string | null {
-  if (!target) return null;
-  if (target === "/login" || target.startsWith("/login?") || target === "/change-password") return null;
-  return target.startsWith("/") && !target.startsWith("//") && !target.includes("\\")
-    ? target
-    : null;
+  if (!target || !target.startsWith("/")) return null;
+  // Browsers strip tabs/newlines and treat "\" as "/", so "/\t/evil.com" would become "//evil.com".
+  // Resolve the path the way the browser will and keep it only if it stays on this origin.
+  if (/[\u0000-\u001f\u007f\\]/.test(target)) return null;
+  let url: URL;
+  try {
+    url = new URL(target, REDIRECT_BASE);
+  } catch {
+    return null;
+  }
+  if (url.origin !== REDIRECT_BASE) return null;
+  if (url.pathname === "/login" || url.pathname === "/change-password") return null;
+  return `${url.pathname}${url.search}${url.hash}`;
 }
 
 export function isRoleAuthorized(role: Role, target: string): boolean {

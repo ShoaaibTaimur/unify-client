@@ -44,10 +44,10 @@ export function LoginContent() {
   useEffect(() => {
     if (!sessionPending && currentSessionUser) {
       const fromParam = getSafeRedirectUrl(searchParams.get("from") || searchParams.get("redirect"));
-      if (fromParam && isRoleAuthorized(currentSessionUser.role, fromParam)) {
+      if (fromParam && isRoleAuthorized(currentSessionUser?.role, fromParam)) {
         router.replace(fromParam);
       } else {
-        router.replace(getDashboardPath(currentSessionUser.role));
+        router.replace(getDashboardPath(currentSessionUser?.role));
       }
     }
   }, [currentSessionUser, sessionPending, searchParams, router]);

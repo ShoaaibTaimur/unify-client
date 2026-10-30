@@ -33,6 +33,10 @@ test("production authentication client security controls", async (t) => {
     assert.equal(getSafeRedirectUrl("//evil.example"), null);
     assert.equal(getSafeRedirectUrl("/\\evil.example"), null);
     assert.equal(getSafeRedirectUrl("/login?from=/admin"), null);
+    assert.equal(getSafeRedirectUrl("/\t/evil.example"), null);
+    assert.equal(getSafeRedirectUrl("/\n/evil.example"), null);
+    assert.equal(getSafeRedirectUrl("/%2F/evil.example"), "/%2F/evil.example");
+    assert.equal(getSafeRedirectUrl("/cr?tab=upcoming#today"), "/cr?tab=upcoming#today");
     assert.equal(isRoleAuthorized("student", "/admin"), false);
     assert.equal(isRoleAuthorized("admin", "/admin/users"), true);
   });
