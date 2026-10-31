@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DashboardContent } from "@/features/dashboard/DashboardContent";
+import { DashboardContent } from "@/components/features/dashboard/DashboardContent";
 
 export const metadata: Metadata = {
   title: "Teacher Dashboard — UNIFY",

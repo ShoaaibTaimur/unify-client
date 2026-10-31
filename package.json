@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint app components features lib types",
+    "lint": "eslint app components lib types",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {

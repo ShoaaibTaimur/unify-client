@@ -93,16 +93,16 @@ client/
 |   `-- (dashboard)/         Role-protected dashboard route group
 |-- components/
 |   |-- common/              Shared application components
+|   |-- features/            Domain-specific screens and components
+|   |   |-- activities/
+|   |   |-- admin/
+|   |   |-- auth/
+|   |   |-- calendar/
+|   |   |-- class-selection/
+|   |   |-- dashboard/
+|   |   `-- home/
 |   |-- layout/              Site and dashboard layouts
 |   `-- ui/                  Reusable UI primitives
-|-- features/                Domain-specific screens and components
-|   |-- activities/
-|   |-- admin/
-|   |-- auth/
-|   |-- calendar/
-|   |-- class-selection/
-|   |-- dashboard/
-|   `-- home/
 |-- lib/                     API, authentication, state, and utilities
 |-- public/                  Static assets
 |-- styles/                  Global CSS and Tailwind theme styles
@@ -110,7 +110,7 @@ client/
 `-- types/                   Shared TypeScript declarations
 ```
 
-Keep route files small. Route files should define metadata and render a feature component. Feature-specific code belongs in `features/<feature>`. Components used across features belong in `components`. Shared declarations belong in `types`.
+Keep route files small. Route files should define metadata and render a feature component. Feature-specific code belongs in `components/features/<feature>`. Components used across features belong in `components/common`, `components/layout`, or `components/ui`. Shared declarations belong in `types`.
 
 ## Application architecture
 
@@ -135,7 +135,7 @@ Global styles live in `styles/globals.css`. Tailwind CSS is configured through `
 Use the `@/` alias for paths relative to the `client` directory:
 
 ```ts
-import { ActivitiesContent } from "@/features/activities/ActivitiesContent";
+import { ActivitiesContent } from "@/components/features/activities/ActivitiesContent";
 ```
 
 ## Deployment

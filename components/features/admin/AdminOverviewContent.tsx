@@ -9,7 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ActivityCard } from "@/features/activities/ActivityCard";
+import { ActivityCard } from "@/components/features/activities/ActivityCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminOverviewQuery } from "@/lib/api";
 

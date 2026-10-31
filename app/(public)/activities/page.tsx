@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ActivitiesContent } from "@/features/activities/ActivitiesContent";
+import { ActivitiesContent } from "@/components/features/activities/ActivitiesContent";
 
 export const metadata: Metadata = {
   title: "All Activities — UNIFY",

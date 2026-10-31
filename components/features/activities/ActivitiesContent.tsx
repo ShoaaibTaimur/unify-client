@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { ACTIVITY_TYPES, type ActivityStatusFilter, type ActivityType } from "@/types/activity";
 import { hasSelectedClass, useClassSelection } from "@/lib/session";
-import { ActivityCard } from "@/features/activities/ActivityCard";
-import { ClassSelectionDialog } from "@/features/class-selection/ClassSelectionDialog";
+import { ActivityCard } from "@/components/features/activities/ActivityCard";
+import { ClassSelectionDialog } from "@/components/features/class-selection/ClassSelectionDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {

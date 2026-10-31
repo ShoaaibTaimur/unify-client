@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { HomeContent } from "@/features/home/HomeContent";
+import { HomeContent } from "@/components/features/home/HomeContent";
 
 export const metadata: Metadata = {
   title: "UNIFY Academic Portal",

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CalendarContent } from "@/features/calendar/CalendarContent";
+import { CalendarContent } from "@/components/features/calendar/CalendarContent";
 
 export const metadata: Metadata = {
   title: "Activity Calendar — UNIFY",

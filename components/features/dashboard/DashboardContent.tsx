@@ -2,9 +2,9 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ActivityForm } from "@/features/activities/ActivityForm";
-import { ManageActivitiesTable } from "@/features/activities/ManageActivitiesTable";
-import { CsvImportDialog } from "@/features/activities/CsvImportDialog";
+import { ActivityForm } from "@/components/features/activities/ActivityForm";
+import { ManageActivitiesTable } from "@/components/features/activities/ManageActivitiesTable";
+import { CsvImportDialog } from "@/components/features/activities/CsvImportDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

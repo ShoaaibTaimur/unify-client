@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ActivityForm } from "@/features/activities/ActivityForm";
-import { ManageActivitiesTable } from "@/features/activities/ManageActivitiesTable";
-import { CsvImportDialog } from "@/features/activities/CsvImportDialog";
+import { ActivityForm } from "@/components/features/activities/ActivityForm";
+import { ManageActivitiesTable } from "@/components/features/activities/ManageActivitiesTable";
+import { CsvImportDialog } from "@/components/features/activities/CsvImportDialog";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";

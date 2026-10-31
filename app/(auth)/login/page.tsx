@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { LoginContent } from "@/features/auth/LoginContent";
+import { LoginContent } from "@/components/features/auth/LoginContent";
 
 export const metadata: Metadata = {
   title: "Portal Sign In — UNIFY",
