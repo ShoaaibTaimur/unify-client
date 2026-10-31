@@ -134,7 +134,7 @@ export function HomeContent() {
                   : "Pick your class to load your timetable, tests, and academic deadlines."}
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto max-w-full">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto max-w-full">
               {showSeatPlan && (
                 <Button
                   asChild

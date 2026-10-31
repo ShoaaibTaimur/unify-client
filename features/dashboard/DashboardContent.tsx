@@ -2,10 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import {
-  ActivityForm,
-  ManageActivitiesTable,
-} from "@/features/activities/ActivityForm";
+import { ActivityForm } from "@/features/activities/ActivityForm";
+import { ManageActivitiesTable } from "@/features/activities/ManageActivitiesTable";
 import { CsvImportDialog } from "@/features/activities/CsvImportDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,7 +69,7 @@ export function DashboardContent() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
       <div className="rounded-[4px] border border-border bg-card p-5 shadow-2xs sm:p-6">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="flex flex-col justify-between gap-4 md:flex-row sm:items-center">
           <div>
             <div className="inline-flex items-center gap-2 border border-border bg-secondary/50 px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-foreground">
               <span className="h-1.5 w-1.5 shrink-0 bg-primary" />
